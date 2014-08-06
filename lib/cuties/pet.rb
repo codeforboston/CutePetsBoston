@@ -26,8 +26,8 @@ class Pet
     # 'Small & Furry' animals like mice & chinchillas
     # have their species in 'breed'
 
-    return "#{breed} #{type.downcase}" if ['Rabbit', 'Pig'].include? type
-    return breed.downcase if type == 'Small & Furry'
+    return "#{breed} #{type.downcase}" if ['#Rabbit', '#Pig'].include? type
+    return breed.downcase if type == '#Small&Furry'
     breed
   end
 
