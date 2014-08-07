@@ -27,18 +27,8 @@ module AdoptAPet
 
 
   def self.get_breeds(pet)
-    breed_list = [pet['breeds']['breed']].flatten          # Coerces into an Array
-    breed_list = breed_list.map{ |b| hashtagify(b["$t"]) }.join(' / ') # Joins into string
-    breed_list << ' mix' if breed_list.include?('/')
-    breed_list
-  end
-
-  def self.hashtagify(words)
-    # given a 'word' return #Word
-    # given a 'string of words' return #StringOfWords
-
-    split = words.split(' ')
-    return '#' + split.map{ |b| b.capitalize() }.join('')
+    breeds = [pet['breeds']['breed']].flatten  # Coerces into an Array
+    breeds.map{ |b| b["$t"] }
   end
 
 
@@ -64,20 +54,19 @@ module AdoptAPet
     uri.query = URI.encode_www_form(PARAMS)
     json = JSON.parse(Net::HTTP.get_response(uri).body)
 
-    PP.pp(json)  # Pretty-prints the response in the Terminal
+    #PP.pp(json)  # Pretty-prints the response in the Terminal
 
     pet_json  = json['petfinder']['pet']
 
-
     Pet.new({
-      breed: get_breeds(pet_json),
+      breeds: get_breeds(pet_json),
       pic:   get_photo(pet_json),
 
       link:  "https://www.petfinder.com/petdetail/" + pet_json['id']['$t'],
-      name:  pet_json['name']['$t'].my_titleize,
+      name:  pet_json['name']['$t'],
       id:    pet_json['id']['$t'],
       sex:   get_sex(pet_json),
-      type:  hashtagify(pet_json['animal']['$t'])
+      type:  pet_json['animal']['$t']
     })
   end
 end
