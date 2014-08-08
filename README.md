@@ -45,6 +45,7 @@ To get them, first register for a Petfinder account: https://users.petfinder.com
 
 Then sign up for the API keys: https://www.petfinder.com/developers/api-key
 
+Then find your shelter_id by searching for a shelter in your city
 
 ### Set up your environment variables
 
@@ -58,6 +59,7 @@ Do not commit your modified .env file to anywhere public. The .env line in the .
     access_token_secret=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     petfinder_key=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     petfinder_secret=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    shelter_id="MA38"
 
 ### How to Tweet
 
