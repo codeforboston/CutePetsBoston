@@ -15,7 +15,7 @@ It should be easily extendable to other shelters using [petfinder.com](petfinder
 
 **Links to API and Bot**
 
-* [Twitter bot](http://twitter.com/CutiesInBoston)
+* [Twitter bot](http://twitter.com/CutePetsBoston)
 
 * [API Docs`](https://www.petfinder.com/developers/api-docs)
 
