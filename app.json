@@ -1,0 +1,7 @@
+{
+  "name": "CutePetsX",
+  "description": "Twitter bot that posts adoptable pets from Petfinder",
+  "repository": "https://github.com/codeforboston/CutePetsBoston",
+  "logo": "http://raw.githubusercontent.com/codeforboston/CutePetsBoston/master/assets/cutieslogo_cfa.svg",
+  "keywords": ["ruby", "animals", "adoption"]
+}
