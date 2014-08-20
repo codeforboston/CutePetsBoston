@@ -15,11 +15,11 @@ Modified by [CodeforBoston](codeforboston.com) to work with the Petfinder.com AP
 
 A twitter bot that pulls data from the Petfinder API and tweets out adoptable pets from the [Boston MSPCA](http://www.mspca.org/adoption/boston/).
 
-It should be easily extendable to other shelters using petfinder.com to list their animals.
+It should be easily extendable to other shelters using [petfinder.com](petfinder.com) to list their animals.
 
 **Links to API and Bot**
 
-* [Twitter bot](http://twitter.com/CutiesInBoston)
+* [Twitter bot](http://twitter.com/CutePetsBoston)
 
 * [API Docs`](https://www.petfinder.com/developers/api-docs)
 
@@ -38,6 +38,8 @@ You need to sign up for a twitter API. You'll need all of the following:
 * access_token
 * access_token_secret
 
+To get twitter keys setup an application for your twitter account: https://dev.twitter.com/docs/auth/tokens-devtwittercom
+
 You'll also need Petfinder keys
 
 * petfinder_key
@@ -47,12 +49,13 @@ To get them, first register for a Petfinder account: https://users.petfinder.com
 
 Then sign up for the API keys: https://www.petfinder.com/developers/api-key
 
+Then find your shelter_id by searching for a shelter in your city
 
 ### Set up your environment variables
 
-We use dotenv to manage environment variables. When you have your keys, add them to a new file saved as `.env`. Make sure to include the preceding `.`. Mac OS X will warn you about creating a dotfile, but no worries, all the cool kids are doing it.
+Modify the .env file to include your actual keys instead of placeholders. The variables in this file will be automatically picked up when you run the rake task.
 
-However, make sure that there is a line `.env` in your `.gitignore` before staging or committing any changes. Never commit environment variables.
+Do not commit your modified .env file to anywhere public. The .env line in the .gitignore file prevents you from accidentially exposing your keys. Do not remove this line.
 
     consumer_key=XXXXXXXXXXXXXXXXXXXXXX
     consumer_secret=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -60,15 +63,7 @@ However, make sure that there is a line `.env` in your `.gitignore` before stagi
     access_token_secret=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     petfinder_key=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     petfinder_secret=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-
-If you don't want to deal with `.env`, you could run the following every time you open a new Terminal session, or store them in your `~/.bash_profile`.
-
-    export consumer_key=XXXXXXXXXXXXXXXXXXXXXX
-    export consumer_secret=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-    export access_token=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-    export access_token_secret=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-    export petfinder_key=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-    export petfinder_secret=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    shelter_id="MA38"
 
 ### How to Tweet
 
@@ -78,15 +73,24 @@ The tweet task is in the Rakefile, which invokes the rest of `cuties.rb`.
 
 ### How to Tweet Periodically
 
+Install the application on a server or a computer that will be powered on continuously.
+
+    cd <install_path>
+    git clone git@github.com:codeforboston/CutiesInBoston.git
+    cd CutiesInBoston
+    bundle install
+    crontab -e  # opens an editor to add a line to your scheduled cron jobs
+
+Add the following to your crontab
+
+    00 08,16 * * * cd <install_path>/CutiesInBoston && /usr/local/bin/rake tweet
+
+This tweets at 8:00am and 4:00pm (0800 hours and 1600 hours) every day.
+You can learn how to configure the crontab to your preference [here](https://help.ubuntu.com/community/CronHowto).
+
+#### Alternatives
+
 CutiesInDenver uses Heroku and the Heroku Scheduler plugin to tweet at regular intervals.
-
-    cd #{current_path}; git fetch origin; git reset --hard #{branch}
-
-If you already have a server and have pulled the bot from github add the following to your crontab (using crontab -e)
-
-This tweets at 8:00am and 4:00pm every day.
-
-    00 08,16 * * * cd /path/to/cuties && /usr/local/bin/rake tweet
 
 -----------------------
 

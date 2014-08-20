@@ -8,7 +8,7 @@ class Twit
 
   def initialize(pet)
     @pet = pet
-    
+
     @errlog       = Logger.new(STDERR)
     @errlog.level = Logger::WARN #set to Logger:WARN to avoid seing status messages
   end
@@ -18,7 +18,6 @@ class Twit
   end
 
   def message
-    # PP.pp(pet)
     "#{greeting} #{pet.message}"
   end
 
