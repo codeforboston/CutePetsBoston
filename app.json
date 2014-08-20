@@ -30,7 +30,7 @@
     "shelter_id": {
       "description": "Petfinder Shelter ID",
       "value": "MA38"
-    },
+    }
   },
   "addons": [
     "scheduler"
