@@ -7,7 +7,7 @@
   "keywords": ["ruby", "animals", "adoption"],
   "scripts": {
     "postdeploy": "rake tweet"
-  }
+  },
   "env": {
     "consumer_key": {
       "description": "Twitter Consumer Key"
@@ -31,6 +31,7 @@
       "description": "Petfinder Shelter ID",
       "value": "MA38"
     },
+  },
   "addons": [
     "scheduler"
   ]
