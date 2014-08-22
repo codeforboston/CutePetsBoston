@@ -7,6 +7,10 @@ Project of [Becky Boone](https://github.com/boonrs) and [Drew](https://github.co
 
 Modified by [CodeforBoston](codeforboston.com) to work with the Petfinder.com API
 
+## Heroku Deploy
+
+[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
+
 ## About
 
 A twitter bot that pulls data from the Petfinder API and tweets out adoptable pets from the [Boston MSPCA](http://www.mspca.org/adoption/boston/).
