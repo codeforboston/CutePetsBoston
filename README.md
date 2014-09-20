@@ -28,6 +28,11 @@ Edit a the local .env file by adding the appropriate config values. How to get T
 7. Take note of the values for environment set up below.
 
 ### Heroku
+
+## Deploy to Heroku
+
+[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
+
 1. Create a [Heroku account](https://id.heroku.com/signup/www-header)
 1. Download and install the [Heroku Toolbelt](from: https://toolbelt.heroku.com).
 2. Create heroku project: `heroku create [app name]`

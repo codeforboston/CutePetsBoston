@@ -1,0 +1,56 @@
+{
+  "name": "CutePetsX",
+  "description": "Twitter bot that posts adoptable pets from Petfinder",
+  "repository": "https://github.com/codeforboston/CutePetsBoston",
+  "template": "https://github.com/codeforboston/CutePetsBoston/tree/heroku-button",
+  "logo": "http://raw.githubusercontent.com/codeforboston/CutePetsBoston/heroku-button/assets/cutieslogo_cfa.png",
+  "keywords": ["ruby", "animals", "adoption"],
+  "scripts": {
+    "postdeploy": "rake tweet"
+  },
+  "env": {
+    "consumer_key": {
+      "description": "Twitter Consumer Key",
+      "value": "XXXXXXXXXXXXXXXXXXXXXXXXX"
+    },
+    "consumer_secret": {
+      "description": "Twitter Consumer Secret",
+      "value": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    },
+    "access_token": {
+      "description": "Twitter Access Token",
+      "value": "0000000000-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    },
+    "access_token_secret": {
+      "description": "Twitter Access Token Secret",
+      "value": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    },
+    "pet_datasource": {
+      "description": "Which service to pull pet information from",
+      "value": "petfinder"
+    },
+    "petfinder_key": {
+      "description": "Petfinder Key",
+      "value": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    },
+    "petfinder_secret": {
+      "description": "Petfinder Secret",
+      "value": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    },
+    "shelter_id": {
+      "description": "Petfinder Shelter ID",
+      "value": "MA38"
+    },
+    "petharbor_pet_types": {
+      "description": "Types of animals to pull from Petharbor",
+      "value": "cat dog others"
+    },
+    "petherbor_shelter_id": {
+      "description": "Petharbor Shelter ID",
+      "value": "BKRL"
+    }
+  },
+  "addons": [
+    "scheduler"
+  ]
+}
