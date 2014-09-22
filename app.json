@@ -1,9 +1,9 @@
 {
   "name": "CutePetsX",
   "description": "Twitter bot that posts adoptable pets from Petfinder",
-  "repository": "https://github.com/codeforboston/CutePetsBoston",
-  "template": "https://github.com/codeforboston/CutePetsBoston/tree/heroku-button",
-  "logo": "http://raw.githubusercontent.com/codeforboston/CutePetsBoston/heroku-button/assets/cutieslogo_cfa.png",
+  "repository": "https://github.com/codeforamerica/CutePets",
+  "template": "https://github.com/codeforamerica/CutePets",
+  "logo": "http://raw.githubusercontent.com/codeforamerica/CutePets/master/assets/cutieslogo_cfa.png",
   "keywords": ["ruby", "animals", "adoption"],
   "scripts": {
     "postdeploy": "rake tweet"
@@ -37,7 +37,7 @@
       "description": "Petfinder Secret",
       "value": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
     },
-    "shelter_id": {
+    "petfinder_shelter_id": {
       "description": "Petfinder Shelter ID",
       "value": "MA38"
     },
