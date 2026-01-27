@@ -1,3 +1,4 @@
+# Ruby
 template.env
 *.gem
 *.rbc
@@ -13,10 +14,16 @@ spec/reports
 test/tmp
 test/version_tmp
 tmp
-.env
+
+# Python
+.venv
+__pycache__
 
 # YARD artifacts
 .yardoc
 _yardoc
-doc/				
+doc/
 image.png
+
+# Other
+.env
