@@ -4,6 +4,9 @@ on:
   push:
     branches: [ mw/test-workflow, j2_test ]
   workflow_dispatch:
+  schedule:
+    # Every 4 hours
+    - cron: "0 */4 * * *"
 
 jobs:
   call-api:
