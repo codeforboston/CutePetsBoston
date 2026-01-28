@@ -2,12 +2,8 @@ name: RescueGroups API check
 
 on:
   push:
-    # We are doing this for testing purposes, but when we start posting, we should remove this line
-    branches: [ mw/test-workflow, j2_test, master, add-crontab ]
+    branches: [ mw/test-workflow, j2_test ]
   workflow_dispatch:
-  schedule:
-    # Every 4 hours
-    - cron: "0 */4 * * *"
 
 jobs:
   call-api:
