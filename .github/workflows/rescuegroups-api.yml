@@ -20,4 +20,7 @@ jobs:
       - name: Call RescueGroups API
         env:
           ACCESS_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
-        run: python main.py
+        run: |
+          pwd
+          ls
+          python ../main.py
