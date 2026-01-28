@@ -2,7 +2,7 @@ name: RescueGroups API check
 
 on:
   push:
-    branches: [ mw/test-workflow ]
+    branches: [ mw/test-workflow, j2_test ]
   workflow_dispatch:
 
 jobs:
