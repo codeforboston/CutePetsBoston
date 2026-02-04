@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Protocol, Iterable
+from typing import Iterable
 
 
 # =============================================================================
@@ -21,9 +21,16 @@ class AdoptablePet:
     image_url: str | None = None
 
 
-class PetSource(Protocol):
+class PetSource(ABC):
     """Interface for fetching pets from various adoption APIs."""
 
+    @property
+    @abstractmethod
+    def source_name(self) -> str:
+        """Return the name of the pet source."""
+        ...
+
+    @abstractmethod
     def fetch_pets(self) -> Iterable[AdoptablePet]:
         """Fetch available pets from the source."""
         ...
