@@ -12,7 +12,24 @@ This Project runs on github actions and runs periodically.
 
 ## Set up your environment variables
 
-TBD
+Required:
+- `RESCUEGROUPS_API_KEY`
+
+Optional for Instagram posting:
+- `INSTAGRAM_USERNAME`
+- `INSTAGRAM_PASSWORD`
+
+Optional for Bluesky posting:
+- `BLUESKY_HANDLE` (or `BLUESKY_TEST_HANDLE`)
+- `BLUESKY_PASSWORD` (or `BLUESKY_TEST_PASSWORD`)
+
+## File organization
+
+- `main.py`: orchestrates fetching pets and publishing posts.
+- `abstractions.py`: shared interfaces and data models.
+- `source_*.py`: pet source implementations (ingest from APIs).
+- `poster_*.py`: social media poster implementations.
+- `manually_test_post.py`: CLI for manual posting with sample data.
 
 # How to run the script
 
