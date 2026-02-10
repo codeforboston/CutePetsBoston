@@ -1,21 +1,17 @@
-name: RescueGroups API check
+name: Bluesky Test Post
 
 on:
   push:
-    # We are doing this for testing purposes, but when we start posting, we should remove this line
-    branches:
-      [mw/test-workflow, j2_test, master, add-crontab, instagram-integration]
+    branches: [ mw/test-workflow, j2_test ]
   workflow_dispatch:
-  schedule:
-    # Every 4 hours
-    - cron: "0 */4 * * *"
 
 jobs:
-  call-api:
+  post-to-bluesky:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -24,11 +20,10 @@ jobs:
       - name: Install dependencies
         run: pip install --upgrade requests
 
-      - name: Call RescueGroups API
+      - name: Post to Bluesky
         env:
           ACCESS_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
-        run: |
-          pwd
-          ls
-          python ./main.py
-
+          BLUESKY_TEST_HANDLE: ${{ secrets.BLUESKY_TEST_HANDLE }}
+          BLUESKY_TEST_PASSWORD: ${{ secrets.BLUESKY_TEST_PASSWORD }}
+        run: python ./bluesky.py
+        
