@@ -25,5 +25,6 @@ _yardoc
 doc/
 image.png
 
-# Other
+# Other - .env is unused but added here just in case
 .env
+.env.local
