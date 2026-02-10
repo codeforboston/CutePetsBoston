@@ -21,7 +21,7 @@ class SourceRescueGroups(PetSource):
     """
     Fetches adoptable pets from RescueGroups.org API.
 
-    Requires RESCUEGROUPS_API_KEY environment variable or api_key constructor arg.
+    Requires CUTEPETSBOSTON_RESCUEGROUPS_API_KEY environment variable or api_key constructor arg.
     """
 
     BASE_URL = "https://api.rescuegroups.org/v5/public/animals/search/available"
@@ -60,7 +60,7 @@ class SourceRescueGroups(PetSource):
         if not self._api_key:
             raise ValueError(
                 "RescueGroups API key not configured. "
-                "Set RESCUEGROUPS_API_KEY environment variable."
+                "Set CUTEPETSBOSTON_RESCUEGROUPS_API_KEY environment variable."
             )
 
         url = f"{self.BASE_URL}/{self.species}"
