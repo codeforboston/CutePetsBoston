@@ -5,12 +5,12 @@ import sys
 from abstractions import PosterDebug
 from poster_bluesky import PosterBluesky
 # from poster_instagram import PosterInstagram
-from source_rescue_groups import SourceRescueGroups
+from source_manual import SourceManual
 
 def main():
     # TODO: inconsistently declaring os.env vars inside this file vs the classes. We
     # should decide what pattern is best
-    source = SourceRescueGroups()
+    source = SourceManual()
     posters = create_posters()
 
     run(source, posters)
