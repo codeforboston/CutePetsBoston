@@ -2,15 +2,14 @@ import os
 import random
 import sys
 
+# from poster_bluesky import PosterBluesky  # Temporarily disabled
 from abstractions import PosterDebug
-from poster_bluesky import PosterBluesky
-# from poster_instagram import PosterInstagram
-from source_manual import SourceManual
+from source_rescue_groups import SourceRescueGroups
 
 def main():
     # TODO: inconsistently declaring os.env vars inside this file vs the classes. We
     # should decide what pattern is best
-    source = SourceManual()
+    source = SourceRescueGroups()
     posters = create_posters()
 
     run(source, posters)
@@ -22,20 +21,21 @@ def create_posters(debug=False):
 
     posters = []
 
-    # Instagram has not been tested yet
-    # instagram_username = os.environ.get("INSTAGRAM_USERNAME")
-    # instagram_password = os.environ.get("INSTAGRAM_PASSWORD")
-    # if instagram_username and instagram_password:
-    #     posters.append(PosterInstagram(instagram_username, instagram_password))
+    instagram_username = os.environ.get("INSTAGRAM_USERNAME")
+    instagram_password = os.environ.get("INSTAGRAM_PASSWORD")
+    if instagram_username and instagram_password:
+        from poster_instagram import PosterInstagram
 
-    bluesky_username = os.environ.get("BLUESKY_HANDLE") or os.environ.get(
-        "BLUESKY_TEST_HANDLE"
-    )
-    bluesky_password = os.environ.get("BLUESKY_PASSWORD") or os.environ.get(
-        "BLUESKY_TEST_PASSWORD"
-    )
-    if bluesky_username and bluesky_password:
-        posters.append(PosterBluesky(bluesky_username, bluesky_password))
+        posters.append(PosterInstagram(instagram_username, instagram_password))
+
+    # bluesky_username = os.environ.get("BLUESKY_HANDLE") or os.environ.get(
+    #     "BLUESKY_TEST_HANDLE"
+    # )
+    # bluesky_password = os.environ.get("BLUESKY_PASSWORD") or os.environ.get(
+    #     "BLUESKY_TEST_PASSWORD"
+    # )
+    # if bluesky_username and bluesky_password:
+    #     posters.append(PosterBluesky(bluesky_username, bluesky_password))
 
     return posters
 
