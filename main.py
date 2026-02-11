@@ -21,7 +21,7 @@ def create_posters(debug=False):
 
     posters = []
 
-    instagram_username = os.environ.get("INSTAGRAM_USERNAME")
+    instagram_username = os.environ.get("INSTAGRAM_HANDLE")
     instagram_password = os.environ.get("INSTAGRAM_PASSWORD")
     if instagram_username and instagram_password:
         from poster_instagram import PosterInstagram
