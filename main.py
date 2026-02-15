@@ -9,17 +9,16 @@ def main():
 
 def create_posters(debug=False):
     from social_posters import PosterDebug
-    from social_posters.instagram import PosterInstagram
-    from social_posters.bluesky import PosterBluesky
 
     if debug:
         return [PosterDebug()]
 
-    posters = []
+    from social_posters.instagram import PosterInstagram
+    from social_posters.bluesky import PosterBluesky
 
+    posters = []
     posters.append(PosterInstagram())
     posters.append(PosterBluesky())
-
     return posters
 
 
