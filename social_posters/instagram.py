@@ -1,6 +1,7 @@
 import os
 import tempfile
 from urllib.parse import urlparse
+from typing import Optional
 
 import requests
 from instapy import InstaPy
@@ -9,10 +10,21 @@ from abstractions import Post, PostResult, SocialPoster
 
 
 class PosterInstagram(SocialPoster):
-    def __init__(self, username: str, password: str):
-        self.username = username
-        self.password = password
+    def __init__(self):
+        # Handle environment variable validation internally
+        self.username = os.environ.get("INSTAGRAM_HANDLE")
+        self.password = os.environ.get("INSTAGRAM_PASSWORD")
         self._session = None
+        self._is_available = bool(self.username and self.password)
+
+    @classmethod
+    def create_if_available(cls) -> Optional['PosterInstagram']:
+        """Create Instagram poster if credentials are available in environment variables."""
+        username = os.environ.get("INSTAGRAM_HANDLE")
+        password = os.environ.get("INSTAGRAM_PASSWORD")
+        if username and password:
+            return cls(username, password)
+        return None
 
     @property
     def platform_name(self) -> str:
@@ -32,6 +44,12 @@ class PosterInstagram(SocialPoster):
             return False
 
     def publish(self, post: Post) -> PostResult:
+        if not self._is_available:
+            return PostResult(
+                success=False,
+                error_message="Instagram credentials not available.",
+            )
+
         if not post.image_url:
             return PostResult(
                 success=False,

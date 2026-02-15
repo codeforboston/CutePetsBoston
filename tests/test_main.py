@@ -45,7 +45,7 @@ class RunFlowTests(unittest.TestCase):
         poster_one = FakePoster()
         poster_two = FakePoster()
 
-        results = run(source, [poster_one, poster_two])
+        results = run([source], [poster_one, poster_two])
 
         self.assertTrue(source.fetch_called)
         self.assertTrue(poster_one.format_called)

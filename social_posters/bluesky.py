@@ -1,4 +1,6 @@
 from datetime import datetime
+from typing import Optional
+import os
 
 import requests
 
@@ -6,11 +8,26 @@ from abstractions import Post, PostResult, SocialPoster
 
 
 class PosterBluesky(SocialPoster):
-    def __init__(self, username: str, password: str):
-        self.username = username
-        self.password = password
+    def __init__(self):
+        # Handle environment variable validation internally
+        self.username = (os.environ.get("BLUESKY_HANDLE") or
+                        os.environ.get("BLUESKY_TEST_HANDLE"))
+        self.password = (os.environ.get("BLUESKY_PASSWORD") or
+                        os.environ.get("BLUESKY_TEST_PASSWORD"))
         self._access_token = None
         self._did = None  # Decentralized identifier from the Bluesky session.
+        self._is_available = bool(self.username and self.password)
+
+    @classmethod
+    def create_if_available(cls) -> Optional['PosterBluesky']:
+        """Create Bluesky poster if credentials are available in environment variables."""
+        username = (os.environ.get("BLUESKY_HANDLE") or
+                   os.environ.get("BLUESKY_TEST_HANDLE"))
+        password = (os.environ.get("BLUESKY_PASSWORD") or
+                   os.environ.get("BLUESKY_TEST_PASSWORD"))
+        if username and password:
+            return cls(username, password)
+        return None
 
     @property
     def platform_name(self) -> str:
@@ -34,6 +51,12 @@ class PosterBluesky(SocialPoster):
             return False
 
     def publish(self, post: Post) -> PostResult:
+        if not self._is_available:
+            return PostResult(
+                success=False,
+                error_message="Bluesky credentials not available."
+            )
+
         if not self._access_token or not self._did:
             if not self.authenticate():
                 return PostResult(

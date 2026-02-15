@@ -1,50 +1,45 @@
-import os
 import random
-import sys
-
-# from poster_bluesky import PosterBluesky  # Temporarily disabled
-from abstractions import PosterDebug
-from source_rescue_groups import SourceRescueGroups
 
 def main():
-    # TODO: inconsistently declaring os.env vars inside this file vs the classes. We
-    # should decide what pattern is best
-    source = SourceRescueGroups()
+    sources = create_sources()
     posters = create_posters()
 
-    run(source, posters)
+    run(sources, posters)
 
 
 def create_posters(debug=False):
+    from social_posters import PosterDebug
+    from social_posters.instagram import PosterInstagram
+    from social_posters.bluesky import PosterBluesky
+
     if debug:
         return [PosterDebug()]
 
     posters = []
 
-    instagram_username = os.environ.get("INSTAGRAM_HANDLE")
-    instagram_password = os.environ.get("INSTAGRAM_PASSWORD")
-    if instagram_username and instagram_password:
-        from poster_instagram import PosterInstagram
-
-        posters.append(PosterInstagram(instagram_username, instagram_password))
-
-    # bluesky_username = os.environ.get("BLUESKY_HANDLE") or os.environ.get(
-    #     "BLUESKY_TEST_HANDLE"
-    # )
-    # bluesky_password = os.environ.get("BLUESKY_PASSWORD") or os.environ.get(
-    #     "BLUESKY_TEST_PASSWORD"
-    # )
-    # if bluesky_username and bluesky_password:
-    #     posters.append(PosterBluesky(bluesky_username, bluesky_password))
+    posters.append(PosterInstagram())
+    posters.append(PosterBluesky())
 
     return posters
 
 
-def run(source, posters):
-    try:
-        pets = list(source.fetch_pets())
-    except ValueError as exc:
-        raise SystemExit(str(exc)) from exc
+def create_sources():
+    from adoption_sources import SourceRescueGroups
+
+    sources = []
+
+    sources.append(SourceRescueGroups())
+
+    return sources
+
+
+def run(sources, posters):
+    pets = []
+    for source in sources:
+        try:
+            pets.extend(list(source.fetch_pets()))
+        except ValueError as exc:
+            raise SystemExit(str(exc)) from exc
 
     print("Fetched", len(pets), "records")
     pet = pick_pet(pets)
@@ -69,12 +64,12 @@ def run(source, posters):
 
     return results
 
+
 def pick_pet(pets):
     with_images = [pet for pet in pets if pet.image_url]
     if not with_images:
         return None
     return random.choice(with_images)
-
 
 
 if __name__ == "__main__":
