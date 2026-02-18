@@ -1,0 +1,32 @@
+name: interfaces e2e
+
+on:
+  push:
+    branches: [ interfaces2 ]
+  workflow_dispatch:
+
+jobs:
+  post-to-bluesky:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install --break-system-packages -r requirements.txt
+
+      - name: Post to Bluesky
+        env:
+          ACCESS_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
+          CUTEPETSBOSTON_RESCUEGROUPS_API_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
+          BLUESKY_TEST_HANDLE: ${{ secrets.BLUESKY_TEST_HANDLE }}
+          BLUESKY_TEST_PASSWORD: ${{ secrets.BLUESKY_TEST_PASSWORD }}
+          INSTAGRAM_HANDLE: ${{ secrets.INSTAGRAM_HANDLE }}
+          INSTAGRAM_PASSWORD: ${{ secrets.INSTAGRAM_PASSWORD }}
+        run: python ./main.py
+        

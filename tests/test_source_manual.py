@@ -1,6 +1,6 @@
 import unittest
 
-from source_manual import MANUAL_SOURCE_DATA, SourceManual
+from adoption_sources import MANUAL_SOURCE_DATA, SourceManual
 
 
 class SourceManualTests(unittest.TestCase):
