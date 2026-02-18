@@ -23,6 +23,7 @@ jobs:
       - name: Post to Bluesky
         env:
           ACCESS_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
+          CUTEPETSBOSTON_RESCUEGROUPS_API_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
           BLUESKY_TEST_HANDLE: ${{ secrets.BLUESKY_TEST_HANDLE }}
           BLUESKY_TEST_PASSWORD: ${{ secrets.BLUESKY_TEST_PASSWORD }}
         run: python ./main.py
