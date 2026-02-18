@@ -2,7 +2,7 @@ name: interfaces e2e
 
 on:
   push:
-    branches: [ interfaces2 ]
+    branches: [ insta_whaaaat ]
   workflow_dispatch:
 
 jobs:
