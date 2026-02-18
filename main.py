@@ -2,7 +2,7 @@ import random
 
 def main():
     sources = create_sources()
-    posters = create_posters(debug=True)
+    posters = create_posters(debug=False)
 
     run(sources, posters)
 
@@ -17,8 +17,9 @@ def create_posters(debug=False):
     from social_posters.bluesky import PosterBluesky
 
     posters = []
+    posters.append(PosterDebug())
     posters.append(PosterInstagram())
-    posters.append(PosterBluesky())
+    # posters.append(PosterBluesky()) 
     return posters
 
 
