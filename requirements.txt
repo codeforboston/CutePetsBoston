@@ -1,4 +1,4 @@
-instapy==0.1.1
+instapy==0.6.16
 clarifai==2.6.2
 emoji==1.7.0
 requests>=2.28.0
