@@ -17,15 +17,6 @@ class PosterInstagram(SocialPoster):
         self._session = None
         self._is_available = bool(self.username and self.password)
 
-    @classmethod
-    def create_if_available(cls) -> Optional['PosterInstagram']:
-        """Create Instagram poster if credentials are available in environment variables."""
-        username = os.environ.get("INSTAGRAM_HANDLE")
-        password = os.environ.get("INSTAGRAM_PASSWORD")
-        if username and password:
-            return cls(username, password)
-        return None
-
     @property
     def platform_name(self) -> str:
         return "Instagram"

@@ -18,17 +18,6 @@ class PosterBluesky(SocialPoster):
         self._did = None  # Decentralized identifier from the Bluesky session.
         self._is_available = bool(self.username and self.password)
 
-    @classmethod
-    def create_if_available(cls) -> Optional['PosterBluesky']:
-        """Create Bluesky poster if credentials are available in environment variables."""
-        username = (os.environ.get("BLUESKY_HANDLE") or
-                   os.environ.get("BLUESKY_TEST_HANDLE"))
-        password = (os.environ.get("BLUESKY_PASSWORD") or
-                   os.environ.get("BLUESKY_TEST_PASSWORD"))
-        if username and password:
-            return cls(username, password)
-        return None
-
     @property
     def platform_name(self) -> str:
         return "Bluesky"
