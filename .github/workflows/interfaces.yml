@@ -18,7 +18,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install --break-system-packages -r requirements.txt
+        run: pip install -r requirements.txt
 
       - name: Post to Bluesky
         env:
