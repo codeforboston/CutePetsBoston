@@ -18,7 +18,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install --upgrade requests
+        run: pip install --break-system-packages -r requirements.txt
 
       - name: Post to Bluesky
         env:
@@ -26,5 +26,7 @@ jobs:
           CUTEPETSBOSTON_RESCUEGROUPS_API_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
           BLUESKY_TEST_HANDLE: ${{ secrets.BLUESKY_TEST_HANDLE }}
           BLUESKY_TEST_PASSWORD: ${{ secrets.BLUESKY_TEST_PASSWORD }}
+          INSTAGRAM_HANDLE: ${{ secrets.INSTAGRAM_HANDLE }}
+          INSTAGRAM_PASSWORD: ${{ secrets.INSTAGRAM_PASSWORD }}
         run: python ./main.py
         
