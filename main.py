@@ -2,7 +2,7 @@ import random
 
 def main():
     sources = create_sources()
-    posters = create_posters()
+    posters = create_posters(debug=True)
 
     run(sources, posters)
 
