@@ -25,5 +25,5 @@ jobs:
           ACCESS_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
           BLUESKY_TEST_HANDLE: ${{ secrets.BLUESKY_TEST_HANDLE }}
           BLUESKY_TEST_PASSWORD: ${{ secrets.BLUESKY_TEST_PASSWORD }}
-        run: python ./bluesky.py
+        run: python ./social_posters/bluesky.py
         
