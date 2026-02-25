@@ -88,10 +88,10 @@ class SourceRescueGroups(PetSource):
         )
 
         response = requests.post(url, headers=headers, json=payload, timeout=30)
-        print(response)
         response.raise_for_status()
 
         data = response.json().get("data", [])
+        print(data)
         logger.info(f"Received {len(data)} pets from RescueGroups")
 
         for animal in data:
