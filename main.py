@@ -17,8 +17,8 @@ def create_posters(debug=False):
     from social_posters.bluesky import PosterBluesky
 
     posters = []
-    posters.append(PosterInstagram())
     posters.append(PosterBluesky())
+    posters.append(PosterInstagram())
     return posters
 
 
