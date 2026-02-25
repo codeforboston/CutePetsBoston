@@ -87,7 +87,7 @@ class SourceRescueGroups(PetSource):
             f"Fetching {self.species} from RescueGroups within {self.radius_miles} miles of {self.postal_code}"
         )
 
-        response = requests.get(url, headers=headers, timeout=30)
+        response = requests.get(url+"-animals.name", headers=headers, timeout=30)
         response.raise_for_status()
 
         data = response.json().get("data", [])
