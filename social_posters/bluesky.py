@@ -41,7 +41,7 @@ class PosterBluesky(SocialPoster):
         if not self._is_available:
             return PostResult(
                 success=False,
-                error_message="Bluesky credentials not available."
+                error_message="Bluesky credentials not available.",
             )
 
         if not self._access_token or not self._did:
@@ -112,3 +112,27 @@ class PosterBluesky(SocialPoster):
             tags = " ".join(f"#{tag}" for tag in post.tags if tag)
             text = f"{text}\n\n{tags}"
         return text[:300]
+
+if __name__ == "__main__":
+    poster = PosterBluesky()
+
+    if not poster._is_available:
+        print("Bluesky credentials not set.")
+        raise SystemExit(1)
+
+    if not poster.authenticate():
+        print("Bluesky authentication failed.")
+        raise SystemExit(1)
+
+    print("Bluesky authentication successful!")
+
+    test_post = Post(
+        text="Test post from CutePetsBoston!",
+        tags=["test", "cutepetsboston"],
+    )
+    result = poster.publish(test_post)
+
+    if result.success:
+        print(f"Post published! URL: {result.post_url}")
+    else:
+        print(f"Post failed: {result.error_message}")
