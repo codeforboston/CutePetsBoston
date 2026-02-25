@@ -17,7 +17,6 @@ import requests
 
 from abstractions import AdoptablePet
 # from poster_bluesky import PosterBluesky  # Temporarily disabled
-from poster_instagram import PosterInstagram
 from instagrapi import Client
 from instagrapi.types import StoryMention, StoryMedia, StoryLink, StoryHashtag
 
@@ -55,17 +54,6 @@ def sample_pet():
 DEFAULT_SETTINGS_PATH = Path(__file__).with_name("instagrapi_settings.json")
 
 
-def build_poster(poster, username, password, session_id, settings):
-    if poster == "instagram":
-        return PosterInstagram(
-            username,
-            password,
-            session_id=session_id,
-            settings=settings,
-        )
-    # if poster == "bluesky":
-    #     return PosterBluesky(username, password)
-    raise ValueError(f"Unsupported poster: {poster}")
 
 def main():
     username = os.environ.get("INSTAGRAM_TEST_HANDLE")
