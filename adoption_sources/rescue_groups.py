@@ -69,17 +69,17 @@ class SourceRescueGroups(PetSource):
             "Authorization": self._api_key,
         }
         payload = {
-            "filters": [
-                {
-                    "fieldName": "status",
-                    "operation": "equals",
-                    "criteria": "Available",
-                }
-            ],
-            "filterRadius": {
-                "miles": self.radius_miles,
-                "postalcode": self.postal_code,
-            },
+            # "filters": [
+            #     {
+            #         "fieldName": "status",
+            #         "operation": "equals",
+            #         "criteria": "Available",
+            #     }
+            # ],
+            # "filterRadius": {
+            #     "miles": self.radius_miles,
+            #     "postalcode": self.postal_code,
+            # },
             "limit": self.limit,
         }
 
