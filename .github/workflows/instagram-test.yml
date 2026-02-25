@@ -1,0 +1,34 @@
+name: RescueGroups API check
+
+on:
+  push:
+    # We are doing this for testing purposes, but when we start posting, we should remove this file
+    branches: [instagram-cutepetsbostontest]
+
+jobs:
+  call-api:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install -r requirements.txt
+
+      - name: Call RescueGroups API
+        env:
+          CUTEPETSBOSTON_RESCUEGROUPS_API_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
+          INSTAGRAM_TEST_HANDLE: ${{ secrets.INSTAGRAM_TEST_HANDLE }}
+          INSTAGRAM_TEST_PASSWORD: ${{ secrets.INSTAGRAM_TEST_PASSWORD }}
+        shell: bash
+        run: |
+          source .venv/bin/activate
+          python ./manually_test_instagram.py
