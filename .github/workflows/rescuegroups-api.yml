@@ -4,7 +4,7 @@ on:
   push:
     # We are doing this for testing purposes, but when we start posting, we should remove this line
     branches:
-      [mw/test-workflow, j2_test, master, add-crontab, instagram-integration]
+      [rescue_groups_api_patch]
   workflow_dispatch:
   schedule:
     # Every 4 hours
