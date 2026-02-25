@@ -26,8 +26,8 @@ jobs:
       - name: Call RescueGroups API
         env:
           CUTEPETSBOSTON_RESCUEGROUPS_API_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
-          INSTAGRAM_TEST_HANDLE: ${{ secrets.INSTAGRAM_TEST_HANDLE }}
-          INSTAGRAM_TEST_PASSWORD: ${{ secrets.INSTAGRAM_TEST_PASSWORD }}
+          INSTAGRAM_TEST_HANDLE: ${{ secrets.INSTAGRAM_HANDLE_2 }}
+          INSTAGRAM_TEST_PASSWORD: ${{ secrets.INSTAGRAM_PASSWORD_2 }}
         shell: bash
         run: |
           source .venv/bin/activate

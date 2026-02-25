@@ -58,8 +58,9 @@ DEFAULT_SETTINGS_PATH = Path(__file__).with_name("instagrapi_settings.json")
 def main():
     username = os.environ.get("INSTAGRAM_TEST_HANDLE")
     password = os.environ.get("INSTAGRAM_TEST_PASSWORD")
-    print("username")
+    print("username start")
     print(username)
+    print("username end")
 
     cl = Client()
     cl.login(username, password)
