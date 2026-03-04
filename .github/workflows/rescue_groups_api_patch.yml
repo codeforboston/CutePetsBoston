@@ -1,12 +1,12 @@
-name: interfaces e2e
+name: rescue_groups_api_patch 
 
 on:
   push:
-    branches: [ interfaces2 ]
+    branches: [ rescue_groups_api_patch ]
   workflow_dispatch:
 
 jobs:
-  post-to-bluesky:
+  debug-rescue-groups:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
