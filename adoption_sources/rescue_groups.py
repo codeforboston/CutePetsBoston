@@ -77,10 +77,10 @@ class SourceRescueGroups(PetSource):
             #         "criteria": "Available",
             #     }
             # ],
-            # "filterRadius": {
-            #     "miles": self.radius_miles,
-            #     "postalcode": self.postal_code,
-            # },
+            "filterRadius": {
+                "miles": self.radius_miles,
+                "postalcode": self.postal_code,
+            },
         }
         query_string = urlencode(query_url_params)
         url = f"{self.BASE_URL}/{self.species}/?{query_string}"

@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: pip install --break-system-packages -r requirements.txt
 
-      - name: Post to Bluesky
+      - name: Debug the Rescue Group API
         env:
           ACCESS_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
           CUTEPETSBOSTON_RESCUEGROUPS_API_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
