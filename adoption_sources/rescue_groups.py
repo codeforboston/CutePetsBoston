@@ -70,16 +70,18 @@ class SourceRescueGroups(PetSource):
             'sort': 'random'
         }
         payload = {
-            # "filters": [
-            #     {
-            #         "fieldName": "status",
-            #         "operation": "equals",
-            #         "criteria": "Available",
-            #     }
-            # ],
-            "filterRadius": {
-                "miles": self.radius_miles,
-                "postalcode": self.postal_code,
+            "data": {
+                # "filters": [
+                #     {
+                #         "fieldName": "status",
+                #         "operation": "equals",
+                #         "criteria": "Available",
+                #     }
+                # ],
+                "filterRadius": {
+                    "miles": self.radius_miles,
+                    "postalcode": self.postal_code,
+                },
             },
         }
         query_string = urlencode(query_url_params)
