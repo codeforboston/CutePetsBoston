@@ -9,8 +9,10 @@ import logging
 import os
 import re
 from typing import Iterator
+from urllib.parse import urlencode
 
 import requests
+
 
 from abstractions import AdoptablePet, PetSource
 
@@ -63,10 +65,9 @@ class SourceRescueGroups(PetSource):
                 "Set CUTEPETSBOSTON_RESCUEGROUPS_API_KEY environment variable."
             )
 
-        url = f"{self.BASE_URL}/{self.species}"
-        headers = {
-            "Content-Type": "application/vnd.api+json",
-            "Authorization": self._api_key,
+        query_url_params = {
+            'limit': 2,
+            'sort': 'random'
         }
         payload = {
             # "filters": [
@@ -80,7 +81,12 @@ class SourceRescueGroups(PetSource):
             #     "miles": self.radius_miles,
             #     "postalcode": self.postal_code,
             # },
-            "limit": 2,
+        }
+        query_string = urlencode(query_url_params)
+        url = f"{self.BASE_URL}/{self.species}?{query_string}"
+        headers = {
+            "Content-Type": "application/vnd.api+json",
+            "Authorization": self._api_key,
         }
 
         logger.info(
