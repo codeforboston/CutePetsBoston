@@ -80,7 +80,7 @@ class SourceRescueGroups(PetSource):
             #     "miles": self.radius_miles,
             #     "postalcode": self.postal_code,
             # },
-            "limit": self.limit,
+            "limit": 2,
         }
 
         logger.info(
