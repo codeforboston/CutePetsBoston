@@ -65,7 +65,7 @@ class SourceRescueGroups(PetSource):
                 "Set CUTEPETSBOSTON_RESCUEGROUPS_API_KEY environment variable."
             )
 
-        query_url_params = {
+        params = {
             'limit': self.limit,
             'sort': 'random'
         }
@@ -84,8 +84,7 @@ class SourceRescueGroups(PetSource):
                 # },
             },
         }
-        query_string = urlencode(query_url_params)
-        url = f"{self.BASE_URL}/{self.species}/?{query_string}"
+        url = f"{self.BASE_URL}/{self.species}/"
         headers = {
             "Content-Type": "application/vnd.api+json",
             "Authorization": self._api_key,
@@ -95,7 +94,13 @@ class SourceRescueGroups(PetSource):
             f"Fetching {self.species} from RescueGroups within {self.radius_miles} miles of {self.postal_code}"
         )
 
-        response = requests.post(url, json=payload, headers=headers, timeout=30)
+        response = requests.post(
+                url,
+                params=params,
+                json=payload,
+                headers=headers,
+                timeout=30
+        )
         response.raise_for_status()
 
         data = response.json().get("data", [])
