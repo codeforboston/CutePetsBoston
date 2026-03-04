@@ -106,6 +106,35 @@ class PosterBluesky(SocialPoster):
         except Exception as exc:
             return PostResult(success=False, error_message=str(exc))
 
+    def format_post(self, pet):
+        from abstractions import Post
+
+        name = pet.name.split("*")[0].strip()
+
+        text = f"Hi, I'm {name}! I'm a {pet.breed} looking for a forever home"
+        if pet.location:
+            text += f" in {pet.location}"
+        text += "."
+
+        details = " · ".join(
+            part for part in [pet.age_string, pet.sex, pet.size_group] if part
+        )
+        if details:
+            text += f"\n\n{details}"
+
+        if pet.pet_id:
+            text += f"\n\nAdopt: https://www.rescuegroups.org/pet/{pet.pet_id}"
+
+        species_tag = "DogsOfBluesky" if pet.species == "dog" else "CatsOfBluesky"
+        tags = ["AdoptDontShop", "Boston", species_tag]
+
+        return Post(
+            text=text,
+            image_url=pet.image_url,
+            link=pet.adoption_url,
+            alt_text=f"Photo of {name}, a {pet.breed} available for adoption",
+            tags=tags,
+        )
     def _format_text(self, post: Post) -> str:
         text = post.text
         if post.tags:

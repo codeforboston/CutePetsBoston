@@ -131,6 +131,10 @@ class SourceRescueGroups(PetSource):
                 description=description,
                 adoption_url=adoption_url,
                 image_url=image_url,
+                age_string=attrs.get("ageString"),
+                sex=attrs.get("sex"),
+                size_group=attrs.get("sizeGroup"),
+                pet_id=animal_id,
             )
         except Exception as e:
             logger.warning(f"Failed to parse animal {animal.get('id', 'unknown')}: {e}")
