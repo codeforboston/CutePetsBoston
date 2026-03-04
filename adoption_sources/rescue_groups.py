@@ -66,8 +66,7 @@ class SourceRescueGroups(PetSource):
         
         url = (
             f"{self.BASE_URL}/available/{self.species}/haspic"
-            f"?fields[animals]=distance"
-            f"&include=breeds,locations"
+            f"?include=breeds,locations"
             f"&sort=random"
             f"&limit={self.limit}"
         )
