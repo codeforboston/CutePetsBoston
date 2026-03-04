@@ -115,13 +115,20 @@ class PosterBluesky(SocialPoster):
         if pet.location:
             text += f" in {pet.location}"
         text += "."
-        if not any([pet.age_string, pet.sex, pet.size_group]):
-            text += f"\n\n{pet.description[:120]}" if pet.description else ""
-        details = " · ".join(
-            part for part in [pet.age_string, pet.sex, pet.size_group] if part
-        )
+
+        detail_parts = []
+        if pet.age_string:
+            detail_parts.append(pet.age_string)
+        if pet.sex:
+            detail_parts.append(pet.sex)
+        if pet.size_group:
+            detail_parts.append(f"{pet.size_group} size")
+        details = " · ".join(detail_parts)
+
         if details:
             text += f"\n\n{details}"
+        elif pet.description:
+            text += f"\n\n{pet.description[:120]}"
 
         if pet.pet_id:
             text += f"\n\nAdopt: https://www.rescuegroups.org/pet/{pet.pet_id}"
