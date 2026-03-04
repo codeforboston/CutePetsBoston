@@ -23,6 +23,10 @@ Optional for Bluesky posting:
 - `BLUESKY_HANDLE` (or `BLUESKY_TEST_HANDLE`)
 - `BLUESKY_PASSWORD` (or `BLUESKY_TEST_PASSWORD`)
 
+Optional for Mastodon posting:
+- `MASTODON_USERNAME`
+- `MASTODON_PASSWORD`
+
 ## File organization
 
 - `main.py`: orchestrates fetching pets and publishing posts.
