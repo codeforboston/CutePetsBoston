@@ -112,3 +112,4 @@ class PosterBluesky(SocialPoster):
             tags = " ".join(f"#{tag}" for tag in post.tags if tag)
             text = f"{text}\n\n{tags}"
         return text[:300]
+
