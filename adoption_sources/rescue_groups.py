@@ -177,7 +177,7 @@ class SourceRescueGroups(PetSource):
 
         return text
 
-def _get_image_url(self, attrs: dict) -> str | None:
+    def _get_image_url(self, attrs: dict) -> str | None:
         """Get the best available image URL."""
         thumbnail = attrs.get("pictureThumbnailUrl")
         if thumbnail:
