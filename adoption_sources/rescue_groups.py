@@ -177,11 +177,10 @@ class SourceRescueGroups(PetSource):
 
         return text
 
-    def _get_image_url(self, attrs: dict) -> str | None:
+def _get_image_url(self, attrs: dict) -> str | None:
         """Get the best available image URL."""
-        # The thumbnail URL can be modified to get a larger image
         thumbnail = attrs.get("pictureThumbnailUrl")
         if thumbnail:
-            # Remove width parameter to get full-size image
-            return re.sub(r"\?width=\d+", "", thumbnail)
+            # Request a larger image instead of the 100px thumbnail
+            return re.sub(r"\?width=\d+", "?width=800", thumbnail)
         return None

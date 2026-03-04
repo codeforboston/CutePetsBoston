@@ -115,7 +115,8 @@ class PosterBluesky(SocialPoster):
         if pet.location:
             text += f" in {pet.location}"
         text += "."
-
+        if not any([pet.age_string, pet.sex, pet.size_group]):
+            text += f"\n\n{pet.description[:120]}" if pet.description else ""
         details = " · ".join(
             part for part in [pet.age_string, pet.sex, pet.size_group] if part
         )
