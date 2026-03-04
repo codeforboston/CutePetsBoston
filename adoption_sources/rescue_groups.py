@@ -9,6 +9,7 @@ import logging
 import os
 import re
 from typing import Iterator
+import json
 
 import requests
 
@@ -24,7 +25,7 @@ class SourceRescueGroups(PetSource):
     Requires CUTEPETSBOSTON_RESCUEGROUPS_API_KEY environment variable or api_key constructor arg.
     """
 
-    BASE_URL = "https://api.rescuegroups.org/v5/public/animals/search/available"
+    BASE_URL = "https://api.rescuegroups.org/v5/public/animals/search"
 
     def __init__(
         self,
@@ -62,32 +63,33 @@ class SourceRescueGroups(PetSource):
                 "RescueGroups API key not configured. "
                 "Set CUTEPETSBOSTON_RESCUEGROUPS_API_KEY environment variable."
             )
-
-        url = f"{self.BASE_URL}/{self.species}"
+        
+        url = (
+            f"{self.BASE_URL}/available/{self.species}/haspic"
+            f"?fields[animals]=distance"
+            f"&include=breeds,locations"
+            f"&sort=random"
+            f"&limit={self.limit}"
+        )
         headers = {
             "Content-Type": "application/vnd.api+json",
             "Authorization": self._api_key,
         }
-        payload = {
-            "filters": [
-                {
-                    "fieldName": "status",
-                    "operation": "equals",
-                    "criteria": "Available",
+        payload = json.dumps({
+            "data": {
+                "filterRadius": {
+                    "miles": self.radius_miles,
+                    "postalcode": self.postal_code,
                 }
-            ],
-            "filterRadius": {
-                "miles": self.radius_miles,
-                "postalcode": self.postal_code,
-            },
-            "limit": self.limit,
-        }
+            }
+        })
+
 
         logger.info(
             f"Fetching {self.species} from RescueGroups within {self.radius_miles} miles of {self.postal_code}"
         )
 
-        response = requests.post(url, headers=headers, json=payload, timeout=30)
+        response = requests.post(url, json=payload, headers=headers, timeout=30)
         response.raise_for_status()
 
         data = response.json().get("data", [])
