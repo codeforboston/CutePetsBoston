@@ -66,7 +66,7 @@ class SourceRescueGroups(PetSource):
             )
 
         query_url_params = {
-            'limit': 2,
+            'limit': self.limit,
             'sort': 'random'
         }
         payload = {
@@ -93,7 +93,7 @@ class SourceRescueGroups(PetSource):
             f"Fetching {self.species} from RescueGroups within {self.radius_miles} miles of {self.postal_code}"
         )
 
-        response = requests.post(url, headers=headers, timeout=30)
+        response = requests.post(url, data=payload, headers=headers, timeout=30)
         response.raise_for_status()
 
         data = response.json().get("data", [])
