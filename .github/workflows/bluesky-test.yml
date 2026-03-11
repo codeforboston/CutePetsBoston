@@ -2,7 +2,7 @@ name: Bluesky Test Post
 
 on:
   push:
-    branches: [ mw/test-workflow, j2_test, prajwal-local ]
+    branches: [prajwal-local]
   workflow_dispatch:
 
 jobs:
@@ -23,6 +23,6 @@ jobs:
       - name: Post to Bluesky
         env:
           CUTEPETSBOSTON_RESCUEGROUPS_API_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
-          BLUESKY_TEST_HANDLE: ${{ secrets.BLUESKY_TEST_HANDLE }}
-          BLUESKY_TEST_PASSWORD: ${{ secrets.BLUESKY_TEST_PASSWORD }}
-        run: PYTHONPATH=. python ./manual_testing/bluesky_manual_test.py
+          BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
+          BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
+        run: PYTHONPATH=. python ./social_posters/bluesky.py
