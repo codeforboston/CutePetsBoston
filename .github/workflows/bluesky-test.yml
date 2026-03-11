@@ -25,4 +25,4 @@ jobs:
           CUTEPETSBOSTON_RESCUEGROUPS_API_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
           BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
           BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
-        run: PYTHONPATH=. python ./social_posters/bluesky.py
+        run: PYTHONPATH=. python ./manual_testing/bluesky_manual_test.py
