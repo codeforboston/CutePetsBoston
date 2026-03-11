@@ -133,6 +133,10 @@ class SourceRescueGroups(PetSource):
                 description=description,
                 adoption_url=adoption_url,
                 image_url=image_url,
+                age_string=attrs.get("ageString"),
+                sex=attrs.get("sex"),
+                size_group=attrs.get("sizeGroup"),
+                pet_id=animal_id,
             )
         except Exception as e:
             logger.warning(f"Failed to parse animal {animal.get('id', 'unknown')}: {e}")
@@ -177,9 +181,8 @@ class SourceRescueGroups(PetSource):
 
     def _get_image_url(self, attrs: dict) -> str | None:
         """Get the best available image URL."""
-        # The thumbnail URL can be modified to get a larger image
         thumbnail = attrs.get("pictureThumbnailUrl")
         if thumbnail:
-            # Remove width parameter to get full-size image
-            return re.sub(r"\?width=\d+", "", thumbnail)
+            # Request a larger image instead of the 100px thumbnail
+            return re.sub(r"\?width=\d+", "?width=800", thumbnail)
         return None

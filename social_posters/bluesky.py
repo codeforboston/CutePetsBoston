@@ -10,8 +10,8 @@ from abstractions import Post, PostResult, SocialPoster
 class PosterBluesky(SocialPoster):
     def __init__(self):
         # Handle environment variable validation internally
-        self.username = os.environ.get("BLUESKY_TEST_HANDLE")
-        self.password = os.environ.get("BLUESKY_TEST_PASSWORD")
+        self.username = os.environ.get("BLUESKY_HANDLE") 
+        self.password = os.environ.get("BLUESKY_PASSWORD")
         self._access_token = None
         self._did = None  # Decentralized identifier from the Bluesky session.
         self._is_available = bool(self.username and self.password)
@@ -106,9 +106,47 @@ class PosterBluesky(SocialPoster):
         except Exception as exc:
             return PostResult(success=False, error_message=str(exc))
 
+    def format_post(self, pet):
+        from abstractions import Post
+
+        name = pet.name.split("*")[0].strip()
+
+        text = f"Hi, I'm {name}! I'm a {pet.breed} looking for a forever home"
+        if pet.location:
+            text += f" in {pet.location}"
+        text += "."
+
+        detail_parts = []
+        if pet.age_string:
+            detail_parts.append(pet.age_string)
+        if pet.sex:
+            detail_parts.append(pet.sex)
+        if pet.size_group:
+            detail_parts.append(f"{pet.size_group} size")
+        details = " · ".join(detail_parts)
+
+        if details:
+            text += f"\n\n{details}"
+        elif pet.description:
+            text += f"\n\n{pet.description[:120]}"
+
+        if pet.pet_id:
+            text += f"\n\nPet ID: {pet.pet_id}"
+
+        species_tag = "DogsOfBluesky" if pet.species == "dog" else "CatsOfBluesky"
+        tags = ["AdoptDontShop", "Boston", species_tag]
+
+        return Post(
+            text=text,
+            image_url=pet.image_url,
+            link=pet.adoption_url,
+            alt_text=f"Photo of {name}, a {pet.breed} available for adoption",
+            tags=tags,
+        )
     def _format_text(self, post: Post) -> str:
         text = post.text
         if post.tags:
             tags = " ".join(f"#{tag}" for tag in post.tags if tag)
             text = f"{text}\n\n{tags}"
         return text[:300]
+
