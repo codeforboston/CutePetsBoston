@@ -1,10 +1,10 @@
-name: RescueGroups API check
+name: RescueGroups API Post
 
 on:
   push:
     # We are doing this for testing purposes, but when we start posting, we should remove this line
     branches:
-      [mw/test-workflow, j2_test, master, add-crontab, instagram-integration, daniels-local]
+      [mw/test-workflow, j2_test, master, add-crontab, instagram-integration]
   workflow_dispatch:
   schedule:
     # Every 4 hours
@@ -32,6 +32,4 @@ jobs:
           BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
           BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
         run: |
-          pwd
-          ls
           python ./main.py
