@@ -19,6 +19,10 @@ class AdoptablePet:
     description: str = ""
     adoption_url: str | None = None
     image_url: str | None = None
+    age_string: str | None = None
+    sex: str | None = None
+    size_group: str | None = None
+    pet_id: str | None = None
 
 
 class PetSource(ABC):
