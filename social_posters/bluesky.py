@@ -131,7 +131,7 @@ class PosterBluesky(SocialPoster):
             text += f"\n\n{pet.description[:120]}"
 
         if pet.adoption_url:
-            text += f"\n\nFind me here: {pet.adoption_url}"
+            text += f'\n\nFind me here: <a href="{pet.adoption_url}">{pet.adoption_url}</a>'
 
         species_tag = "DogsOfBluesky" if pet.species == "dog" else "CatsOfBluesky"
         tags = ["AdoptDontShop", "Boston", species_tag]
