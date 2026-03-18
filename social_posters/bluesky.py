@@ -130,8 +130,8 @@ class PosterBluesky(SocialPoster):
         elif pet.description:
             text += f"\n\n{pet.description[:120]}"
 
-        if pet.pet_id:
-            text += f"\n\nPet ID: {pet.pet_id}"
+        if pet.adoption_url:
+            text += f"\n\nFind me here: {pet.adoption_url}"
 
         species_tag = "DogsOfBluesky" if pet.species == "dog" else "CatsOfBluesky"
         tags = ["AdoptDontShop", "Boston", species_tag]

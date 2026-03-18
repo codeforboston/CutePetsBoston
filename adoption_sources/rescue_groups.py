@@ -118,9 +118,8 @@ class SourceRescueGroups(PetSource):
             # Clean up description (use text version, not HTML)
             description = self._clean_description(attrs.get("descriptionText", ""))
 
-            # Build adoption URL from slug
-            slug = attrs.get("slug", "")
-            adoption_url = f"https://www.rescuegroups.org/pet/{slug}" if slug else None
+            # Get adoption_url
+            adoption_url = attrs.get('url')
 
             # Get best available image
             image_url = self._get_image_url(attrs)

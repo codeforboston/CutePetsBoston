@@ -1,8 +1,9 @@
-name: Bluesky Test Post
+name: Test Post
 
 on:
   push:
-    branches: [prajwal-local]
+    branches:
+      - '!master'
   workflow_dispatch:
 
 jobs:

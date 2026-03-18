@@ -66,7 +66,8 @@ def run(sources, posters):
 
 def pick_pet(pets):
     with_images = [pet for pet in pets if pet.image_url]
-    if not with_images:
+    with_url = [pet for pet in pets if pet.get('attributes').get('url')]
+    if not (with_images and with_url):
         return None
     return random.choice(with_images)
 
