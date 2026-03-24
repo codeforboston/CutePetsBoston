@@ -74,14 +74,14 @@ class SourceRescueGroups(PetSource):
             "Content-Type": "application/vnd.api+json",
             "Authorization": self._api_key,
         }
-        payload = json.dumps({
+        payload = {
             "data": {
                 "filterRadius": {
                     "miles": self.radius_miles,
                     "postalcode": self.postal_code,
                 }
             }
-        })
+        }
 
 
         logger.info(
