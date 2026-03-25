@@ -1,20 +1,19 @@
 import os
 import tempfile
+from pathlib import Path
 from urllib.parse import urlparse
-from typing import Optional
 
 import requests
-from instapy import InstaPy
+from instagrapi import Client
 
 from abstractions import Post, PostResult, SocialPoster
 
 
 class PosterInstagram(SocialPoster):
     def __init__(self):
-        # Handle environment variable validation internally
         self.username = os.environ.get("INSTAGRAM_HANDLE")
         self.password = os.environ.get("INSTAGRAM_PASSWORD")
-        self._session = None
+        self._client = None
         self._is_available = bool(self.username and self.password)
 
     @property
@@ -23,15 +22,18 @@ class PosterInstagram(SocialPoster):
 
     def authenticate(self) -> bool:
         try:
-            self._session = InstaPy(
-                username=self.username,
-                password=self.password,
-                headless_browser=True,
-            )
-            self._session.login()
+            self._client = Client()
+            session_file = Path("ig_session.json")
+            # Reuse saved session to avoid repeated logins, as per instagrapi best practices
+            if session_file.exists():
+                self._client.load_settings(str(session_file))
+            # Login
+            self._client.login(self.username, self.password)
+            # Save session so future runs can skip full login
+            self._client.dump_settings(str(session_file))
             return True
         except Exception:
-            self._session = None
+            self._client = None
             return False
 
     def publish(self, post: Post) -> PostResult:
@@ -47,7 +49,7 @@ class PosterInstagram(SocialPoster):
                 error_message="Instagram posts require an image URL.",
             )
 
-        if not self._session and not self.authenticate():
+        if not self._client and not self.authenticate():
             return PostResult(
                 success=False,
                 error_message="Instagram authentication failed.",
@@ -57,14 +59,15 @@ class PosterInstagram(SocialPoster):
         try:
             image_path = self._download_image(post.image_url)
             caption = self._format_caption(post)
-            self._session.upload_photo(image_path, caption=caption)
-            return PostResult(success=True)
+            media = self._client.photo_upload(image_path, caption=caption)
+            return PostResult(
+                success=True,
+                post_id=str(media.pk),  # Instagrams unique numeric ID for this post
+                post_url=f"https://www.instagram.com/p/{media.code}/",  # Public URL to view post
+            )
         except Exception as exc:
             return PostResult(success=False, error_message=str(exc))
         finally:
-            if self._session:
-                self._session.end()
-                self._session = None
             if image_path and os.path.exists(image_path):
                 os.unlink(image_path)
 
