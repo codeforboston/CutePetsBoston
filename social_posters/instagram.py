@@ -23,7 +23,7 @@ class PosterInstagram(SocialPoster):
     def authenticate(self) -> bool:
         try:
             self._client = Client()
-            # Use proxy if available to maintain a consistent IP
+            # Use proxy if available to maintain a consistent IP, running on a private VPS using a proxy service so lowkey gonna need a better fix
             proxy = os.environ.get("INSTAGRAM_PROXY")
             if proxy:
                 self._client.set_proxy(proxy)
