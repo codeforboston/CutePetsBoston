@@ -33,7 +33,7 @@ class SourceRescueGroups(PetSource):
         postal_code: str = "02108",  # Boston
         radius_miles: int = 50,
         species: str = "dogs",  # "dogs" or "cats"
-        limit: int = 25,
+        limit: int = 100,
         location_label: str = "Boston, MA",  # For display purposes
     ):
         self._api_key = api_key or os.environ.get("CUTEPETSBOSTON_RESCUEGROUPS_API_KEY")
@@ -92,7 +92,6 @@ class SourceRescueGroups(PetSource):
         response.raise_for_status()
 
         data = response.json().get("data", [])
-        print(data)
         logger.info(f"Received {len(data)} pets from RescueGroups")
 
         for animal in data:
