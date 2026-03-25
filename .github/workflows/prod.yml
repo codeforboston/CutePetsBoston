@@ -11,7 +11,7 @@ on:
     - cron: "0 */4 * * *"
 
 jobs:
-  call-api:
+  run-cute-pets:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
