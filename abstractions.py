@@ -16,9 +16,9 @@ class AdoptablePet:
     species: str  # "dog" or "cat"
     breed: str
     location: str
+    adoption_url: str
+    image_url: str
     description: str = ""
-    adoption_url: str | None = None
-    image_url: str | None = None
     age_string: str | None = None
     sex: str | None = None
     size_group: str | None = None
@@ -50,8 +50,8 @@ class Post:
     """Represents a social media post about an adoptable pet."""
 
     text: str
-    image_url: str | None = None
-    link: str | None = None
+    image_url: str
+    link: str
     alt_text: str | None = None  # For image accessibility
     tags: list[str] = field(default_factory=list)
 
