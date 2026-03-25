@@ -23,13 +23,17 @@ class PosterInstagram(SocialPoster):
     def authenticate(self) -> bool:
         try:
             self._client = Client()
+            # Use proxy if available to maintain a consistent IP
+            proxy = os.environ.get("INSTAGRAM_PROXY")
+            if proxy:
+                self._client.set_proxy(proxy)
             session_file = Path("ig_session.json")
             # Reuse saved session to avoid repeated logins, as per instagrapi best practices
             if session_file.exists():
                 self._client.load_settings(str(session_file))
             # Login
             self._client.login(self.username, self.password)
-            # Save session so future runs can skip full login
+            # Save session 
             self._client.dump_settings(str(session_file))
             return True
         except Exception:

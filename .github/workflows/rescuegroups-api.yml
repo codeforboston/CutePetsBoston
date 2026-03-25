@@ -31,6 +31,7 @@ jobs:
           INSTAGRAM_PASSWORD: ${{ secrets.INSTAGRAM_PASSWORD }}
           BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
           BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
+          INSTAGRAM_PROXY: ${{ secrets.INSTAGRAM_PROXY }}
         run: |
           pwd
           ls
