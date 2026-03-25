@@ -26,7 +26,7 @@ jobs:
           CUTEPETSBOSTON_RESCUEGROUPS_API_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
           INSTAGRAM_HANDLE: ${{ secrets.INSTAGRAM_HANDLE_2 }}
           INSTAGRAM_PASSWORD: ${{ secrets.INSTAGRAM_PASSWORD_2 }}
-          BLUESKY_HANDLE: ${{ secrets.BLUESKY_TEST_HANDLE }}
-          BLUESKY_PASSWORD: ${{ secrets.BLUESKY_TEST_PASSWORD }}
+          BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
+          BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
         run: |
           python ./main.py

@@ -44,7 +44,6 @@ def run(sources, posters):
     pet = pick_pet(pets)
     if not pet:
         print("No pets available to post.")
-        print(pets)
         return []
 
     if not posters:

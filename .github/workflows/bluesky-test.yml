@@ -5,6 +5,7 @@ on:
     branches:
       - '**'
       - '!master'
+      - '!post_with_url'
   workflow_dispatch:
 
 jobs:
