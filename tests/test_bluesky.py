@@ -41,6 +41,22 @@ class TestBuildTextAndFacets:
         for facet in facets[1:]:
             assert facet["features"][0]["$type"] == "app.bsky.richtext.facet#tag"
 
+    def test_long_body_still_includes_full_url_and_link_facet_with_tags(self):
+        """Without preserving the URL suffix, body[:max_body] would drop the link entirely."""
+        url = "https://www.rescuegroups.org/html/sa_details.html?id=12345"
+        tags = ["AdoptDontShop", "Boston", "DogsOfBluesky"]
+        tags_section = " ".join(f"#{t}" for t in tags)
+        filler = "x" * 400
+        post = Post(text=f"{filler}\n\n{url}", tags=tags, link=url)
+        text, facets = self.poster._build_text_and_facets(post)
+
+        assert url in text
+        assert text.endswith(f"\n\n{tags_section}")
+        assert len(text) <= 300
+        link_facets = [f for f in facets if f["features"][0]["$type"] == "app.bsky.richtext.facet#link"]
+        assert len(link_facets) == 1
+        assert link_facets[0]["features"][0]["uri"] == url
+
     def test_tags_produce_facets_with_correct_byte_offsets(self):
         post = Post(text="Adopt me!", tags=["AdoptDontShop", "Boston", "DogsOfBluesky"])
         text, facets = self.poster._build_text_and_facets(post)

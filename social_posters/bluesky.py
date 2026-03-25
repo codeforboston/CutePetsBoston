@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 import os
 
 import requests
@@ -147,36 +146,34 @@ class PosterBluesky(SocialPoster):
             alt_text=f"Photo of {name}, a {pet.breed} available for adoption",
             tags=tags,
         )
+
     def _build_text_and_facets(self, post: Post) -> tuple[str, list]:
         body = post.text
         facets: list = []
         separator = "\n\n"
         limit = 300
 
-        tag_strings = [f"#{tag}" for tag in (post.tags or []) if tag]
-        if tag_strings:
-            tags_section = " ".join(tag_strings)
-            # Truncate body so the full text (body + separator + tags) fits in limit chars.
-            max_body = limit - len(separator) - len(tags_section)
-            full_text = f"{body[:max_body]}{separator}{tags_section}"
-        else:
-            full_text = body[:limit]
+        tag_strings = [f"#{tag}" for tag in (post.tags) if tag]
+        tags_section = " ".join(tag_strings)
+        link_section = post.link
+        # Truncate body so the full text (body + link + tags + separators) fits in limit chars.
+        max_body = limit - len(separator) - len(link_section) - len(separator) - len(tags_section)
+        full_text = f"{body[:max_body]}{separator}{link_section}{separator}{tags_section}"
 
         encoded = full_text.encode("utf-8")
 
-        if post.link:
-            link_bytes = post.link.encode("utf-8")
-            link_idx = encoded.find(link_bytes)
-            if link_idx != -1:
-                facets.append({
-                    "index": {
-                        "byteStart": link_idx,
-                        "byteEnd": link_idx + len(link_bytes),
-                    },
-                    "features": [
-                        {"$type": "app.bsky.richtext.facet#link", "uri": post.link}
-                    ],
-                })
+        link_bytes = post.link.encode("utf-8")
+        link_idx = encoded.find(link_bytes)
+        if link_idx != -1:
+            facets.append({
+                "index": {
+                    "byteStart": link_idx,
+                    "byteEnd": link_idx + len(link_bytes),
+                },
+                "features": [
+                    {"$type": "app.bsky.richtext.facet#link", "uri": post.link}
+                ],
+            })
 
         search_from = 0
         for tag_str in tag_strings:
