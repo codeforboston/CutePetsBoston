@@ -14,7 +14,7 @@ class PosterMastodon(SocialPoster):
         self.username = os.environ.get("MASTODON_ID")
         self.token = os.environ.get("MASTODON_TOKEN")
         self.password = os.environ.get("MASTODON_PASSWORD")
-        self.domain = "https://mastodon.social")
+        self.domain = "https://mastodon.social"
         self._session = None
         self._is_available = bool(self.username and self.token)
 
@@ -27,7 +27,7 @@ class PosterMastodon(SocialPoster):
     def authenticate(self) -> bool:
         try:
             self._session = Mastodon(
-                access_token="h_o6jBz37M5322Mb8a1PYNTA9ALjfKL15_XMY2dYwAs",
+                access_token=self.token,
                 api_base_url="https://mastodon.social"
                 #access_token=self.token,
                 #api_base_url=f"https://{self.domain}"
