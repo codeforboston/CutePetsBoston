@@ -11,9 +11,9 @@ from abstractions import Post, PostResult, SocialPoster
 class PosterMastodon(SocialPoster):
     def __init__(self):
         # Handle environment variable validation internally
-        self.username = os.environ.get("MASTODON_ID")
-        self.token = os.environ.get("MASTODON_TOKEN")
-        self.password = os.environ.get("MASTODON_PASSWORD")
+        self.username = os.environ.get("MASTODON_TEST_ID")
+        self.token = os.environ.get("MASTODON_TEST_TOKEN")
+        self.password = os.environ.get("MASTODON_TEST_PASSWORD")
         self.domain = "https://mastodon.social"
         self._session = None
         self._is_available = bool(self.username and self.token)
