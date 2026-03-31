@@ -1,9 +1,10 @@
 from datetime import datetime
 from typing import Optional
 import os
-import mastodon import Mastodon
-
+from mastodon import Mastodon
 import requests
+from urllib.parse import urlparse
+import tempfile
 
 from abstractions import Post, PostResult, SocialPoster
 
@@ -11,23 +12,27 @@ class PosterMastodon(SocialPoster):
     def __init__(self):
         # Handle environment variable validation internally
         self.username = os.environ.get("MASTODON_ID")
-        self.token = os.environ.get("MASTODON.TOKEN")
+        self.token = os.environ.get("MASTODON_TOKEN")
         self.password = os.environ.get("MASTODON_PASSWORD")
+        self.domain = "https://mastodon.social")
         self._session = None
-        self._is_available = bool(self.username and self.password)
+        self._is_available = bool(self.username and self.token)
 
     # public functions: platform, authenticate, publish
     @property
     def platform_name(self) -> str:
         return "Mastodon"
     
-    # 
+
     def authenticate(self) -> bool:
         try:
             self._session = Mastodon(
-                access_token=self.token,
-                api_base_url='mastodon.social'
+                access_token="h_o6jBz37M5322Mb8a1PYNTA9ALjfKL15_XMY2dYwAs",
+                api_base_url="https://mastodon.social"
+                #access_token=self.token,
+                #api_base_url=f"https://{self.domain}"
             )
+            self._session.account_verify_credentials()
             return True
         except Exception:
             self._session = None
@@ -35,7 +40,6 @@ class PosterMastodon(SocialPoster):
         
 
     def publish(self, post: Post) -> PostResult:
-        mastodon.status_post("Hello World!")
         if not self._is_available:
             return PostResult(
                 success=False,
