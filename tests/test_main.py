@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 
 from abstractions import AdoptablePet, Post, PostResult
 from main import create_posters, run
@@ -61,6 +62,17 @@ class CreatePostersTests(unittest.TestCase):
 
         self.assertEqual(len(posters), 1)
         self.assertEqual(posters[0].platform_name, "Debug")
+
+    @patch.dict("os.environ", {"POSTER_PLATFORMS": "mastodon"}, clear=False)
+    @patch("main._load_mastodon_poster")
+    def test_platform_filter_returns_only_requested_platform(self, mock_loader):
+        fake_poster = FakePoster()
+        fake_poster.platform_name = "Mastodon"
+        mock_loader.return_value = fake_poster
+
+        posters = create_posters()
+
+        self.assertEqual([poster.platform_name for poster in posters], ["Mastodon"])
 
 
 if __name__ == "__main__":

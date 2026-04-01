@@ -1,0 +1,30 @@
+name: Mastodon Post
+
+on:
+  push:
+    branches:
+      - mastodon
+  workflow_dispatch:
+
+jobs:
+  post-to-mastodon:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install --break-system-packages -r requirements.txt
+
+      - name: Post to Mastodon
+        env:
+          CUTEPETSBOSTON_RESCUEGROUPS_API_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
+          MASTODON_TEST_TOKEN: ${{ secrets.MASTODON_TEST_TOKEN }}
+          MASTODON_API_BASE_URL: ${{ secrets.MASTODON_API_BASE_URL }}
+          POSTER_PLATFORMS: mastodon
+        run: python ./main.py

@@ -13,10 +13,10 @@ This Project runs on github actions and runs periodically.
 ## Set up your environment variables
 
 Required:
-- `RESCUEGROUPS_API_KEY`
+- `CUTEPETSBOSTON_RESCUEGROUPS_API_KEY`
 
 Optional for Instagram posting:
-- `INSTAGRAM_USERNAME`
+- `INSTAGRAM_HANDLE`
 - `INSTAGRAM_PASSWORD`
 
 Optional for Bluesky posting:
@@ -24,8 +24,11 @@ Optional for Bluesky posting:
 - `BLUESKY_PASSWORD` (or `BLUESKY_TEST_PASSWORD`)
 
 Optional for Mastodon posting:
-- `MASTODON_USERNAME`
-- `MASTODON_PASSWORD`
+- `MASTODON_TOKEN` or `MASTODON_TEST_TOKEN`
+- `MASTODON_API_BASE_URL` (defaults to `https://mastodon.social`)
+
+Optional platform selection:
+- `POSTER_PLATFORMS` to limit posting to specific platforms, for example `mastodon` or `bluesky,mastodon`
 
 ## File organization
 
@@ -38,6 +41,10 @@ Optional for Mastodon posting:
 # How to run the script
 
     python main.py
+
+To run only the Mastodon poster locally or in GitHub Actions:
+
+    POSTER_PLATFORMS=mastodon python main.py
 
 # History
 
