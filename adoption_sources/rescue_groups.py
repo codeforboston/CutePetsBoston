@@ -133,7 +133,7 @@ class SourceRescueGroups(PetSource):
             )
             org_attrs = orgs_by_id.get(org_id, {}) if org_id else {}
             adoption_url = next(
-                (u for u in (org_attrs.get("adoptionUrl"), org_attrs.get("url"))
+                (u for u in (attrs.get("adoptionUrl"), org_attrs.get("adoptionUrl"), org_attrs.get("url"))
                  if u and u.strip().rstrip("/") not in ("http:", "https:", "http://", "https://")),
                 None
             )
