@@ -44,7 +44,6 @@ def run(sources, posters):
     pet = pick_pet(pets)
     if not pet:
         print("No pets available to post.")
-        print(pets)
         return []
 
     if not posters:
@@ -65,10 +64,10 @@ def run(sources, posters):
 
 
 def pick_pet(pets):
-    with_images = [pet for pet in pets if pet.image_url]
-    if not with_images:
+    eligible = [pet for pet in pets if pet.image_url and pet.adoption_url]
+    if not eligible:
         return None
-    return random.choice(with_images)
+    return random.choice(eligible)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 import os
 
 import requests
@@ -134,8 +133,8 @@ class PosterBluesky(SocialPoster):
         elif pet.description:
             text += f"\n\n{pet.description[:120]}"
 
-        if pet.pet_id:
-            text += f"\n\nPet ID: {pet.pet_id}"
+        if pet.adoption_url:
+            text += f"\n\nLearn more and adopt me: {pet.adoption_url}"
 
         species_tag = "DogsOfBluesky" if pet.species == "dog" else "CatsOfBluesky"
         tags = ["AdoptDontShop", "Boston", species_tag]
@@ -147,33 +146,45 @@ class PosterBluesky(SocialPoster):
             alt_text=f"Photo of {name}, a {pet.breed} available for adoption",
             tags=tags,
         )
+
     def _build_text_and_facets(self, post: Post) -> tuple[str, list]:
         body = post.text
-        facets = []
-
-        if not post.tags:
-            return body[:300], facets
-
-        tag_strings = [f"#{tag}" for tag in post.tags if tag]
-        tags_section = " ".join(tag_strings)
+        facets: list = []
         separator = "\n\n"
+        limit = 300
 
-        # Truncate body so the full text (body + separator + tags) fits in 300 chars.
-        max_body = 300 - len(separator) - len(tags_section)
+        tag_strings = [f"#{tag}" for tag in (post.tags) if tag]
+        tags_section = " ".join(tag_strings)
+        # Truncate body so the full text (body + separators + tags) fits in limit chars.
+        max_body = limit - len(separator) - len(tags_section)
         full_text = f"{body[:max_body]}{separator}{tags_section}"
 
-        # Compute byte offsets (AT Protocol facets use UTF-8 byte positions).
         encoded = full_text.encode("utf-8")
-        search_from = 0
-        for tag_str in tag_strings:
-            tag_bytes = tag_str.encode("utf-8")
-            idx = encoded.find(tag_bytes, search_from)
-            if idx != -1:
-                facets.append({
-                    "index": {"byteStart": idx, "byteEnd": idx + len(tag_bytes)},
-                    "features": [{"$type": "app.bsky.richtext.facet#tag", "tag": tag_str[1:]}],
-                })
-                search_from = idx + len(tag_bytes)
 
+        if post.link:
+            link_bytes = post.link.encode("utf-8")
+            link_idx = encoded.find(link_bytes)
+            if link_idx != -1: facets.append({
+                    "index": {
+                        "byteStart": link_idx,
+                        "byteEnd": link_idx + len(link_bytes),
+                    },
+                    "features": [
+                        {"$type": "app.bsky.richtext.facet#link", "uri": post.link}
+                    ],
+                })
+
+            search_from = 0
+            for tag_str in tag_strings:
+                tag_bytes = tag_str.encode("utf-8")
+                idx = encoded.find(tag_bytes, search_from)
+                if idx != -1:
+                    facets.append({
+                        "index": {"byteStart": idx, "byteEnd": idx + len(tag_bytes)},
+                        "features": [{"$type": "app.bsky.richtext.facet#tag", "tag": tag_str[1:]}],
+                    })
+                    search_from = idx + len(tag_bytes)
+
+        facets.sort(key=lambda f: f["index"]["byteStart"])
         return full_text, facets
 
