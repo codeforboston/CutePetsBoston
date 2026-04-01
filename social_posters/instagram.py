@@ -8,9 +8,9 @@ from instagrapi import Client
 import random
 import time
 
-rand = random.randint(0, 2000)
+#rand = random.randint(0, 2000)
 
-time.sleep(rand)
+#time.sleep(rand)
 
 
 
