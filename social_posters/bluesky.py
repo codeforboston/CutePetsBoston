@@ -134,7 +134,7 @@ class PosterBluesky(SocialPoster):
             text += f"\n\n{pet.description[:120]}"
 
         if pet.adoption_url:
-            text += f"\n\n{pet.adoption_url}"
+            text += f"\n\nLearn more and adopt me: {pet.adoption_url}"
 
         species_tag = "DogsOfBluesky" if pet.species == "dog" else "CatsOfBluesky"
         tags = ["AdoptDontShop", "Boston", species_tag]
@@ -161,28 +161,29 @@ class PosterBluesky(SocialPoster):
 
         encoded = full_text.encode("utf-8")
 
-        link_bytes = post.link.encode("utf-8")
-        link_idx = encoded.find(link_bytes)
-        if link_idx != -1: facets.append({
-                "index": {
-                    "byteStart": link_idx,
-                    "byteEnd": link_idx + len(link_bytes),
-                },
-                "features": [
-                    {"$type": "app.bsky.richtext.facet#link", "uri": post.link}
-                ],
-            })
-
-        search_from = 0
-        for tag_str in tag_strings:
-            tag_bytes = tag_str.encode("utf-8")
-            idx = encoded.find(tag_bytes, search_from)
-            if idx != -1:
-                facets.append({
-                    "index": {"byteStart": idx, "byteEnd": idx + len(tag_bytes)},
-                    "features": [{"$type": "app.bsky.richtext.facet#tag", "tag": tag_str[1:]}],
+        if post.link:
+            link_bytes = post.link.encode("utf-8")
+            link_idx = encoded.find(link_bytes)
+            if link_idx != -1: facets.append({
+                    "index": {
+                        "byteStart": link_idx,
+                        "byteEnd": link_idx + len(link_bytes),
+                    },
+                    "features": [
+                        {"$type": "app.bsky.richtext.facet#link", "uri": post.link}
+                    ],
                 })
-                search_from = idx + len(tag_bytes)
+
+            search_from = 0
+            for tag_str in tag_strings:
+                tag_bytes = tag_str.encode("utf-8")
+                idx = encoded.find(tag_bytes, search_from)
+                if idx != -1:
+                    facets.append({
+                        "index": {"byteStart": idx, "byteEnd": idx + len(tag_bytes)},
+                        "features": [{"$type": "app.bsky.richtext.facet#tag", "tag": tag_str[1:]}],
+                    })
+                    search_from = idx + len(tag_bytes)
 
         facets.sort(key=lambda f: f["index"]["byteStart"])
         return full_text, facets
