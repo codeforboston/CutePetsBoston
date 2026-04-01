@@ -25,6 +25,5 @@ jobs:
         env:
           CUTEPETSBOSTON_RESCUEGROUPS_API_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
           MASTODON_TEST_TOKEN: ${{ secrets.MASTODON_TEST_TOKEN }}
-          MASTODON_API_BASE_URL: ${{ secrets.MASTODON_API_BASE_URL }}
           POSTER_PLATFORMS: mastodon
         run: python ./main.py
