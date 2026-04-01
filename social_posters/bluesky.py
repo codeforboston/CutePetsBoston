@@ -156,15 +156,28 @@ class PosterBluesky(SocialPoster):
         tag_strings = [f"#{tag}" for tag in (post.tags) if tag]
         tags_section = " ".join(tag_strings)
         # Truncate body so the full text (body + separators + tags) fits in limit chars.
-        max_body = limit - len(separator) - len(tags_section)
-        full_text = f"{body[:max_body]}{separator}{tags_section}"
+        max_body = limit - (len(separator) + len(tags_section) if tags_section else 0)
+        # When the link URL is embedded in the body and would be truncated, preserve it
+        # by truncating only the prefix before it.
+        if post.link and post.link in body:
+            link_pos = body.find(post.link)
+            if link_pos >= max_body:
+                suffix = body[link_pos:]
+                available = max_body - len(suffix)
+                truncated_body = (body[:available] + suffix) if available >= 0 else body[:max_body]
+            else:
+                truncated_body = body[:max_body]
+        else:
+            truncated_body = body[:max_body]
+        full_text = f"{truncated_body}{separator}{tags_section}" if tags_section else truncated_body
 
         encoded = full_text.encode("utf-8")
 
         if post.link:
             link_bytes = post.link.encode("utf-8")
             link_idx = encoded.find(link_bytes)
-            if link_idx != -1: facets.append({
+            if link_idx != -1:
+                facets.append({
                     "index": {
                         "byteStart": link_idx,
                         "byteEnd": link_idx + len(link_bytes),
@@ -174,16 +187,16 @@ class PosterBluesky(SocialPoster):
                     ],
                 })
 
-            search_from = 0
-            for tag_str in tag_strings:
-                tag_bytes = tag_str.encode("utf-8")
-                idx = encoded.find(tag_bytes, search_from)
-                if idx != -1:
-                    facets.append({
-                        "index": {"byteStart": idx, "byteEnd": idx + len(tag_bytes)},
-                        "features": [{"$type": "app.bsky.richtext.facet#tag", "tag": tag_str[1:]}],
-                    })
-                    search_from = idx + len(tag_bytes)
+        search_from = 0
+        for tag_str in tag_strings:
+            tag_bytes = tag_str.encode("utf-8")
+            idx = encoded.find(tag_bytes, search_from)
+            if idx != -1:
+                facets.append({
+                    "index": {"byteStart": idx, "byteEnd": idx + len(tag_bytes)},
+                    "features": [{"$type": "app.bsky.richtext.facet#tag", "tag": tag_str[1:]}],
+                })
+                search_from = idx + len(tag_bytes)
 
         facets.sort(key=lambda f: f["index"]["byteStart"])
         return full_text, facets

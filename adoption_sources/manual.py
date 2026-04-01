@@ -7,6 +7,9 @@ from typing import Iterable, Sequence
 
 from abstractions import AdoptablePet, PetSource
 
+_data_path = __file__.replace(".py", ".json")
+with open(_data_path) as _f:
+    MANUAL_SOURCE_DATA: tuple[dict, ...] = tuple(json.loads(_f.read()))
 
 
 class SourceManual(PetSource):
@@ -18,8 +21,6 @@ class SourceManual(PetSource):
         location_label: str = "Boston, MA",
         species: str = "dog",
     ) -> None:
-        with open("./adoption_sources/manual.json") as f:
-            MANUAL_SOURCE_DATA: Sequence[dict] = tuple(json.loads(f.read()))
         self._animals: Sequence[dict] = animals if animals is not None else MANUAL_SOURCE_DATA
         self.location_label = location_label
         self.species = species
