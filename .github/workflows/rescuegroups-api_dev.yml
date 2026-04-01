@@ -1,0 +1,32 @@
+name: RescueGroups API Post
+
+on:
+  push:
+    branches:
+      - '**'
+      - '!master'
+  workflow_dispatch:
+
+jobs:
+  call-api:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install --break-system-packages -r requirements.txt
+
+      - name: Call RescueGroups API
+        env:
+          CUTEPETSBOSTON_RESCUEGROUPS_API_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
+          INSTAGRAM_HANDLE: ${{ secrets.INSTAGRAM_HANDLE_2 }}
+          INSTAGRAM_PASSWORD: ${{ secrets.INSTAGRAM_PASSWORD_2 }}
+          BLUESKY_HANDLE: ${{ secrets.BLUESKY_TEST_HANDLE }}
+          BLUESKY_PASSWORD: ${{ secrets.BLUESKY_TEST_PASSWORD }}
+        run: |
+          python ./main.py
