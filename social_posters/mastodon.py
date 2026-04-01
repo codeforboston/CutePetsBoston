@@ -7,6 +7,9 @@ from mastodon import Mastodon
 
 from abstractions import Post, PostResult, SocialPoster
 
+MASTODON_CHARACTER_LIMIT = 500
+ELLIPSIS = "..."
+
 
 class PosterMastodon(SocialPoster):
     def __init__(self):
@@ -82,11 +85,19 @@ class PosterMastodon(SocialPoster):
                 os.unlink(image_path)
 
     def _format_caption(self, post: Post) -> str:
-        caption = post.text
-        if post.tags:
-            tags = " ".join(f"#{tag}" for tag in post.tags if tag)
-            caption = f"{caption}\n\n{tags}"
-        return caption[:2200]
+        tags = " ".join(f"#{tag}" for tag in post.tags if tag)
+        suffix = f"\n\n{tags}" if tags else ""
+        available_text_length = MASTODON_CHARACTER_LIMIT - len(suffix)
+
+        if available_text_length <= len(ELLIPSIS):
+            return (suffix[-MASTODON_CHARACTER_LIMIT:]).strip()
+
+        caption_text = post.text.strip()
+        if len(caption_text) > available_text_length:
+            caption_text = caption_text[: available_text_length - len(ELLIPSIS)].rstrip()
+            caption_text = f"{caption_text}{ELLIPSIS}"
+
+        return f"{caption_text}{suffix}"
 
     def _download_image(self, image_url: str) -> str:
         parsed = urlparse(image_url)
