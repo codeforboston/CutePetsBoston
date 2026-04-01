@@ -2,13 +2,16 @@ name: RescueGroups API Post
 
 on:
   push:
+    # We are doing this for testing purposes, but when we start posting, we should remove this line
     branches:
-      - '**'
-      - '!master'
+      [master]
   workflow_dispatch:
+  schedule:
+    # Every 4 hours
+    - cron: "0 */4 * * *"
 
 jobs:
-  call-api:
+  run-cute-pets:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -24,10 +27,9 @@ jobs:
       - name: Call RescueGroups API
         env:
           CUTEPETSBOSTON_RESCUEGROUPS_API_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
-          INSTAGRAM_HANDLE: ${{ secrets.INSTAGRAM_HANDLE_2 }}
-          INSTAGRAM_PASSWORD: ${{ secrets.INSTAGRAM_PASSWORD_2 }}
-          BLUESKY_HANDLE: ${{ secrets.BLUESKY_TEST_HANDLE }}
-          BLUESKY_PASSWORD: ${{ secrets.BLUESKY_TEST_PASSWORD }}
+          INSTAGRAM_HANDLE: ${{ secrets.INSTAGRAM_HANDLE }}
+          INSTAGRAM_PASSWORD: ${{ secrets.INSTAGRAM_PASSWORD }}
+          BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
+          BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
         run: |
-          #In order to create posts on the test accounts remove the --debugposters debug flag
-          python ./main.py --debugsources --debugposters
+          python ./main.py

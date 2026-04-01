@@ -1,28 +1,33 @@
-name: Bluesky Test Post
+name: RescueGroups API Post
 
 on:
   push:
-    branches: [prajwal-local]
+    branches:
+      - '**'
+      - '!master'
   workflow_dispatch:
 
 jobs:
-  post-to-bluesky:
+  run-cute-pets:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install --upgrade requests
+        run: pip install --break-system-packages -r requirements.txt
 
-      - name: Post to Bluesky
+      - name: Call RescueGroups API
         env:
           CUTEPETSBOSTON_RESCUEGROUPS_API_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
+          INSTAGRAM_HANDLE: ${{ secrets.INSTAGRAM_HANDLE_2 }}
+          INSTAGRAM_PASSWORD: ${{ secrets.INSTAGRAM_PASSWORD_2 }}
           BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
           BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
-        run: PYTHONPATH=. python ./manual_testing/bluesky_manual_test.py
+        run: |
+          #In order to create posts on the test accounts remove the --debugposters debug flag
+          python ./main.py --debugsources --debugposters
