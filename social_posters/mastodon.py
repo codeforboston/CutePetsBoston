@@ -1,43 +1,40 @@
-from datetime import datetime
-from typing import Optional
 import os
-from mastodon import Mastodon
-import requests
 from urllib.parse import urlparse
 import tempfile
 
+import requests
+from mastodon import Mastodon
+
 from abstractions import Post, PostResult, SocialPoster
+
 
 class PosterMastodon(SocialPoster):
     def __init__(self):
-        # Handle environment variable validation internally
-        self.username = os.environ.get("MASTODON_TEST_ID")
-        self.token = os.environ.get("MASTODON_TEST_TOKEN")
-        self.password = os.environ.get("MASTODON_TEST_PASSWORD")
-        self.domain = "https://mastodon.social"
+        self.username = (
+            os.environ.get("MASTODON_USERNAME")
+            or os.environ.get("MASTODON_ID")
+            or os.environ.get("MASTODON_TEST_ID")
+        )
+        self.token = os.environ.get("MASTODON_TOKEN") or os.environ.get("MASTODON_TEST_TOKEN")
+        self.api_base_url = os.environ.get("MASTODON_API_BASE_URL") or "https://mastodon.social"
         self._session = None
-        self._is_available = bool(self.username and self.token)
+        self._is_available = bool(self.token)
 
-    # public functions: platform, authenticate, publish
     @property
     def platform_name(self) -> str:
         return "Mastodon"
-    
 
     def authenticate(self) -> bool:
         try:
             self._session = Mastodon(
                 access_token=self.token,
-                api_base_url="https://mastodon.social"
-                #access_token=self.token,
-                #api_base_url=f"https://{self.domain}"
+                api_base_url=self.api_base_url,
             )
             self._session.account_verify_credentials()
             return True
         except Exception:
             self._session = None
             return False
-        
 
     def publish(self, post: Post) -> PostResult:
         if not self._is_available:
@@ -61,22 +58,26 @@ class PosterMastodon(SocialPoster):
         image_path = None
         try:
             image_path = self._download_image(post.image_url)
-            caption = self._format_caption(post)
-            image = self._session.media_post("example.png",
-                                            mime_type ="image/png",
-                                            description =caption)
-            self._session.status_post("Hello, world!", media_ids=image["id"])
-            return PostResult(success=True)
+            media = self._session.media_post(
+                image_path,
+                description=post.alt_text or "Photo of an adoptable pet",
+            )
+            status = self._session.status_post(
+                self._format_caption(post),
+                media_ids=[media["id"]],
+            )
+            return PostResult(
+                success=True,
+                post_id=str(status["id"]),
+                post_url=status.get("url"),
+            )
         except Exception as exc:
             return PostResult(success=False, error_message=str(exc))
         finally:
-            if self._session:
-                #self._session.end()
-                self._session = None
+            self._session = None
             if image_path and os.path.exists(image_path):
                 os.unlink(image_path)
 
-    # private methods for _methodname
     def _format_caption(self, post: Post) -> str:
         caption = post.text
         if post.tags:

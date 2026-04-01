@@ -1,3 +1,4 @@
+import os
 import random
 import argparse
 
@@ -15,18 +16,26 @@ def main():
 
 
 def create_posters(debug=False):
-    from social_posters import PosterDebug
-
     if debug:
+        from social_posters.debug import PosterDebug
+
         return [PosterDebug()]
 
-    from social_posters.instagram import PosterInstagram
-    from social_posters.bluesky import PosterBluesky
+    requested_platforms = _requested_platforms()
+    poster_factories = {
+        "bluesky": _load_bluesky_poster,
+        "instagram": _load_instagram_poster,
+        "mastodon": _load_mastodon_poster,
+    }
 
-    posters = []
-    posters.append(PosterBluesky())
-    posters.append(PosterInstagram())
-    return posters
+    if requested_platforms:
+        return [
+            poster_factories[platform_name]()
+            for platform_name in poster_factories
+            if platform_name in requested_platforms
+        ]
+
+    return [factory() for factory in poster_factories.values()]
 
 
 def create_sources(debug=False):
@@ -78,6 +87,36 @@ def pick_pet(pets):
     if not eligible:
         return None
     return random.choice(eligible)
+
+
+def _requested_platforms():
+    raw_value = os.environ.get("POSTER_PLATFORMS", "")
+    if not raw_value.strip():
+        return set()
+
+    return {
+        platform.strip().lower()
+        for platform in raw_value.split(",")
+        if platform.strip()
+    }
+
+
+def _load_bluesky_poster():
+    from social_posters.bluesky import PosterBluesky
+
+    return PosterBluesky()
+
+
+def _load_instagram_poster():
+    from social_posters.instagram import PosterInstagram
+
+    return PosterInstagram()
+
+
+def _load_mastodon_poster():
+    from social_posters.mastodon import PosterMastodon
+
+    return PosterMastodon()
 
 
 if __name__ == "__main__":
