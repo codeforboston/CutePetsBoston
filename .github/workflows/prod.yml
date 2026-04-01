@@ -24,6 +24,11 @@ jobs:
       - name: Install dependencies
         run: pip install --break-system-packages -r requirements.txt
 
+      - name: Restore Instagram session
+        env:
+          INSTAGRAM_SESSION: ${{ secrets.INSTAGRAM_SESSION }}
+        run: echo "$INSTAGRAM_SESSION" > ig_session.json
+
       - name: Call RescueGroups API
         env:
           CUTEPETSBOSTON_RESCUEGROUPS_API_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
@@ -31,5 +36,4 @@ jobs:
           INSTAGRAM_PASSWORD: ${{ secrets.INSTAGRAM_PASSWORD }}
           BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
           BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
-        run: |
-          python ./main.py
+        run: python ./main.py
