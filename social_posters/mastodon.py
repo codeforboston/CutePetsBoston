@@ -10,15 +10,12 @@ from abstractions import Post, PostResult, SocialPoster
 
 class PosterMastodon(SocialPoster):
     def __init__(self):
-        self.username = (
-            os.environ.get("MASTODON_USERNAME")
-            or os.environ.get("MASTODON_ID")
-            or os.environ.get("MASTODON_TEST_ID")
-        )
-        self.token = os.environ.get("MASTODON_TOKEN") or os.environ.get("MASTODON_TEST_TOKEN")
-        self.api_base_url = os.environ.get("MASTODON_API_BASE_URL") or "https://mastodon.social"
+        raw_token = os.environ.get("MASTODON_TOKEN") or os.environ.get("MASTODON_TEST_TOKEN")
+        self.token = raw_token.strip() if raw_token else None
+        self.api_base_url = "https://mastodon.social"
         self._session = None
         self._is_available = bool(self.token)
+        self._auth_error = None
 
     @property
     def platform_name(self) -> str:
@@ -31,9 +28,11 @@ class PosterMastodon(SocialPoster):
                 api_base_url=self.api_base_url,
             )
             self._session.account_verify_credentials()
+            self._auth_error = None
             return True
-        except Exception:
+        except Exception as exc:
             self._session = None
+            self._auth_error = f"{type(exc).__name__}: {exc}"
             return False
 
     def publish(self, post: Post) -> PostResult:
@@ -52,7 +51,11 @@ class PosterMastodon(SocialPoster):
         if not self._session and not self.authenticate():
             return PostResult(
                 success=False,
-                error_message="Mastodon authentication failed.",
+                error_message=(
+                    "Mastodon authentication failed."
+                    if not self._auth_error
+                    else f"Mastodon authentication failed: {self._auth_error}"
+                ),
             )
 
         image_path = None
