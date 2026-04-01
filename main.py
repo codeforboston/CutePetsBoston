@@ -1,8 +1,15 @@
 import random
+import argparse
 
 def main():
-    sources = create_sources()
-    posters = create_posters(debug=False)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--debugsources", action="store_true") # this defaults to False
+    parser.add_argument("--debugposters", action="store_true") # this defaults to False
+
+    args = parser.parse_args()
+
+    sources = create_sources(debug=args.debugsources)
+    posters = create_posters(debug=args.debugposters)
 
     run(sources, posters)
 
@@ -22,8 +29,11 @@ def create_posters(debug=False):
     return posters
 
 
-def create_sources():
-    from adoption_sources import SourceRescueGroups
+def create_sources(debug=False):
+    from adoption_sources import SourceRescueGroups, SourceManual
+    
+    if debug:
+        return [SourceManual()]
 
     sources = []
 
