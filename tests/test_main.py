@@ -41,6 +41,7 @@ class RunFlowTests(unittest.TestCase):
             breed="mutt",
             location="Boston, MA",
             image_url="https://example.com/poppy.jpg",
+            adoption_url="https://example.com/adopt/poppy",
         )
         source = FakeSource([pet])
         poster_one = FakePoster()

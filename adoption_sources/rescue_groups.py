@@ -9,6 +9,7 @@ import logging
 import os
 import re
 from typing import Iterator
+import json
 
 import requests
 
@@ -24,7 +25,7 @@ class SourceRescueGroups(PetSource):
     Requires CUTEPETSBOSTON_RESCUEGROUPS_API_KEY environment variable or api_key constructor arg.
     """
 
-    BASE_URL = "https://api.rescuegroups.org/v5/public/animals/search/available"
+    BASE_URL = "https://api.rescuegroups.org/v5/public/animals/search"
 
     def __init__(
         self,
@@ -62,43 +63,50 @@ class SourceRescueGroups(PetSource):
                 "RescueGroups API key not configured. "
                 "Set CUTEPETSBOSTON_RESCUEGROUPS_API_KEY environment variable."
             )
-
-        url = f"{self.BASE_URL}/{self.species}"
+        
+        url = (
+            f"{self.BASE_URL}/available/{self.species}/haspic"
+            f"?include=orgs,breeds,locations"
+            f"&sort=random"
+            f"&limit={self.limit}"
+        )
         headers = {
             "Content-Type": "application/vnd.api+json",
             "Authorization": self._api_key,
         }
         payload = {
-            "filters": [
-                {
-                    "fieldName": "status",
-                    "operation": "equals",
-                    "criteria": "Available",
+            "data": {
+                "filterRadius": {
+                    "miles": self.radius_miles,
+                    "postalcode": self.postal_code,
                 }
-            ],
-            "filterRadius": {
-                "miles": self.radius_miles,
-                "postalcode": self.postal_code,
-            },
-            "limit": self.limit,
+            }
         }
+
 
         logger.info(
             f"Fetching {self.species} from RescueGroups within {self.radius_miles} miles of {self.postal_code}"
         )
 
-        response = requests.post(url, headers=headers, json=payload, timeout=30)
+        response = requests.post(url, json=payload, headers=headers, timeout=30)
         response.raise_for_status()
 
-        data = response.json().get("data", [])
+        body = response.json()
+        data = body.get("data", [])
         logger.info(f"Received {len(data)} pets from RescueGroups")
 
+        orgs_by_id = {
+            item["id"]: item.get("attributes", {})
+            for item in body.get("included", [])
+            if item.get("type") == "orgs"
+        }
+
         for animal in data:
-            pet = self._parse_animal(animal)
+            pet = self._parse_animal(animal, orgs_by_id)
             if pet:
                 yield pet
 
-    def _parse_animal(self, animal: dict) -> AdoptablePet | None:
+    def _parse_animal(self, animal: dict, orgs_by_id: dict) -> AdoptablePet | None:
         """Parse a single animal record from the API response."""
         try:
             attrs = animal.get("attributes", {})
@@ -116,21 +124,39 @@ class SourceRescueGroups(PetSource):
             # Clean up description (use text version, not HTML)
             description = self._clean_description(attrs.get("descriptionText", ""))
 
-            # Build adoption URL from slug
-            slug = attrs.get("slug", "")
-            adoption_url = f"https://www.rescuegroups.org/pet/{slug}" if slug else None
+            # Get adoption_url
+            org_id = (
+                animal.get("relationships", {})
+                .get("orgs", {})
+                .get("data", [{}])[0]
+                .get("id")
+            )
+            org_attrs = orgs_by_id.get(org_id, {}) if org_id else {}
+            adoption_url = next(
+                (u for u in (attrs.get("adoptionUrl"), org_attrs.get("adoptionUrl"), org_attrs.get("url"))
+                 if u and u.strip().rstrip("/") not in ("http:", "https:", "http://", "https://")),
+                None
+            )
 
             # Get best available image
             image_url = self._get_image_url(attrs)
+
+            # Location of the adoption org
+            location = f"{org_attrs.get('city')}, {org_attrs.get('state')}"
+
 
             return AdoptablePet(
                 name=name,
                 species=species,
                 breed=breed,
-                location=self.location_label,
+                location=location,
                 description=description,
                 adoption_url=adoption_url,
                 image_url=image_url,
+                age_string=attrs.get("ageString"),
+                sex=attrs.get("sex"),
+                size_group=attrs.get("sizeGroup"),
+                pet_id=animal_id,
             )
         except Exception as e:
             logger.warning(f"Failed to parse animal {animal.get('id', 'unknown')}: {e}")
@@ -175,9 +201,8 @@ class SourceRescueGroups(PetSource):
 
     def _get_image_url(self, attrs: dict) -> str | None:
         """Get the best available image URL."""
-        # The thumbnail URL can be modified to get a larger image
         thumbnail = attrs.get("pictureThumbnailUrl")
         if thumbnail:
-            # Remove width parameter to get full-size image
-            return re.sub(r"\?width=\d+", "", thumbnail)
+            # Request a larger image instead of the 100px thumbnail
+            return re.sub(r"\?width=\d+", "?width=800", thumbnail)
         return None
