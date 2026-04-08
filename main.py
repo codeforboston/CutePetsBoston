@@ -1,9 +1,16 @@
 import os
 import random
+import argparse
 
 def main():
-    sources = create_sources()
-    posters = create_posters(debug=False)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--debugsources", action="store_true") # this defaults to False
+    parser.add_argument("--debugposters", action="store_true") # this defaults to False
+
+    args = parser.parse_args()
+
+    sources = create_sources(debug=args.debugsources)
+    posters = create_posters(debug=args.debugposters)
 
     run(sources, posters)
 
@@ -31,8 +38,11 @@ def create_posters(debug=False):
     return [factory() for factory in poster_factories.values()]
 
 
-def create_sources():
-    from adoption_sources import SourceRescueGroups
+def create_sources(debug=False):
+    from adoption_sources import SourceRescueGroups, SourceManual
+    
+    if debug:
+        return [SourceManual()]
 
     sources = []
 
@@ -53,7 +63,6 @@ def run(sources, posters):
     pet = pick_pet(pets)
     if not pet:
         print("No pets available to post.")
-        print(pets)
         return []
 
     if not posters:
@@ -74,10 +83,10 @@ def run(sources, posters):
 
 
 def pick_pet(pets):
-    with_images = [pet for pet in pets if pet.image_url]
-    if not with_images:
+    eligible = [pet for pet in pets if pet.image_url and pet.adoption_url]
+    if not eligible:
         return None
-    return random.choice(with_images)
+    return random.choice(eligible)
 
 
 def _requested_platforms():

@@ -1,0 +1,1483 @@
+[
+  {
+    "type": "animals",
+    "id": "19427790",
+    "attributes": {
+      "isAdoptionPending": false,
+      "ageString": "7 Years 8 Months",
+      "birthDate": "2018-05-12T00:00:00Z",
+      "isBirthDateExact": false,
+      "breedString": "American Staffordshire Terrier / Mixed",
+      "breedPrimary": "American Staffordshire Terrier",
+      "breedPrimaryId": 82,
+      "isBreedMixed": true,
+      "isCourtesyListing": false,
+      "descriptionHtml": "<p>Found with a chain around his neck.&nbsp; The chain was dropped into the sewer and he could not move.</p><img src=\"https://tracker.rescuegroups.org/pet?19427790\" width=\"0\" height=\"0\" alt=\"\" />",
+      "descriptionText": "Found with a chain around his neck.&nbsp; The chain was dropped into the sewer and he could not move.",
+      "isFound": false,
+      "priority": 10,
+      "name": "Flynn",
+      "pictureCount": 2,
+      "pictureThumbnailUrl": "https://cdn.rescuegroups.org/8552/pictures/animals/19427/19427790/100783814.jpg?width=100",
+      "searchString": "Flynn   Blue/Silver/Salt & Pepper Male X-Large   Dogs American Staffordshire Terrier / Mixeds",
+      "sex": "Male",
+      "sizeCurrent": 109,
+      "sizeGroup": "X-Large",
+      "sizeUOM": "Pounds",
+      "slug": "adopt-flynn-american-staffordshire-terrier-dog",
+      "isSponsorable": false,
+      "trackerimageUrl": "https://tracker.rescuegroups.org/pet?19427790",
+      "videoCount": 0,
+      "videoUrlCount": 0,
+      "createdDate": "2023-06-24T17:12:25Z",
+      "updatedDate": "2025-11-03T02:20:53Z"
+    },
+    "relationships": {
+      "breeds": {
+        "data": [
+          {
+            "type": "breeds",
+            "id": "82"
+          }
+        ]
+      },
+      "locations": {
+        "data": [
+          {
+            "type": "locations",
+            "id": "1000008552"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "animals",
+    "id": "22339942",
+    "attributes": {
+      "isAdoptionPending": false,
+      "ageGroup": "Baby",
+      "isBirthDateExact": false,
+      "breedString": "Hound",
+      "breedPrimary": "Hound",
+      "breedPrimaryId": 151,
+      "isBreedMixed": false,
+      "isCourtesyListing": false,
+      "isCurrentVaccinations": false,
+      "isDeclawed": false,
+      "descriptionText": "Meet Merry and Pippin!\nThese sweet 8 week old pups are looking for their forever homes. They love to play with their foster brother, chase down balls, and then follow it all up with a nap, in a lap preferably.\nCome meet Merry and Pippin this Saturday at the Woodbury Fire Department hoagie sale (9-12) or Sunday at Magnify Brewing.\nEmail ammrsabrina@gmail.com with questions or fill out an application at:\nTinyurl.com/AMMRadoptapp\n\nCheck us out on FB https://m.facebook.com/groups/927573409001459/?ref=share\nOr our Instagram https://www.instagram.com/all_mutts_matter_rescue?igsh=MWVycnBzMjFkOG5lNQ==\nAdoption donation of $425 includes age-appropriate vaccinations and spay/neuter when pup is approximately 5-7 months of age. Copays vary by location.\n$110 reimbursement if adopters&#39 own vet/clinic is used within same timeframe for alter and microchip.\nAll Mutts Matter Rescue is a registered 501c3 non-profit organization and donations are tax deductible.\n\n*** Breed determination in most cases is often based on the limited history typically available for most rescued animals. We try to be as accurate as possible with the information we have and the rescue assessment of the pup.\n\nCurrent Adoptions are within 3 hours of our foster homes, most within the SJ area - within NJ/PA/DE",
+      "isNeedingFoster": false,
+      "isFound": false,
+      "priority": 10,
+      "isHousetrained": false,
+      "name": "Pippin",
+      "pictureCount": 2,
+      "pictureThumbnailUrl": "https://cdn.rescuegroups.org/11627/pictures/animals/22339/22339942/102851090.jpg?width=100",
+      "rescueId": "Sabrina",
+      "searchString": "Pippin    Male Medium Sabrina  Dogs Hounds",
+      "sex": "Male",
+      "sizeGroup": "Medium",
+      "slug": "adopt-pippin-hound-dog",
+      "isSpecialNeeds": false,
+      "isSponsorable": false,
+      "videoCount": 0,
+      "videoUrlCount": 0,
+      "createdDate": "2026-03-19T21:57:50Z",
+      "updatedDate": "2026-03-19T22:58:41Z"
+    },
+    "relationships": {
+      "breeds": {
+        "data": [
+          {
+            "type": "breeds",
+            "id": "151"
+          }
+        ]
+      },
+      "locations": {
+        "data": [
+          {
+            "type": "locations",
+            "id": "1000011627"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "animals",
+    "id": "21218464",
+    "attributes": {
+      "isAdoptionPending": false,
+      "ageGroup": "Adult",
+      "isBirthDateExact": false,
+      "breedString": "German Shepherd Dog / Rottweiler / Mixed (short coat)",
+      "breedPrimary": "German Shepherd Dog",
+      "breedPrimaryId": 142,
+      "breedSecondary": "Rottweiler",
+      "breedSecondaryId": 189,
+      "isBreedMixed": true,
+      "coatLength": "Short",
+      "isCourtesyListing": true,
+      "isCurrentVaccinations": true,
+      "isDeclawed": false,
+      "descriptionText": "Check out my video!\nWell, hello! My name is&nbsp;Zelda&nbsp;and I'm a spayed, 2 years old, German Shepherd/Rottweiler mix who currently weighs around 62 lbs. I'm an energetic and effervescent girl that LOVES to play in the water! I would be the perfect companion to beach goers, river rafters or sprinkler hoppers! I'm a girl who feels the call of the wild! I'm a rambunctious girl that prefers to be outdoors exploring. I'm hoping to continue working on my social skills and impulse control&nbsp;with an active, loving family.&nbsp;I can't wait to meet everyone in the household including any resident dogs before I head home. Just ask Customer Service about Zelda&nbsp;ID# A955664",
+      "isNeedingFoster": false,
+      "isFound": false,
+      "priority": 10,
+      "name": "Zelda",
+      "pictureCount": 4,
+      "pictureThumbnailUrl": "https://cdn.rescuegroups.org/1776/pictures/animals/21218/21218464/100323336.jpg?width=100",
+      "rescueId": "A955664",
+      "searchString": "Zelda   Black with Brown, Red, Golden, Orange or Chestnut Female Large A955664  Dogs German Shepherd Dog / Rottweiler / Mixed (short coat)s",
+      "sex": "Female",
+      "sizeGroup": "Large",
+      "slug": "adopt-zelda-german-shepherd-dog-dog",
+      "isSpecialNeeds": false,
+      "isSponsorable": false,
+      "videoCount": 0,
+      "videoUrlCount": 1,
+      "createdDate": "2025-01-19T19:21:52Z",
+      "updatedDate": "2026-03-20T22:42:38Z"
+    },
+    "relationships": {
+      "breeds": {
+        "data": [
+          {
+            "type": "breeds",
+            "id": "142"
+          },
+          {
+            "type": "breeds",
+            "id": "189"
+          }
+        ]
+      },
+      "locations": {
+        "data": [
+          {
+            "type": "locations",
+            "id": "13256"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "animals",
+    "id": "21907959",
+    "attributes": {
+      "adoptionFeeString": "$225 includes spay and vaccines",
+      "isAdoptionPending": false,
+      "ageGroup": "Young",
+      "isBirthDateExact": false,
+      "breedString": "Greyhound / Mixed",
+      "breedPrimary": "Greyhound",
+      "breedPrimaryId": 150,
+      "isBreedMixed": true,
+      "isCourtesyListing": false,
+      "descriptionHtml": "Cassie is a fun loving playful girl whose approx dob is&nbsp; August 13 2025. We weren't given any info on her parents so our best guess is Greyhound mix due to her very slender body frame and unique markings. Cassie does great with other dogs LOVES to meet people and guve hugs and kisses! She has such a fun spunky personality. Www.barconline.com or call 951 845 1513 we are located in Cherry Valley Ca.<img src=\"https://tracker.rescuegroups.org/pet?21907959\" width=\"0\" height=\"0\" alt=\"\" />",
+      "descriptionText": "Cassie is a fun loving playful girl whose approx dob is&nbsp; August 13 2025. We weren't given any info on her parents so our best guess is Greyhound mix due to her very slender body frame and unique markings. Cassie does great with other dogs LOVES to meet people and guve hugs and kisses! She has such a fun spunky personality. Www.barconline.com or call 951 845 1513 we are located in Cherry Valley Ca.",
+      "isDogsOk": true,
+      "isNeedingFoster": false,
+      "isFound": false,
+      "priority": 10,
+      "name": "Cassie",
+      "pictureCount": 1,
+      "pictureThumbnailUrl": "https://cdn.rescuegroups.org/105/pictures/animals/21907/21907959/101859184.jpg?width=100",
+      "rescueId": "5738",
+      "searchString": "Cassie    Female  5738  Dogs Greyhound / Mixeds",
+      "sex": "Female",
+      "slug": "adopt-cassie-greyhound-dog",
+      "isSpecialNeeds": false,
+      "isSponsorable": true,
+      "trackerimageUrl": "https://tracker.rescuegroups.org/pet?21907959",
+      "url": "https://www.barconline.com/animals/detail?AnimalID=21907959",
+      "videoCount": 0,
+      "videoUrlCount": 0,
+      "createdDate": "2025-09-24T21:43:38Z",
+      "updatedDate": "2026-01-03T01:03:49Z"
+    },
+    "relationships": {
+      "breeds": {
+        "data": [
+          {
+            "type": "breeds",
+            "id": "150"
+          }
+        ]
+      },
+      "locations": {
+        "data": [
+          {
+            "type": "locations",
+            "id": "1000000105"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "animals",
+    "id": "22326727",
+    "attributes": {
+      "activityLevel": "Moderately Active",
+      "adoptionFeeString": "350",
+      "isAdoptionPending": false,
+      "adultSexesOk": "All",
+      "ageGroup": "Adult",
+      "ageString": "1 Year 5 Months",
+      "birthDate": "2024-09-14T00:00:00Z",
+      "isBirthDateExact": false,
+      "breedString": "American Staffordshire Terrier / Mixed (short coat)",
+      "breedPrimary": "American Staffordshire Terrier",
+      "breedPrimaryId": 82,
+      "isBreedMixed": true,
+      "coatLength": "Short",
+      "isCourtesyListing": true,
+      "isCurrentVaccinations": true,
+      "descriptionText": "Polly Pockets is 1.5 year sold, 50 lbs\n\n&nbsp;\n\nShe is a dollbaby Good with all people and dogs. Very sweet. Her owner had openheart surgery and can no longer care for her. He is disrtraught. In danger of going to the shelter and they will kill her.",
+      "isDogsOk": true,
+      "energyLevel": "Moderate",
+      "exerciseNeeds": "Moderate",
+      "fenceNeeds": "Any Type",
+      "isFound": false,
+      "groomingNeeds": "Not Required",
+      "priority": 10,
+      "isHousetrained": true,
+      "indoorOutdoor": "Indoor and Outdoor",
+      "name": "Polly Pockets",
+      "newPeopleReaction": "Friendly",
+      "obedienceTraining": "Well Trained",
+      "pictureCount": 1,
+      "pictureThumbnailUrl": "https://cdn.rescuegroups.org/6198/pictures/animals/22326/22326727/102819970.jpg?width=100",
+      "qualities": [
+        "affectionate",
+        "cratetrained",
+        "eagerToPlease",
+        "doesWellInCar",
+        "lap",
+        "leashtrained",
+        "playful"
+      ],
+      "searchString": "Polly Pockets   Tan Female Medium   Dogs American Staffordshire Terrier / Mixed (short coat)s",
+      "sex": "Female",
+      "sheddingLevel": "Moderate",
+      "sizeCurrent": 50,
+      "sizeGroup": "Medium",
+      "sizePotential": 50,
+      "sizeUOM": "Pounds",
+      "slug": "adopt-polly-pockets-american-staffordshire-terrier-dog",
+      "isSpecialNeeds": false,
+      "isSponsorable": false,
+      "videoCount": 0,
+      "videoUrlCount": 0,
+      "vocalLevel": "Quiet",
+      "isYardRequired": true,
+      "createdDate": "2026-03-13T16:20:17Z",
+      "updatedDate": "2026-03-13T16:20:18Z"
+    },
+    "relationships": {
+      "breeds": {
+        "data": [
+          {
+            "type": "breeds",
+            "id": "82"
+          }
+        ]
+      },
+      "locations": {
+        "data": [
+          {
+            "type": "locations",
+            "id": "1000006198"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "animals",
+    "id": "21388410",
+    "attributes": {
+      "isAdoptionPending": false,
+      "ageGroup": "Young",
+      "isBirthDateExact": false,
+      "breedString": "Labrador Retriever / Akita / Mixed",
+      "breedPrimary": "Labrador Retriever",
+      "breedPrimaryId": 162,
+      "breedSecondary": "Akita",
+      "breedSecondaryId": 78,
+      "isBreedMixed": true,
+      "isCourtesyListing": false,
+      "descriptionText": "Meet Snow, a 3-4 year old friendly and well-mannered dog who loves people. He&rsquo;s fully potty trained and crate trained, making him an easy addition to any home. Snow enjoys car rides and going for walks, so he&rsquo;s always ready for an adventure or a relaxing drive. With his sweet nature and great temperament, Snow would make a wonderful companion for anyone looking for a loyal, loving friend.&nbsp;",
+      "isNeedingFoster": false,
+      "isFound": false,
+      "priority": 10,
+      "isHousetrained": true,
+      "isKidsOk": true,
+      "name": "Snow",
+      "pictureCount": 3,
+      "pictureThumbnailUrl": "https://cdn.rescuegroups.org/637/pictures/animals/21388/21388410/100692761.jpg?width=100",
+      "searchString": "Snow   White Male Large   Dogs Labrador Retriever / Akita / Mixeds",
+      "sex": "Male",
+      "sizeGroup": "Large",
+      "slug": "adopt-snow-labrador-retriever-dog",
+      "isSpecialNeeds": false,
+      "isSponsorable": false,
+      "videoCount": 0,
+      "videoUrlCount": 0,
+      "createdDate": "2025-03-30T05:07:47Z",
+      "updatedDate": "2025-03-30T05:37:25Z"
+    },
+    "relationships": {
+      "breeds": {
+        "data": [
+          {
+            "type": "breeds",
+            "id": "162"
+          },
+          {
+            "type": "breeds",
+            "id": "78"
+          }
+        ]
+      },
+      "locations": {
+        "data": [
+          {
+            "type": "locations",
+            "id": "1000000637"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "animals",
+    "id": "22335553",
+    "attributes": {
+      "isAdoptionPending": false,
+      "ageGroup": "Senior",
+      "ageString": "8 Years",
+      "birthDate": "2018-03-09T00:00:00Z",
+      "isBirthDateExact": false,
+      "breedString": "Terrier / Mixed (medium coat)",
+      "breedPrimary": "Terrier",
+      "breedPrimaryId": 208,
+      "isBreedMixed": true,
+      "coatLength": "Medium",
+      "isCourtesyListing": false,
+      "descriptionText": "Hi I'm Frito!I\u00e2\u0080\u0099m a sweet, senior guy who loves nothing more than curling up on a fluffy bed and soaking in the cozy vibes. I enjoy sniffing and exploring when we go on walks, and treats always make my day. Once I warm up to you, I become a little attention-seeker, happily nudging for pets and cuddles. If you\u00e2\u0080\u0099re looking for a calm, loving companion with a big heart, I\u00e2\u0080\u0099d love to meet you!",
+      "isFound": false,
+      "priority": 10,
+      "name": "FRITO",
+      "pictureCount": 1,
+      "pictureThumbnailUrl": "https://cdn.rescuegroups.org/8846/pictures/animals/22335/22335553/102866911.jpg?width=100",
+      "rescueId": "A270361",
+      "searchString": "FRITO   White Male Medium A270361  Dogs Terrier / Mixed (medium coat)s",
+      "sex": "Male",
+      "sizeGroup": "Medium",
+      "slug": "adopt-frito-terrier-dog",
+      "isSponsorable": false,
+      "videoCount": 0,
+      "videoUrlCount": 0,
+      "createdDate": "2026-03-17T21:52:18Z",
+      "updatedDate": "2026-03-23T01:27:14Z"
+    },
+    "relationships": {
+      "breeds": {
+        "data": [
+          {
+            "type": "breeds",
+            "id": "208"
+          }
+        ]
+      },
+      "locations": {
+        "data": [
+          {
+            "type": "locations",
+            "id": "1000008846"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "animals",
+    "id": "16027333",
+    "attributes": {
+      "isAdoptionPending": false,
+      "ageGroup": "Adult",
+      "isBirthDateExact": false,
+      "breedString": "Husky / Pit Bull Terrier (medium coat)",
+      "breedPrimary": "Husky",
+      "breedPrimaryId": 152,
+      "breedSecondary": "Pit Bull Terrier",
+      "breedSecondaryId": 179,
+      "isCatsOk": true,
+      "coatLength": "Medium",
+      "isCourtesyListing": false,
+      "isCurrentVaccinations": true,
+      "descriptionHtml": "<p>COCO came to us after she had a cluster of seizures in her newly adoptive home. She was adopted only a month before from a rescue in Tennessee which did not respond to our inquiries regarding her previous history. Coco is a SWEET girl! She is currently in a foster home with a Chihuahua and several cats and does well with all! She enjoys her walks as much as she enjoys her couch time! Coco is a beautiful red brindle! she is 110% housebroken. Great with meeting new people! Coco is in Keppra and \n<span class=\"tojvnm2t a6sixzi8 abs2jz4q a8s20v7p t1p8iaqh k5wvi7nf q3lfd5jv pk4s997a bipmatt0 cebpdrjk qowsmv63 owwhemhu dp1hu0rb dhp61c6y iyyx5f41\">phenobarbital </span>\nto control her seizures. She has had a couple of clusters since arriving in her foster home and we are working In fine tuning her meds. Coco will need more frequent vet visits than the average dog her age. With excellent care, we feel she can live a relatively normal life and will make an excellent companion for some lucky family. Coco has been spayed, vaccinated, microchipped and heartworm tested. Adoption $200. Please fill out an application at www.companimals.org if you are interested in adding Coco to your family!&nbsp;</p><img src=\"https://tracker.rescuegroups.org/pet?16027333\" width=\"0\" height=\"0\" alt=\"\" />",
+      "descriptionText": "COCO came to us after she had a cluster of seizures in her newly adoptive home. She was adopted only a month before from a rescue in Tennessee which did not respond to our inquiries regarding her previous history. Coco is a SWEET girl! She is currently in a foster home with a Chihuahua and several cats and does well with all! She enjoys her walks as much as she enjoys her couch time! Coco is a beautiful red brindle! she is 110% housebroken. Great with meeting new people! Coco is in Keppra and \nphenobarbital \nto control her seizures. She has had a couple of clusters since arriving in her foster home and we are working In fine tuning her meds. Coco will need more frequent vet visits than the average dog her age. With excellent care, we feel she can live a relatively normal life and will make an excellent companion for some lucky family. Coco has been spayed, vaccinated, microchipped and heartworm tested. Adoption $200. Please fill out an application at www.companimals.org if you are interested in adding Coco to your family!&nbsp;",
+      "isDogsOk": true,
+      "isNeedingFoster": false,
+      "isFound": false,
+      "priority": 10,
+      "isHousetrained": true,
+      "isKidsOk": true,
+      "name": "Coco",
+      "pictureCount": 12,
+      "pictureThumbnailUrl": "https://cdn.rescuegroups.org/4012/pictures/animals/16027/16027333/76723483.jpg?width=100",
+      "searchString": "Coco   Red Female Large   Dogs Husky / Pit Bull Terrier (medium coat)s",
+      "sex": "Female",
+      "sizeGroup": "Large",
+      "sizeUOM": "Pounds",
+      "slug": "adopt-coco-husky-dog",
+      "isSpecialNeeds": true,
+      "isSponsorable": false,
+      "trackerimageUrl": "https://tracker.rescuegroups.org/pet?16027333",
+      "videoCount": 0,
+      "videoUrlCount": 0,
+      "createdDate": "2020-09-07T09:47:40Z",
+      "updatedDate": "2023-06-05T01:03:41Z"
+    },
+    "relationships": {
+      "breeds": {
+        "data": [
+          {
+            "type": "breeds",
+            "id": "152"
+          },
+          {
+            "type": "breeds",
+            "id": "179"
+          }
+        ]
+      },
+      "locations": {
+        "data": [
+          {
+            "type": "locations",
+            "id": "1000004012"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "animals",
+    "id": "22276752",
+    "attributes": {
+      "isAdoptionPending": false,
+      "ageGroup": "Baby",
+      "isBirthDateExact": false,
+      "breedString": "Staffordshire Bull Terrier / Mixed (short coat)",
+      "breedPrimary": "Staffordshire Bull Terrier",
+      "breedPrimaryId": 207,
+      "isBreedMixed": true,
+      "coatLength": "Short",
+      "isCourtesyListing": false,
+      "descriptionHtml": "<img src=\"https://tracker.rescuegroups.org/pet?22276752\" width=\"0\" height=\"0\" alt=\"\" />",
+      "isFound": false,
+      "priority": 10,
+      "name": "Rei",
+      "pictureCount": 0,
+      "searchString": "Rei Luna Rose  Black with White Female Medium   Dogs Staffordshire Bull Terrier / Mixed (short coat)s",
+      "sex": "Female",
+      "sizeGroup": "Medium",
+      "sizeUOM": "Pounds",
+      "slug": "adopt-rei-staffordshire-bull-terrier-dog",
+      "isSponsorable": false,
+      "trackerimageUrl": "https://tracker.rescuegroups.org/pet?22276752",
+      "videoCount": 0,
+      "videoUrlCount": 0,
+      "createdDate": "2026-02-18T20:24:01Z",
+      "updatedDate": "2026-02-26T13:31:04Z",
+      "pictureThumbnailUrl": "https://www.rescuegroups.org/images/photos/22276752/22276752-1-400x400.jpg"
+    },
+    "relationships": {
+      "breeds": {
+        "data": [
+          {
+            "type": "breeds",
+            "id": "207"
+          }
+        ]
+      },
+      "locations": {
+        "data": [
+          {
+            "type": "locations",
+            "id": "1000003398"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "animals",
+    "id": "17439767",
+    "attributes": {
+      "isAdoptionPending": false,
+      "ageGroup": "Adult",
+      "ageString": "6 Years 4 Months",
+      "birthDate": "2019-11-09T00:00:00Z",
+      "isBirthDateExact": false,
+      "breedString": "Chinese Shar-Pei / Mixed",
+      "breedPrimary": "Chinese Shar-Pei",
+      "breedPrimaryId": 120,
+      "isBreedMixed": true,
+      "isCourtesyListing": false,
+      "descriptionText": "Myrtle is a fun-loving, energetic girl with a sweet spirit and a love for the great outdoors. She enjoys hikes and leisurely walks where she can take in all the sights and smells, making her a wonderful companion for fresh-air adventures.After a day out, Myrtle is happy to relax with her favorite toys and enjoy some well-earned downtime. With her affectionate nature and adventurous heart, Myrtle is ready to share life&#226;\u20ac\u2122s simple joys with a loving home. Ask an Adoption Specialist to meet Myrtle today!",
+      "isDogsOk": true,
+      "isFound": false,
+      "priority": 10,
+      "name": "Myrtle",
+      "pictureCount": 9,
+      "pictureThumbnailUrl": "https://cdn.rescuegroups.org/6685/pictures/animals/17439/17439767/97865248.jpg?width=100",
+      "qualities": [
+        "protective"
+      ],
+      "searchString": "Myrtle   Black Female Large   Dogs Chinese Shar-Pei / Mixeds",
+      "sex": "Female",
+      "sizeCurrent": 54.674598693847656,
+      "sizeGroup": "Large",
+      "sizeUOM": "Pounds",
+      "slug": "adopt-myrtle-chinese-shar-pei-dog",
+      "isSponsorable": false,
+      "videoCount": 0,
+      "videoUrlCount": 0,
+      "createdDate": "2021-11-10T19:02:15Z",
+      "updatedDate": "2026-03-13T21:08:32Z"
+    },
+    "relationships": {
+      "breeds": {
+        "data": [
+          {
+            "type": "breeds",
+            "id": "120"
+          }
+        ]
+      },
+      "locations": {
+        "data": [
+          {
+            "type": "locations",
+            "id": "1000006685"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "animals",
+    "id": "21639940",
+    "attributes": {
+      "isAdoptionPending": false,
+      "ageGroup": "Young",
+      "ageString": "2 Years 1 Month",
+      "birthDate": "2024-01-01T00:00:00Z",
+      "isBirthDateExact": false,
+      "breedString": "American Staffordshire Terrier / Mixed (short coat)",
+      "breedPrimary": "American Staffordshire Terrier",
+      "breedPrimaryId": 82,
+      "isBreedMixed": true,
+      "isCatsOk": false,
+      "coatLength": "Short",
+      "isCourtesyListing": true,
+      "isCurrentVaccinations": true,
+      "isDeclawed": false,
+      "descriptionHtml": "<p>Part Staffy? Part Adorable? Full on adorable is Thor! He is just not another black dog; if fact, he is so fun that if you meet him, you will see why we love this breed at the shelter (Thor is a courtesy post for the Brooke County Animal Shelter in BeechBottom, WV, about 45 minutes from Pittsburgh).&nbsp;</p>\n\n<p>Thor is a young adult -- about a year or two old who sports a smooth, sleek and easy-to-care for coat and ears that stand up or down according to his mood!</p>\n\n<p>Thor likes to bounce and hop when he is happy and his joy is infectious. He is great with other dogs and always has his eyes on people looking for love and attention. Thor promises to bring the best of his breed traits including lots of contact and snuggles as well as being game for going wherever you go. He ADORES toys, especially if they squeak. This boy is medium weight, ready-to-travel size and is game for anything as long as he his with his family! He can be a bit excitable initially but quickly calms down to scoot close for cuddles. Thor is almost impossible to resist when he gazes up at you with eyes filled with love and kindness.</p>\n\n<p>Please contact the Brooke County Animal Shelter at 304-394-0800 for more information or to arrange a meet and greet with Thor.</p><img src=\"https://tracker.rescuegroups.org/pet?21639940\" width=\"0\" height=\"0\" alt=\"\" />",
+      "descriptionText": "Part Staffy? Part Adorable? Full on adorable is Thor! He is just not another black dog; if fact, he is so fun that if you meet him, you will see why we love this breed at the shelter (Thor is a courtesy post for the Brooke County Animal Shelter in BeechBottom, WV, about 45 minutes from Pittsburgh).&nbsp;\n\nThor is a young adult -- about a year or two old who sports a smooth, sleek and easy-to-care for coat and ears that stand up or down according to his mood!\n\nThor likes to bounce and hop when he is happy and his joy is infectious. He is great with other dogs and always has his eyes on people looking for love and attention. Thor promises to bring the best of his breed traits including lots of contact and snuggles as well as being game for going wherever you go. He ADORES toys, especially if they squeak. This boy is medium weight, ready-to-travel size and is game for anything as long as he his with his family! He can be a bit excitable initially but quickly calms down to scoot close for cuddles. Thor is almost impossible to resist when he gazes up at you with eyes filled with love and kindness.\n\nPlease contact the Brooke County Animal Shelter at 304-394-0800 for more information or to arrange a meet and greet with Thor.",
+      "isDogsOk": true,
+      "isFound": false,
+      "priority": 10,
+      "isHousetrained": true,
+      "isKidsOk": true,
+      "killReason": "0",
+      "name": "Thor (courtesy post)",
+      "pictureCount": 3,
+      "pictureThumbnailUrl": "https://cdn.rescuegroups.org/3365/pictures/animals/21639/21639940/101248442.jpg?width=100",
+      "rescueId": "25-0086",
+      "searchString": "Thor (courtesy post)   Black Male Medium 25-0086  Dogs American Staffordshire Terrier / Mixed (short coat)s",
+      "sex": "Male",
+      "sizeCurrent": 60,
+      "sizeGroup": "Medium",
+      "sizeUOM": "Pounds",
+      "slug": "adopt-thor-courtesy-post-american-staffordshire-terrier-dog",
+      "isSpecialNeeds": false,
+      "isSponsorable": false,
+      "trackerimageUrl": "https://tracker.rescuegroups.org/pet?21639940",
+      "videoCount": 0,
+      "videoUrlCount": 0,
+      "createdDate": "2025-06-30T14:04:15Z",
+      "updatedDate": "2025-06-30T14:09:12Z"
+    },
+    "relationships": {
+      "breeds": {
+        "data": [
+          {
+            "type": "breeds",
+            "id": "82"
+          }
+        ]
+      },
+      "locations": {
+        "data": [
+          {
+            "type": "locations",
+            "id": "1000003365"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "animals",
+    "id": "22277252",
+    "attributes": {
+      "activityLevel": "Moderately Active",
+      "adoptionFeeString": "350",
+      "isAdoptionPending": false,
+      "adultSexesOk": "All",
+      "ageGroup": "Adult",
+      "ageString": "2 Years 6 Months",
+      "birthDate": "2023-08-23T00:00:00Z",
+      "isBirthDateExact": false,
+      "breedString": "American Pit Bull Terrier / Mixed (short coat)",
+      "breedPrimary": "American Pit Bull Terrier",
+      "breedPrimaryId": 729,
+      "isBreedMixed": true,
+      "coatLength": "Short",
+      "isCourtesyListing": false,
+      "isCurrentVaccinations": true,
+      "descriptionText": "Meet Gumdrop!\n\nGumdrop is a 1.5&ndash;2 year old&nbsp; 45 lb female pittie mix who is as sweet as her name suggests. This adorable girl is the total package &mdash; smart, playful, affectionate, and ready to find a family to call her own.\n\nGumdrop is already housebroken and crate trained, which makes the transition into her new home that much easier. She&rsquo;s also completed 8 weeks of puppy training, so she has a great foundation and loves to keep learning. She&rsquo;s a bright girl who enjoys engaging with her people and showing off what she knows.\n\nWhen it&rsquo;s time to play, Gumdrop is happy to have fun and burn off some energy, but when the day winds down her favorite place to be is curled up right next to you for cuddles. She truly loves being close to her people.\n\nGumdrop gets along well with other dogs and would enjoy having a canine companion to play with, though she&rsquo;d also be perfectly happy soaking up all the attention as your one and only.\n\nThis sweet, affectionate, and well-mannered girl is more than ready to start the next chapter of her life with a loving family.\n\nIf you&rsquo;re looking for a loyal companion who can play, learn, and snuggle, Gumdrop might just be your perfect match\n\n&nbsp;\n\nIf you are interested in adopting/meeting this pup , please complete our online adoption application that you can find here: https://www.starfishanimalrescue.com/adopt/dog-adoption-application&nbsp; . Your application will be reviewed by our team and if it is a good fit, we will send to the foster family to set up a meet!\n\nThe adoption fee of $350 will include spay/neuter, microchip, age appropriate/required vaccinations, treatment for heartworm and any other necessary medical treatment to assure a healthy new pup for your family. IMPORTANT DISCLAIMER: Although we do our best to describe breed, since our pups all come from shelters we can not and will not make any guarantee on breed or size. We can tell you that they are 100% RESCUED! And that is the BEST breed!\n\n*please note that we are a foster home based rescue and we do home visits as part of the adoption process - we are unable to adopt to families who live outside of the Chicago and surrounding suburbs. Thank you for your understanding.",
+      "isDogsOk": true,
+      "energyLevel": "Moderate",
+      "exerciseNeeds": "Moderate",
+      "fenceNeeds": "6 foot",
+      "isNeedingFoster": false,
+      "isFound": false,
+      "priority": 10,
+      "isHousetrained": true,
+      "indoorOutdoor": "Indoor Only",
+      "isKidsOk": true,
+      "name": "Gumdrop",
+      "newPeopleReaction": "Friendly",
+      "obedienceTraining": "Needs Training",
+      "pictureCount": 6,
+      "pictureThumbnailUrl": "https://cdn.rescuegroups.org/8605/pictures/animals/22277/22277252/102786566.jpg?width=100",
+      "qualities": [
+        "affectionate",
+        "cratetrained",
+        "eagerToPlease",
+        "lap",
+        "olderKidsOnly",
+        "playful",
+        "playsToys"
+      ],
+      "rescueId": "D260086",
+      "searchString": "Gumdrop   White with Black Female Medium D260086  Dogs American Pit Bull Terrier / Mixed (short coat)s",
+      "sex": "Female",
+      "sizeCurrent": 45,
+      "sizeGroup": "Medium",
+      "sizeUOM": "Pounds",
+      "slug": "adopt-gumdrop-american-pit-bull-terrier-dog",
+      "isSponsorable": true,
+      "url": "https://Crowe.rescuegroups.org/animals/detail?AnimalID=22277252",
+      "videoCount": 0,
+      "videoUrlCount": 0,
+      "isYardRequired": true,
+      "createdDate": "2026-02-18T23:08:59Z",
+      "updatedDate": "2026-03-19T17:25:39Z"
+    },
+    "relationships": {
+      "breeds": {
+        "data": [
+          {
+            "type": "breeds",
+            "id": "729"
+          }
+        ]
+      },
+      "locations": {
+        "data": [
+          {
+            "type": "locations",
+            "id": "1000008605"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "animals",
+    "id": "22315844",
+    "attributes": {
+      "isAdoptionPending": false,
+      "ageGroup": "Adult",
+      "ageString": "5 Years 11 Months",
+      "birthDate": "2020-04-17T00:00:00Z",
+      "isBirthDateExact": false,
+      "breedString": "Pit Bull Terrier (medium coat)",
+      "breedPrimary": "Pit Bull Terrier",
+      "breedPrimaryId": 179,
+      "isBreedMixed": false,
+      "coatLength": "Medium",
+      "isCourtesyListing": false,
+      "isFound": false,
+      "priority": 10,
+      "name": "HARLEY",
+      "pictureCount": 1,
+      "pictureThumbnailUrl": "https://cdn.rescuegroups.org/1991/pictures/animals/22315/22315844/102863279.jpg?width=100",
+      "rescueId": "A115110",
+      "searchString": "HARLEY   Brown/Chocolate Female Large A115110  Dogs Pit Bull Terrier (medium coat)s",
+      "sex": "Female",
+      "sizeGroup": "Large",
+      "slug": "adopt-harley-pit-bull-terrier-dog",
+      "isSponsorable": false,
+      "videoCount": 0,
+      "videoUrlCount": 0,
+      "createdDate": "2026-03-08T16:39:01Z",
+      "updatedDate": "2026-03-22T02:18:24Z"
+    },
+    "relationships": {
+      "breeds": {
+        "data": [
+          {
+            "type": "breeds",
+            "id": "179"
+          }
+        ]
+      },
+      "locations": {
+        "data": [
+          {
+            "type": "locations",
+            "id": "1000001991"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "animals",
+    "id": "22308825",
+    "attributes": {
+      "isAdoptionPending": false,
+      "ageGroup": "Adult",
+      "ageString": "2 Years",
+      "birthDate": "2024-02-17T00:00:00Z",
+      "isBirthDateExact": false,
+      "breedString": "Pit Bull Terrier (medium coat)",
+      "breedPrimary": "Pit Bull Terrier",
+      "breedPrimaryId": 179,
+      "isBreedMixed": false,
+      "coatLength": "Medium",
+      "isCourtesyListing": false,
+      "descriptionHtml": "<img src=\"https://tracker.rescuegroups.org/pet?22308825\" width=\"0\" height=\"0\" alt=\"\" />",
+      "isFound": false,
+      "priority": 10,
+      "name": "DOS",
+      "pictureCount": 1,
+      "pictureThumbnailUrl": "https://cdn.rescuegroups.org/4156/pictures/animals/22308/22308825/102782448.jpg?width=100",
+      "rescueId": "A071698",
+      "searchString": "DOS   Gray Male Medium A071698  Dogs Pit Bull Terrier (medium coat)s",
+      "sex": "Male",
+      "sizeGroup": "Medium",
+      "slug": "adopt-dos-pit-bull-terrier-dog",
+      "isSponsorable": false,
+      "trackerimageUrl": "https://tracker.rescuegroups.org/pet?22308825",
+      "videoCount": 0,
+      "videoUrlCount": 0,
+      "createdDate": "2026-03-04T22:38:23Z",
+      "updatedDate": "2026-03-05T23:12:41Z"
+    },
+    "relationships": {
+      "breeds": {
+        "data": [
+          {
+            "type": "breeds",
+            "id": "179"
+          }
+        ]
+      },
+      "locations": {
+        "data": [
+          {
+            "type": "locations",
+            "id": "1000004156"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "animals",
+    "id": "22323834",
+    "attributes": {
+      "isAdoptionPending": false,
+      "ageGroup": "Young",
+      "isBirthDateExact": false,
+      "breedString": "Pit Bull Terrier / Mixed (short coat)",
+      "breedPrimary": "Pit Bull Terrier",
+      "breedPrimaryId": 179,
+      "isBreedMixed": true,
+      "coatLength": "Short",
+      "isCourtesyListing": true,
+      "isCurrentVaccinations": true,
+      "descriptionText": "This animal is available at:\nSonoma County Animal Services (707) 565-7100\nPLEASE DO NOT CONTACT NORTH BAY\nDaisy A438421\n&nbsp;\nLocated At: Sonoma County Animal Services\n&nbsp;\nDescription: I am a spayed female, white Pit Bull Terrier mix.\n&nbsp;\nAge: I am estimated to be about 1 year and 4 months old.\n&nbsp;\nWeight: I weigh approximately 43 pounds.\n&nbsp;\nMore Info: I have been at the shelter since Nov 29, 2025.&nbsp;\nFor more information about this animal, call:Sonoma County Animal Services at&nbsp;(707) 565-71001247 Century Court, Santa Rosa\nTuesday - Saturday12:00 - 5:00 p.m.Adoptions are processed until 4:30 p.m.",
+      "isNeedingFoster": false,
+      "isFound": false,
+      "priority": 10,
+      "isHousetrained": true,
+      "name": "Daisy A438421",
+      "pictureCount": 1,
+      "pictureThumbnailUrl": "https://cdn.rescuegroups.org/3325/pictures/animals/22323/22323834/102812908.jpg?width=100",
+      "rescueId": "Sonoma County AS",
+      "searchString": "Daisy A438421   White Female Medium Sonoma County AS  Dogs Pit Bull Terrier / Mixed (short coat)s",
+      "sex": "Female",
+      "sizeGroup": "Medium",
+      "slug": "adopt-daisy-a-pit-bull-terrier-dog",
+      "isSponsorable": false,
+      "videoCount": 0,
+      "videoUrlCount": 0,
+      "createdDate": "2026-03-12T02:03:23Z",
+      "updatedDate": "2026-03-12T02:03:23Z"
+    },
+    "relationships": {
+      "breeds": {
+        "data": [
+          {
+            "type": "breeds",
+            "id": "179"
+          }
+        ]
+      },
+      "locations": {
+        "data": [
+          {
+            "type": "locations",
+            "id": "6833"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "animals",
+    "id": "20063917",
+    "attributes": {
+      "activityLevel": "Highly Active",
+      "isAdoptionPending": false,
+      "adultSexesOk": "All",
+      "ageGroup": "Adult",
+      "ageString": "3 Years 6 Months",
+      "birthDate": "2021-07-22T00:00:00Z",
+      "isBirthDateExact": false,
+      "breedString": "Pit Bull Terrier / Mixed (short coat)",
+      "breedPrimary": "Pit Bull Terrier",
+      "breedPrimaryId": 179,
+      "isBreedMixed": true,
+      "coatLength": "Short",
+      "colorDetails": "White with Black",
+      "isCourtesyListing": false,
+      "isDeclawed": false,
+      "descriptionHtml": "<p>AFFECTIONATE AND PLAYFUL</p>\n\n<p>My name is Star. My estimated date of birth is 7/22/2021. I am very affectionate! I love to be the center of attention, and won&#39;t allow you much personal space. I enjoy lounging and will sit on your lap. I am energetic and enjoy playing.&nbsp;I am a black and white Pit Bull. I am 85 lbs.&nbsp;Due to my size, I would do best in a home without young children or frail adults. I am good with older, considerate children.</p>\n\n<p>*** A courtesy post means this cat is NOT a part of Forever Love Rescue. We are trying to help a fellow rescuer find a home for this cat. We accept the adoption application, assist in processing the application, and then all communication will be handled by the private rescuer onwards. We do not attest to the information they provide, or to the health or&nbsp;vet care of the cat. Specific questions about this cat should be emailed to us at&nbsp;<a data-linkindex=\"0\" href=\"mailto:foreverloverescue@gmail.com\" style=\"color: rgb(5, 99, 193) !important;\" title=\"mailto:foreverloverescue@gmail.com\">foreverloverescue@gmail.com</a>&nbsp;so we can forward them to the appropriate person!&nbsp;***</p><img src=\"https://tracker.rescuegroups.org/pet?20063917\" width=\"0\" height=\"0\" alt=\"\" />",
+      "descriptionText": "AFFECTIONATE AND PLAYFUL\n\nMy name is Star. My estimated date of birth is 7/22/2021. I am very affectionate! I love to be the center of attention, and won&#39;t allow you much personal space. I enjoy lounging and will sit on your lap. I am energetic and enjoy playing.&nbsp;I am a black and white Pit Bull. I am 85 lbs.&nbsp;Due to my size, I would do best in a home without young children or frail adults. I am good with older, considerate children.\n\n*** A courtesy post means this cat is NOT a part of Forever Love Rescue. We are trying to help a fellow rescuer find a home for this cat. We accept the adoption application, assist in processing the application, and then all communication will be handled by the private rescuer onwards. We do not attest to the information they provide, or to the health or&nbsp;vet care of the cat. Specific questions about this cat should be emailed to us at&nbsp;foreverloverescue@gmail.com&nbsp;so we can forward them to the appropriate person!&nbsp;***",
+      "energyLevel": "High",
+      "exerciseNeeds": "High",
+      "isFound": false,
+      "groomingNeeds": "Not Required",
+      "priority": 10,
+      "isHousetrained": true,
+      "indoorOutdoor": "Indoor and Outdoor",
+      "isKidsOk": true,
+      "name": "(KS Courtesy Post) Star",
+      "newPeopleReaction": "Friendly",
+      "ownerExperience": "Breed",
+      "pictureCount": 1,
+      "pictureThumbnailUrl": "https://cdn.rescuegroups.org/6552/pictures/animals/20063/20063917/97344032.jpg?width=100",
+      "qualities": [
+        "affectionate",
+        "lap",
+        "olderKidsOnly",
+        "playful",
+        "playsToys"
+      ],
+      "searchString": "(KS Courtesy Post) Star  White with Black White with Black Female Large  White with Black Dogs Pit Bull Terrier / Mixed (short coat)s",
+      "sex": "Female",
+      "sheddingLevel": "Moderate",
+      "sizeCurrent": 85,
+      "sizeGroup": "Large",
+      "sizeUOM": "Pounds",
+      "slug": "adopt-ks-courtesy-post-star-pit-bull-terrier-dog",
+      "isSpecialNeeds": false,
+      "isSponsorable": false,
+      "trackerimageUrl": "https://tracker.rescuegroups.org/pet?20063917",
+      "videoCount": 0,
+      "videoUrlCount": 0,
+      "vocalLevel": "Lots",
+      "isYardRequired": true,
+      "createdDate": "2023-12-11T18:28:02Z",
+      "updatedDate": "2025-02-14T23:34:01Z"
+    },
+    "relationships": {
+      "breeds": {
+        "data": [
+          {
+            "type": "breeds",
+            "id": "179"
+          }
+        ]
+      },
+      "locations": {
+        "data": [
+          {
+            "type": "locations",
+            "id": "1000006552"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "animals",
+    "id": "22087654",
+    "attributes": {
+      "isAdoptionPending": false,
+      "ageGroup": "Young",
+      "ageString": "1 Year 3 Months",
+      "birthDate": "2024-11-26T00:00:00Z",
+      "isBirthDateExact": false,
+      "breedString": "Labrador Retriever / Pit Bull Terrier / Mixed (medium coat)",
+      "breedPrimary": "Labrador Retriever",
+      "breedPrimaryId": 162,
+      "breedSecondary": "Pit Bull Terrier",
+      "breedSecondaryId": 179,
+      "isBreedMixed": true,
+      "coatLength": "Medium",
+      "isCourtesyListing": false,
+      "descriptionHtml": "Kairo is a 53-pound boy who was surrendered to the shelter by his owner due to the owner's medical issues. He is known to be active, friendly, playful and loving. He can be an escape artist so he will need a home with a secure yard with room to run around. He's scared of vacuums and loud noises but loves to chase anything that moves. He's crate trained but this young man needs a little more help with house training. This playful pup is looking for his forever home! Could that be yours?<img src=\"https://tracker.rescuegroups.org/pet?22087654\" width=\"0\" height=\"0\" alt=\"\" />",
+      "descriptionText": "Kairo is a 53-pound boy who was surrendered to the shelter by his owner due to the owner's medical issues. He is known to be active, friendly, playful and loving. He can be an escape artist so he will need a home with a secure yard with room to run around. He's scared of vacuums and loud noises but loves to chase anything that moves. He's crate trained but this young man needs a little more help with house training. This playful pup is looking for his forever home! Could that be yours?",
+      "isFound": false,
+      "priority": 10,
+      "name": "KAIRO",
+      "pictureCount": 1,
+      "pictureThumbnailUrl": "https://cdn.rescuegroups.org/1903/pictures/animals/22087/22087654/102787305.jpg?width=100",
+      "rescueId": "A216619",
+      "searchString": "KAIRO   Black Male Large A216619  Dogs Labrador Retriever / Pit Bull Terrier / Mixed (medium coat)s",
+      "sex": "Male",
+      "sizeGroup": "Large",
+      "slug": "adopt-kairo-labrador-retriever-dog",
+      "isSponsorable": false,
+      "trackerimageUrl": "https://tracker.rescuegroups.org/pet?22087654",
+      "videoCount": 0,
+      "videoUrlCount": 0,
+      "createdDate": "2025-11-29T16:27:27Z",
+      "updatedDate": "2026-03-06T22:16:06Z"
+    },
+    "relationships": {
+      "breeds": {
+        "data": [
+          {
+            "type": "breeds",
+            "id": "162"
+          },
+          {
+            "type": "breeds",
+            "id": "179"
+          }
+        ]
+      },
+      "locations": {
+        "data": [
+          {
+            "type": "locations",
+            "id": "1000001903"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "animals",
+    "id": "22294941",
+    "attributes": {
+      "isAdoptionPending": false,
+      "ageGroup": "Baby",
+      "ageString": "2 Months 8 Days",
+      "birthDate": "2026-01-14T00:00:00Z",
+      "isBirthDateExact": false,
+      "breedString": "Boxer / Labrador Retriever / Mixed",
+      "breedPrimary": "Boxer",
+      "breedPrimaryId": 104,
+      "breedSecondary": "Labrador Retriever",
+      "breedSecondaryId": 162,
+      "isBreedMixed": true,
+      "isCourtesyListing": false,
+      "descriptionText": "Gilbert&nbsp;and his siblings were rescued with their mom from the streets of Arkansas. These adorable pups are now taking applications. Meet them and fall in love!\n\nApply here:&nbsp;https://projecthopearf.rescuegroups.org/forms/form?formid=6707",
+      "isFound": false,
+      "priority": 10,
+      "name": "Gilbert",
+      "pictureCount": 4,
+      "pictureThumbnailUrl": "https://cdn.rescuegroups.org/10006/pictures/animals/22294/22294941/102813227.jpg?width=100",
+      "rescueId": "26-0224-1736",
+      "searchString": "Gilbert   Tan Male  26-0224-1736  Dogs Boxer / Labrador Retriever / Mixeds",
+      "sex": "Male",
+      "sizeUOM": "Pounds",
+      "slug": "adopt-gilbert-boxer-dog",
+      "isSponsorable": false,
+      "url": "https://projecthopearf.rescuegroups.org/animals/detail?AnimalID=22294941",
+      "videoCount": 0,
+      "videoUrlCount": 0,
+      "createdDate": "2026-02-26T20:58:00Z",
+      "updatedDate": "2026-03-23T00:13:18Z"
+    },
+    "relationships": {
+      "breeds": {
+        "data": [
+          {
+            "type": "breeds",
+            "id": "104"
+          },
+          {
+            "type": "breeds",
+            "id": "162"
+          }
+        ]
+      },
+      "locations": {
+        "data": [
+          {
+            "type": "locations",
+            "id": "1000010006"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "animals",
+    "id": "22058131",
+    "attributes": {
+      "isAdoptionPending": false,
+      "ageGroup": "Senior",
+      "ageString": "10 Years 2 Months",
+      "birthDate": "2015-11-15T00:00:00Z",
+      "isBirthDateExact": false,
+      "breedString": "American Staffordshire Terrier / Mixed (medium coat)",
+      "breedPrimary": "American Staffordshire Terrier",
+      "breedPrimaryId": 82,
+      "isBreedMixed": true,
+      "isCatsOk": false,
+      "coatLength": "Medium",
+      "isCourtesyListing": true,
+      "isCurrentVaccinations": true,
+      "isDeclawed": false,
+      "descriptionHtml": "<p>Stark is a 10-year old &quot;Pittie&quot; mix neutered male with a personality that instantly wins people over. Don&#39;t let his age fool you -- this sweet guy is full of spunk and loves showing off his playful side. He&#39;s a big fan of toys and will happily bounce around with them like a much younger pup.</p>\n\n<p>When Stark isn&#39;t playing, he is the most incredibly affectionate boy and loves soaking up all the attention he can get. And his ears? Truly the cutest ever since one stands straight up while the other flops perfectly to the side giving him a look that melts the heart on sight.</p>\n\n<p>Stark may be a senior but he has tons of love, joy and a touch of goofiness left to share. He&#39;s just waiting for the right person or family to appreciate his charm and give him the cozy loving home he deserves.</p>\n\n<p>Stark is a courtesy post for the Brooke County Animal Shelter in Beechbottom, WV, about 45 minutes from downtown Pittsburgh. Please contact the shelter at 304-394-0800 for more information or to arrange a meet-and-greet with Stark.&nbsp;</p><img src=\"https://tracker.rescuegroups.org/pet?22058131\" width=\"0\" height=\"0\" alt=\"\" />",
+      "descriptionText": "Stark is a 10-year old &quot;Pittie&quot; mix neutered male with a personality that instantly wins people over. Don&#39;t let his age fool you -- this sweet guy is full of spunk and loves showing off his playful side. He&#39;s a big fan of toys and will happily bounce around with them like a much younger pup.\n\nWhen Stark isn&#39;t playing, he is the most incredibly affectionate boy and loves soaking up all the attention he can get. And his ears? Truly the cutest ever since one stands straight up while the other flops perfectly to the side giving him a look that melts the heart on sight.\n\nStark may be a senior but he has tons of love, joy and a touch of goofiness left to share. He&#39;s just waiting for the right person or family to appreciate his charm and give him the cozy loving home he deserves.\n\nStark is a courtesy post for the Brooke County Animal Shelter in Beechbottom, WV, about 45 minutes from downtown Pittsburgh. Please contact the shelter at 304-394-0800 for more information or to arrange a meet-and-greet with Stark.&nbsp;",
+      "isDogsOk": true,
+      "isFound": false,
+      "priority": 10,
+      "isHousetrained": true,
+      "killReason": "0",
+      "name": "Stark (courtesy post)",
+      "pictureCount": 3,
+      "pictureThumbnailUrl": "https://cdn.rescuegroups.org/3365/pictures/animals/22058/22058131/102195876.jpg?width=100",
+      "rescueId": "25-0126",
+      "searchString": "Stark (courtesy post)   Brindle with White Male Medium 25-0126  Dogs American Staffordshire Terrier / Mixed (medium coat)s",
+      "sex": "Male",
+      "sizeCurrent": 50,
+      "sizeGroup": "Medium",
+      "sizeUOM": "Pounds",
+      "slug": "adopt-stark-courtesy-post-american-staffordshire-terrier-dog",
+      "isSpecialNeeds": false,
+      "isSponsorable": false,
+      "trackerimageUrl": "https://tracker.rescuegroups.org/pet?22058131",
+      "videoCount": 0,
+      "videoUrlCount": 0,
+      "createdDate": "2025-11-16T18:51:44Z",
+      "updatedDate": "2025-11-16T18:54:20Z"
+    },
+    "relationships": {
+      "breeds": {
+        "data": [
+          {
+            "type": "breeds",
+            "id": "82"
+          }
+        ]
+      },
+      "locations": {
+        "data": [
+          {
+            "type": "locations",
+            "id": "1000003365"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "animals",
+    "id": "21839884",
+    "attributes": {
+      "isAdoptionPending": false,
+      "ageGroup": "Baby",
+      "isBirthDateExact": false,
+      "breedString": "Pit Bull Terrier / Plott Hound / Mixed (short coat)",
+      "breedPrimary": "Pit Bull Terrier",
+      "breedPrimaryId": 179,
+      "breedSecondary": "Plott Hound",
+      "breedSecondaryId": 400,
+      "isBreedMixed": true,
+      "coatLength": "Short",
+      "isCourtesyListing": false,
+      "isCurrentVaccinations": true,
+      "descriptionHtml": "Meet Sasha \u2013 Our Sweet Survivor Ready to be Part of a Single-Dog Loving Home! Sasha is a one-year-old brindle American Terrier mix bursting with love and joyful energy! She adores belly rubs, long walks, splashing around in water, camping, car rides, and most of all, snuggling up with her people. Sasha is the ultimate companion; she\u2019ll keep you company while you cook, settle by your side as you work, and snuggle up close for movie nights.Her journey is a true \u201crags to riches\u201d story. At just six months old she was found starving in a California alley, abandoned in a kennel chained to a pole. With a body score of one, she was skin and bones barely hanging onto life.  And to top it off, the initial shelter that picked her up deemed her unadoptable and gave her 72 hours until euthanization. Working with Pack Lyfe Rescue, we quickly stepped up to commit to giving her a better life and gave Sasha her first cross-country road trip to bring this sweet girl home to Minnesota.  Today, Sasha\u2019s days are filled with the warmth of a loving home, cozy beds, endless pets, and delicious treats.For the past eight months, Sasha has been sharing her life with three cats, another dog, and all the humans she loves. Sasha is truly part of our family.  We love Sasha and wish more than anything that she could stay with us forever. She\u2019s such an amazing girl, however, her wonderful puppy energy has been a bit too much for our resident dog, who\u2019s eight years old and set in her ways. While Sasha and her \u201csister\u201d have bonded beautifully and get along well most of the time, there have been a few incidents where our older pup\u2019s quick temper has triggered intense disagreements between the two. It breaks our hearts, but because of this we believe Sasha will thrive as the only dog in a home where she can soak up all the love and attention she deserves.  And there's even more to adore about Sasha! She's fully potty trained and incredibly smart, knowing lots of commands like sit, stay, lay down, turn around, and heel. Sasha is so attentive and well-mannered that she\u2019ll even sit patiently, waiting for the \u201cokay\u201d before diving into her dinner. She\u2019s eager to learn, loves making her people proud, and is always ready to show off her good-girl skills! If you\u2019re looking for a loyal, affectionate, and adventurous friend, Sasha is ready to be the light of your life. Let\u2019s find this amazing girl the forever family she so deserves!<img src=\"https://tracker.rescuegroups.org/pet?21839884\" width=\"0\" height=\"0\" alt=\"\" />",
+      "descriptionText": "Meet Sasha \u2013 Our Sweet Survivor Ready to be Part of a Single-Dog Loving Home! Sasha is a one-year-old brindle American Terrier mix bursting with love and joyful energy! She adores belly rubs, long walks, splashing around in water, camping, car rides, and most of all, snuggling up with her people. Sasha is the ultimate companion; she\u2019ll keep you company while you cook, settle by your side as you work, and snuggle up close for movie nights.Her journey is a true \u201crags to riches\u201d story. At just six months old she was found starving in a California alley, abandoned in a kennel chained to a pole. With a body score of one, she was skin and bones barely hanging onto life.  And to top it off, the initial shelter that picked her up deemed her unadoptable and gave her 72 hours until euthanization. Working with Pack Lyfe Rescue, we quickly stepped up to commit to giving her a better life and gave Sasha her first cross-country road trip to bring this sweet girl home to Minnesota.  Today, Sasha\u2019s days are filled with the warmth of a loving home, cozy beds, endless pets, and delicious treats.For the past eight months, Sasha has been sharing her life with three cats, another dog, and all the humans she loves. Sasha is truly part of our family.  We love Sasha and wish more than anything that she could stay with us forever. She\u2019s such an amazing girl, however, her wonderful puppy energy has been a bit too much for our resident dog, who\u2019s eight years old and set in her ways. While Sasha and her \u201csister\u201d have bonded beautifully and get along well most of the time, there have been a few incidents where our older pup\u2019s quick temper has triggered intense disagreements between the two. It breaks our hearts, but because of this we believe Sasha will thrive as the only dog in a home where she can soak up all the love and attention she deserves.  And there's even more to adore about Sasha! She's fully potty trained and incredibly smart, knowing lots of commands like sit, stay, lay down, turn around, and heel. Sasha is so attentive and well-mannered that she\u2019ll even sit patiently, waiting for the \u201cokay\u201d before diving into her dinner. She\u2019s eager to learn, loves making her people proud, and is always ready to show off her good-girl skills! If you\u2019re looking for a loyal, affectionate, and adventurous friend, Sasha is ready to be the light of your life. Let\u2019s find this amazing girl the forever family she so deserves!",
+      "isFound": false,
+      "priority": 10,
+      "isHousetrained": true,
+      "isKidsOk": true,
+      "killReason": "0",
+      "name": "Sasha",
+      "pictureCount": 6,
+      "pictureThumbnailUrl": "https://cdn.rescuegroups.org/10308/pictures/animals/21839/21839884/101707821.jpg?width=100",
+      "searchString": "Sasha   Brindle Female Medium   Dogs Pit Bull Terrier / Plott Hound / Mixed (short coat)s",
+      "sex": "Female",
+      "sizeGroup": "Medium",
+      "slug": "adopt-sasha-pit-bull-terrier-dog",
+      "isSponsorable": false,
+      "trackerimageUrl": "https://tracker.rescuegroups.org/pet?21839884",
+      "videoCount": 0,
+      "videoUrlCount": 0,
+      "createdDate": "2025-09-02T12:45:52Z",
+      "updatedDate": "2025-09-02T12:46:21Z"
+    },
+    "relationships": {
+      "breeds": {
+        "data": [
+          {
+            "type": "breeds",
+            "id": "179"
+          },
+          {
+            "type": "breeds",
+            "id": "400"
+          }
+        ]
+      },
+      "locations": {
+        "data": [
+          {
+            "type": "locations",
+            "id": "1000010308"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "animals",
+    "id": "22251807",
+    "attributes": {
+      "adoptionFeeString": "300.00",
+      "isAdoptionPending": false,
+      "ageGroup": "Young",
+      "ageString": "8 Months",
+      "birthDate": "2025-06-02T00:00:00Z",
+      "isBirthDateExact": false,
+      "breedString": "Shepherd / Mixed",
+      "breedPrimary": "Shepherd",
+      "breedPrimaryId": 411,
+      "isBreedMixed": true,
+      "isCatsOk": true,
+      "isCourtesyListing": false,
+      "isCurrentVaccinations": true,
+      "descriptionHtml": "<br /><br /><span style=\"color: #1f7bdf;\"><span style=\"color: #1f7bdf;\"><strong><span style=\"color: #000000;\"><strong>DOGS:</strong></span></strong><span style=\"color: #000000;\">&nbsp; &nbsp;</span><br /><strong><span style=\"color: #000000;\">CATS:</span></strong><span style=\"color: #000000;\">&nbsp;&nbsp;&nbsp;&nbsp;</span><br /><strong><span style=\"color: #000000;\">KIDS:</span></strong><span style=\"color: #000000;\">&nbsp;&nbsp;&nbsp;&nbsp;</span><br /><strong><span style=\"color: #000000;\">IDEAL</span><span style=\"color: #000000;\"> FAMILY:</span></strong><span style=\"color: #000000;\">&nbsp;&nbsp;</span><br /></span></span>\n<p align=\"center\"><strong><span style=\"color: #800000; font-size: 12pt; font-family: trebuchet ms,geneva;\">If you're looking for a gorgeous, young, trainable buddy </span><br /><span style=\"color: #800000; font-size: 12pt; font-family: trebuchet ms,geneva;\">who will love you forever,<br />Gaby may be your ideal family member!</span><br /></strong></p>\n<span style=\"color: #1f7bdf;\"><strong><span style=\"color: #1f7bdf;\"><strong><strong>GABY'S ADOPTION FEE:&nbsp;&nbsp; $300</strong></strong><strong><br /> </strong></span></strong><span style=\"color: #000000;\"><span style=\"color: #1f7bdf;\"><span style=\"color: #000000;\">This fee covers only part of what we spend to vet, board and rehab the dogs we save. On average we spend<strong> over $450 </strong>on each dog. We made a decision to keep our adoption fee at the 2005 level even though vet prices have doubled and tripled since then. We are constantly fundraising to cover the deficit. At minimum, your adoption fee includes the dog's spay/neuter, heartworm test, heartworm treatment if needed, rabies shot, distemper/parvo shot, bordatella shot, deworming, monthly heartworm and flea preventives, and microchip. In many cases it also includes surgery and various types of vet treatment for standard issues such as hot spots, ear infections and so on.</span></span></span><strong><br /><br /><span style=\"color: #1f7bdf;\"><strong>INTERESTED IN ADOPTING GABY?<br /><a href=\"http://mogsrescue.rescuegroups.org/user/login?refererPageID=72&amp;keyID=1410&amp;referer=/forms/form_edit.phpQu8FormID=1410\">Complete an Adoption Application Now!</a></strong></span></strong></span><img src=\"https://tracker.rescuegroups.org/pet?22251807\" width=\"0\" height=\"0\" alt=\"\" />",
+      "descriptionText": "DOGS:&nbsp; &nbsp;CATS:&nbsp;&nbsp;&nbsp;&nbsp;KIDS:&nbsp;&nbsp;&nbsp;&nbsp;IDEAL FAMILY:&nbsp;&nbsp;\nIf you're looking for a gorgeous, young, trainable buddy who will love you forever,Gaby may be your ideal family member!\nGABY'S ADOPTION FEE:&nbsp;&nbsp; $300 This fee covers only part of what we spend to vet, board and rehab the dogs we save. On average we spend over $450 on each dog. We made a decision to keep our adoption fee at the 2005 level even though vet prices have doubled and tripled since then. We are constantly fundraising to cover the deficit. At minimum, your adoption fee includes the dog's spay/neuter, heartworm test, heartworm treatment if needed, rabies shot, distemper/parvo shot, bordatella shot, deworming, monthly heartworm and flea preventives, and microchip. In many cases it also includes surgery and various types of vet treatment for standard issues such as hot spots, ear infections and so on.INTERESTED IN ADOPTING GABY?Complete an Adoption Application Now!",
+      "isNeedingFoster": false,
+      "isFound": false,
+      "priority": 10,
+      "name": "Gaby",
+      "pictureCount": 1,
+      "pictureThumbnailUrl": "https://cdn.rescuegroups.org/2152/pictures/animals/22251/22251807/102643524.jpg?width=100",
+      "rescueId": "2026-2.1",
+      "searchString": "Gaby Gypsy (OS)  Black with Brown, Red, Golden, Orange or Chestnut Female Medium 2026-2.1  Dogs Shepherd / Mixeds",
+      "sex": "Female",
+      "sizeGroup": "Medium",
+      "slug": "adopt-gaby-shepherd-dog",
+      "isSpecialNeeds": false,
+      "isSponsorable": true,
+      "trackerimageUrl": "https://tracker.rescuegroups.org/pet?22251807",
+      "url": "https://mogsrescue.rescuegroups.org/animals/detail?AnimalID=22251807",
+      "videoCount": 0,
+      "videoUrlCount": 0,
+      "createdDate": "2026-02-07T01:43:03Z",
+      "updatedDate": "2026-02-07T01:43:04Z"
+    },
+    "relationships": {
+      "breeds": {
+        "data": [
+          {
+            "type": "breeds",
+            "id": "411"
+          }
+        ]
+      },
+      "locations": {
+        "data": [
+          {
+            "type": "locations",
+            "id": "1000002152"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "animals",
+    "id": "22331986",
+    "attributes": {
+      "isAdoptionPending": false,
+      "ageGroup": "Baby",
+      "isBirthDateExact": false,
+      "breedString": "Terrier / Mixed",
+      "breedPrimary": "Terrier",
+      "breedPrimaryId": 208,
+      "isBreedMixed": true,
+      "isCatsOk": true,
+      "isCourtesyListing": false,
+      "isCurrentVaccinations": true,
+      "descriptionText": "Meet Velma! Breed: Scruffy Terrier Mix Estimated DOB: 11/12/2025 Sex: Female (spayed) Weight: 10-15 lbs Currently up to date on all age appropriate vaccinationsThings To Know about Velma:\tRescued from Mississippi&nbsp;\tLoves people and takes to everyone she meets like they&#39;re her new best friend\tEasygoing, affectionate, and full of puppy charm &mdash; when she&#39;s not busy playing or exploring, she&#39;ll launch herself into your lap for a full-on kiss attack\tPlayful and curious with a love for squeaky toys, bones, and balls\tTreat motivated and eager to learn &mdash; future star student written all over her\tCrate training is progressing nicely\tCurrently working on housetraining and will require continued, consistent housetraining habits to establish a good routine\tDog friendly\tYoung enough to learn to love cats\tLooking for a loving and committed forever home to provide her with the care and love she deservesLearn more and apply to adopt at TLCrescuePA.org/adoptInterested in fostering? Join our 100% foster-based team at tlcrescuepa.org/foster. #AdoptVelma #ScruffyTerrier #TLCRescuePA",
+      "isDogsOk": true,
+      "isNeedingFoster": false,
+      "isFound": false,
+      "priority": 10,
+      "isKidsOk": true,
+      "name": "Velma 031426",
+      "pictureCount": 3,
+      "pictureThumbnailUrl": "https://cdn.rescuegroups.org/10212/pictures/animals/22331/22331986/102832437.png?width=100",
+      "searchString": "Velma 031426   Black with Tan, Yellow or Fawn Female Medium   Dogs Terrier / Mixeds",
+      "sex": "Female",
+      "sizeGroup": "Medium",
+      "slug": "adopt-velma-terrier-dog",
+      "isSpecialNeeds": false,
+      "isSponsorable": false,
+      "videoCount": 0,
+      "videoUrlCount": 0,
+      "createdDate": "2026-03-16T05:32:11Z",
+      "updatedDate": "2026-03-17T04:42:18Z"
+    },
+    "relationships": {
+      "breeds": {
+        "data": [
+          {
+            "type": "breeds",
+            "id": "208"
+          }
+        ]
+      },
+      "locations": {
+        "data": [
+          {
+            "type": "locations",
+            "id": "1000010212"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "animals",
+    "id": "22024006",
+    "attributes": {
+      "activityLevel": "Moderately Active",
+      "adoptionFeeString": "295.00",
+      "isAdoptionPending": false,
+      "adultSexesOk": "All",
+      "ageGroup": "Baby",
+      "ageString": "10 Months",
+      "birthDate": "2025-04-17T00:00:00Z",
+      "isBirthDateExact": false,
+      "breedString": "Labrador Retriever / Border Collie / Mixed (short coat)",
+      "breedPrimary": "Labrador Retriever",
+      "breedPrimaryId": 162,
+      "breedSecondary": "Border Collie",
+      "breedSecondaryId": 99,
+      "isBreedMixed": true,
+      "isCatsOk": false,
+      "coatLength": "Short",
+      "isCourtesyListing": false,
+      "isCurrentVaccinations": true,
+      "descriptionHtml": "<p style=\"color: rgb(34, 34, 34); font-family: Arial, Helvetica, sans-serif; font-size: small; background-color: rgb(255, 255, 255);\"><strong>\n<span style=\"font-size:16px;\">Meet Dante!</span>\n</strong></p>\n\n<p style=\"color: rgb(34, 34, 34); font-family: Arial, Helvetica, sans-serif; font-size: small; background-color: rgb(255, 255, 255);\">\n<span style=\"font-size:16px;\">Dante is a lovable goofball with charm for days and energy to spare! This clumsy, silly pup is guaranteed to keep you smiling&mdash;from his wiggly zoomies (he especially loves being outside) to his playful personality.</span>\n</p>\n\n<p dir=\"auto\" style=\"color: rgb(34, 34, 34); font-family: Arial, Helvetica, sans-serif; font-size: small; background-color: rgb(255, 255, 255);\">\n<span style=\"font-size:16px;\">Dante is crate trained and knows the command &ldquo;Kennel&rdquo; like a champ. He&rsquo;s still working on sit, but proudly does it before meals. He&rsquo;s also potty trained and confidently uses a doggy door. Dante is smart, eager to please, and making progress every day!</span>\n</p>\n\n<p dir=\"auto\" style=\"color: rgb(34, 34, 34); font-family: Arial, Helvetica, sans-serif; font-size: small; background-color: rgb(255, 255, 255);\">\n<span style=\"font-size:16px;\">Dante gets along wonderfully with his three foster dog siblings and loves having canine friends to play with. He would do best in a home without cats, and because he&rsquo;s still polishing his manners, he may be better suited for a family with older kids.</span>\n</p>\n\n<p><strong>\n<span style=\"font-family:arial,helvetica,sans-serif;\">If interested, please&nbsp; \n<span style=\"font-size: 14px;\"> complete the&nbsp; </span>\n<strong style=\"font-family: arial, helvetica, sans-serif; font-size: 14px;\"><a href=\"http://www.needypaws.org/adoption-application\"> Adoption Application </a></strong> \n<span style=\"font-size: 14px;\"> &nbsp;on our website at&nbsp; </span>\n<strong style=\"font-family: arial, helvetica, sans-serif; font-size: 14px;\"><a href=\"http://www.needypaws.org/\"> www.NeedyPaws.org </a></strong> \n<span style=\"font-size: 14px;\"> &nbsp;and we will contact you.&nbsp; </span>\n<strong style=\"font-family: arial, helvetica, sans-serif; font-size: 14px;\"> Adopters must live within an hour&rsquo;s drive of St.&nbsp;Louis, MO. </strong> </span>\n</strong></p>\n\n<p>\n<span style=\"font-family: arial, helvetica, sans-serif; font-size: 14px;\">Our $295&nbsp;adoption fee includes up-to-date vaccinations, heartworm testing and preventative, spay/neuter and microchip.</span>\n</p>\n\n<p>\n<span style=\"font-family: arial, helvetica, sans-serif; font-size: 14px;\">We are a 100% foster-based rescue and all of our dogs live in approved foster homes. We are dedicated to finding the best Forever Homes, and will perform home visits and conduct veterinarian and reference checks for each potential adopter.</span>\n</p><img src=\"https://tracker.rescuegroups.org/pet?22024006\" width=\"0\" height=\"0\" alt=\"\" />",
+      "descriptionText": "\nMeet Dante!\n\n\n\nDante is a lovable goofball with charm for days and energy to spare! This clumsy, silly pup is guaranteed to keep you smiling&mdash;from his wiggly zoomies (he especially loves being outside) to his playful personality.\n\n\n\nDante is crate trained and knows the command &ldquo;Kennel&rdquo; like a champ. He&rsquo;s still working on sit, but proudly does it before meals. He&rsquo;s also potty trained and confidently uses a doggy door. Dante is smart, eager to please, and making progress every day!\n\n\n\nDante gets along wonderfully with his three foster dog siblings and loves having canine friends to play with. He would do best in a home without cats, and because he&rsquo;s still polishing his manners, he may be better suited for a family with older kids.\n\n\n\nIf interested, please&nbsp; \n complete the&nbsp; \n Adoption Application  \n &nbsp;on our website at&nbsp; \n www.NeedyPaws.org  \n &nbsp;and we will contact you.&nbsp; \n Adopters must live within an hour&rsquo;s drive of St.&nbsp;Louis, MO.  \n\n\n\nOur $295&nbsp;adoption fee includes up-to-date vaccinations, heartworm testing and preventative, spay/neuter and microchip.\n\n\n\nWe are a 100% foster-based rescue and all of our dogs live in approved foster homes. We are dedicated to finding the best Forever Homes, and will perform home visits and conduct veterinarian and reference checks for each potential adopter.\n",
+      "isDogsOk": true,
+      "energyLevel": "Moderate",
+      "exerciseNeeds": "Moderate",
+      "isNeedingFoster": false,
+      "isFound": false,
+      "priority": 10,
+      "isHousetrained": true,
+      "indoorOutdoor": "Indoor Only",
+      "name": "Dante",
+      "newPeopleReaction": "Friendly",
+      "obedienceTraining": "Needs Training",
+      "pictureCount": 10,
+      "pictureThumbnailUrl": "https://cdn.rescuegroups.org/6733/pictures/animals/22024/22024006/102432921.jpg?width=100",
+      "qualities": [
+        "cratetrained",
+        "doesWellInCar",
+        "goofy",
+        "olderKidsOnly",
+        "playful",
+        "playsToys"
+      ],
+      "rescueId": "251104-404",
+      "searchString": "Dante   Black with White Male Large 251104-404  Dogs Labrador Retriever / Border Collie / Mixed (short coat)s",
+      "sex": "Male",
+      "sizeCurrent": 43,
+      "sizeGroup": "Large",
+      "sizeUOM": "Pounds",
+      "slug": "adopt-dante-labrador-retriever-dog",
+      "isSponsorable": false,
+      "trackerimageUrl": "https://tracker.rescuegroups.org/pet?22024006",
+      "url": "https://needypaws.rescuegroups.org/animals/detail?AnimalID=22024006",
+      "videoCount": 0,
+      "videoUrlCount": 0,
+      "createdDate": "2025-11-05T02:04:57Z",
+      "updatedDate": "2026-03-01T22:54:36Z"
+    },
+    "relationships": {
+      "breeds": {
+        "data": [
+          {
+            "type": "breeds",
+            "id": "162"
+          },
+          {
+            "type": "breeds",
+            "id": "99"
+          }
+        ]
+      },
+      "locations": {
+        "data": [
+          {
+            "type": "locations",
+            "id": "1000006733"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "animals",
+    "id": "20391987",
+    "attributes": {
+      "isAdoptionPending": false,
+      "ageGroup": "Adult",
+      "ageString": "5 Years",
+      "birthDate": "2019-04-12T00:00:00Z",
+      "isBirthDateExact": false,
+      "breedString": "Labrador Retriever (medium coat)",
+      "breedPrimary": "Labrador Retriever",
+      "breedPrimaryId": 162,
+      "isBreedMixed": false,
+      "coatLength": "Medium",
+      "isCourtesyListing": false,
+      "descriptionHtml": "<img src=\"https://tracker.rescuegroups.org/pet?20391987\" width=\"0\" height=\"0\" alt=\"\" />",
+      "isFound": false,
+      "priority": 10,
+      "name": "FREDERICK",
+      "pictureCount": 1,
+      "pictureThumbnailUrl": "https://cdn.rescuegroups.org/7832/pictures/animals/20391/20391987/98176198.jpg?width=100",
+      "rescueId": "A111253",
+      "searchString": "FREDERICK   Black Male Large A111253  Dogs Labrador Retriever (medium coat)s",
+      "sex": "Male",
+      "sizeGroup": "Large",
+      "slug": "adopt-frederick-labrador-retriever-dog",
+      "isSponsorable": false,
+      "trackerimageUrl": "https://tracker.rescuegroups.org/pet?20391987",
+      "videoCount": 0,
+      "videoUrlCount": 0,
+      "createdDate": "2024-04-15T00:00:41Z",
+      "updatedDate": "2024-04-23T12:39:49Z"
+    },
+    "relationships": {
+      "breeds": {
+        "data": [
+          {
+            "type": "breeds",
+            "id": "162"
+          }
+        ]
+      },
+      "locations": {
+        "data": [
+          {
+            "type": "locations",
+            "id": "1000007832"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "animals",
+    "id": "21737563",
+    "attributes": {
+      "isAdoptionPending": false,
+      "ageGroup": "Adult",
+      "ageString": "1 Year 5 Months",
+      "birthDate": "2024-05-24T00:00:00Z",
+      "isBirthDateExact": false,
+      "breedString": "German Shepherd Dog (medium coat)",
+      "breedPrimary": "German Shepherd Dog",
+      "breedPrimaryId": 142,
+      "isBreedMixed": false,
+      "coatLength": "Medium",
+      "isCourtesyListing": false,
+      "descriptionHtml": "<img src=\"https://tracker.rescuegroups.org/pet?21737563\" width=\"0\" height=\"0\" alt=\"\" />",
+      "isFound": false,
+      "priority": 10,
+      "name": "LUNA",
+      "pictureCount": 1,
+      "pictureThumbnailUrl": "https://cdn.rescuegroups.org/2013/pictures/animals/21737/21737563/101546619.jpg?width=100",
+      "rescueId": "A2199610",
+      "searchString": "LUNA   Tan Female Medium A2199610  Dogs German Shepherd Dog (medium coat)s",
+      "sex": "Female",
+      "sizeGroup": "Medium",
+      "slug": "adopt-luna-german-shepherd-dog-dog",
+      "isSponsorable": false,
+      "trackerimageUrl": "https://tracker.rescuegroups.org/pet?21737563",
+      "videoCount": 0,
+      "videoUrlCount": 0,
+      "createdDate": "2025-07-31T19:58:52Z",
+      "updatedDate": "2025-11-01T08:24:57Z"
+    },
+    "relationships": {
+      "breeds": {
+        "data": [
+          {
+            "type": "breeds",
+            "id": "142"
+          }
+        ]
+      },
+      "locations": {
+        "data": [
+          {
+            "type": "locations",
+            "id": "1000002013"
+          }
+        ]
+      }
+    }
+  }
+]
