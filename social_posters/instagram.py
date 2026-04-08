@@ -1,83 +1,91 @@
 import os
-import tempfile
-from pathlib import Path
-from urllib.parse import urlparse
 
 import requests
-from instagrapi import Client
-import random
-import time
-
-#rand = random.randint(0, 2000)
-
-#time.sleep(rand)
-
-
 
 from abstractions import Post, PostResult, SocialPoster
 
 
+GRAPH_API_VERSION = "v21.0"
+GRAPH_API_BASE = f"https://graph.facebook.com/{GRAPH_API_VERSION}"
+
+
 class PosterInstagram(SocialPoster):
     def __init__(self):
-        self.username = os.environ.get("INSTAGRAM_HANDLE")
-        self.password = os.environ.get("INSTAGRAM_PASSWORD")
-        self._client = None
-        self._is_available = bool(self.username and self.password)
+        self.account_id = os.environ.get("INSTAGRAM_BUSINESS_ACCOUNT_ID")
+        self.access_token = os.environ.get("INSTAGRAM_PAGE_ACCESS_TOKEN")
+        self._is_available = bool(self.account_id and self.access_token)
+        self._authenticated = False
 
     @property
     def platform_name(self) -> str:
         return "Instagram"
 
     def authenticate(self) -> bool:
+        if not self._is_available:
+            return False
         try:
-            self._client = Client()
-            session_file = Path("ig_session.json")
-            # Reuse saved session to avoid repeated logins, as per instagrapi best practices
-            if session_file.exists():
-                self._client.load_settings(str(session_file))
-            # Login
-            self._client.login(self.username, self.password)
-            # Save session 
-            self._client.dump_settings(str(session_file))
+            response = requests.get(
+                f"{GRAPH_API_BASE}/{self.account_id}",
+                params={"fields": "id,username", "access_token": self.access_token},
+                timeout=10,
+            )
+            response.raise_for_status()
+            self._authenticated = True
             return True
         except Exception:
-            self._client = None
+            self._authenticated = False
             return False
+
+    def is_authenticated(self) -> bool:
+        return self._authenticated
 
     def publish(self, post: Post) -> PostResult:
         if not self._is_available:
-            return PostResult(
-                success=False,
-                error_message="Instagram credentials not available.",
-            )
+            return PostResult(success=False, error_message="Instagram credentials not available.")
 
         if not post.image_url:
-            return PostResult(
-                success=False,
-                error_message="Instagram posts require an image URL.",
-            )
+            return PostResult(success=False, error_message="Instagram posts require an image URL.")
 
-        if not self._client and not self.authenticate():
-            return PostResult(
-                success=False,
-                error_message="Instagram authentication failed.",
-            )
+        if not self._authenticated and not self.authenticate():
+            return PostResult(success=False, error_message="Instagram authentication failed.")
 
-        image_path = None
         try:
-            image_path = self._download_image(post.image_url)
-            caption = self._format_caption(post)
-            media = self._client.photo_upload(image_path, caption=caption)
+            container_id = self._create_media_container(post)
+            media_id = self._publish_media(container_id)
             return PostResult(
                 success=True,
-                post_id=str(media.pk),  # Instagrams unique numeric ID for this post
-                post_url=f"https://www.instagram.com/p/{media.code}/",  # Public URL to view post
+                post_id=media_id,
+                post_url="https://www.instagram.com/cute.pets.boston/",
             )
         except Exception as exc:
             return PostResult(success=False, error_message=str(exc))
-        finally:
-            if image_path and os.path.exists(image_path):
-                os.unlink(image_path)
+
+    def _create_media_container(self, post: Post) -> str:
+        """Create a media container and return its ID."""
+        caption = self._format_caption(post)
+        response = requests.post(
+            f"{GRAPH_API_BASE}/{self.account_id}/media",
+            data={
+                "image_url": post.image_url,
+                "caption": caption,
+                "access_token": self.access_token,
+            },
+            timeout=30,
+        )
+        response.raise_for_status()
+        return response.json()["id"]
+
+    def _publish_media(self, container_id: str) -> str:
+        response = requests.post(
+            f"{GRAPH_API_BASE}/{self.account_id}/media_publish",
+            data={
+                "creation_id": container_id,
+                "access_token": self.access_token,
+            },
+            timeout=30,
+        )
+        response.raise_for_status()
+        return response.json()["id"]
 
     def _format_caption(self, post: Post) -> str:
         caption = post.text
@@ -85,14 +93,3 @@ class PosterInstagram(SocialPoster):
             tags = " ".join(f"#{tag}" for tag in post.tags if tag)
             caption = f"{caption}\n\n{tags}"
         return caption[:2200]
-
-    def _download_image(self, image_url: str) -> str:
-        parsed = urlparse(image_url)
-        ext = os.path.splitext(parsed.path)[1] or ".jpg"
-        with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
-            response = requests.get(image_url, stream=True, timeout=20)
-            response.raise_for_status()
-            for chunk in response.iter_content(chunk_size=1024 * 128):
-                if chunk:
-                    tmp.write(chunk)
-            return tmp.name
