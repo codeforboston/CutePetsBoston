@@ -35,3 +35,30 @@ class PosterInstagram(SocialPoster):
         except Exception:
             self._authenticated = False
             return False
+
+    def is_authenticated(self) -> bool:
+        return self._authenticated
+
+    def publish(self, post: Post) -> PostResult:
+        if not self._is_available:
+            return PostResult(success=False, error_message="Instagram credentials not available.")
+
+        if not post.image_url:
+            return PostResult(success=False, error_message="Instagram posts require an image URL.")
+
+        if not self._authenticated and not self.authenticate():
+            return PostResult(success=False, error_message="Instagram authentication failed.")
+
+        try:
+            container_id = self._create_media_container(post)
+            media_id = self._publish_media(container_id)
+            return PostResult(
+                success=True,
+                post_id=media_id,
+                post_url="https://www.instagram.com/cute.pets.boston/",
+            )
+        except Exception as exc:
+            return PostResult(success=False, error_message=str(exc))
+
+
+
