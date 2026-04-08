@@ -1,0 +1,20 @@
+name: VARTEST
+
+on:
+  push:
+    branches:
+      - '**'
+      - '!master'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+            gh variable list
+            gh variable set TEST_VAR --body "Set from workflow"
+            gh variable list
+        env:
+          GITHUB_TOKEN: ${{ secrets.FULL_PAT }}
