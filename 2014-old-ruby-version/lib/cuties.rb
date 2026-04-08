@@ -1,5 +1,0 @@
-require_relative 'extensions/string'
-require_relative 'cuties/twit'
-require_relative 'cuties/pet'
-require_relative 'cuties/adopt_a_pet'
-require_relative 'cuties/greeting'
