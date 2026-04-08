@@ -13,7 +13,7 @@ ELLIPSIS = "..."
 
 class PosterMastodon(SocialPoster):
     def __init__(self):
-        raw_token = os.environ.get("MASTODON_TOKEN") or os.environ.get("MASTODON_TEST_TOKEN")
+        raw_token = os.environ.get("MASTODON_TOKEN")
         self.token = raw_token.strip() if raw_token else None
         self.api_base_url = "https://mastodon.social"
         self._session = None
