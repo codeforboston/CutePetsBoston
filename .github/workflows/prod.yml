@@ -36,4 +36,5 @@ jobs:
           INSTAGRAM_PASSWORD: ${{ secrets.INSTAGRAM_PASSWORD }}
           BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
           BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
+          MASTODON_TOKEN: ${{ secrets.MASTODON_TOKEN }}
         run: python ./main.py
