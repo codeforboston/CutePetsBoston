@@ -19,7 +19,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install --break-system-packages -r requirements.txt
+        run: pip install --break-system-packages requests==2.32.5 Mastodon.py==2.1.4
 
       - name: Post to Mastodon
         env:
