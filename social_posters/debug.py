@@ -22,6 +22,7 @@ class PosterDebug(SocialPoster):
             f"Link: {post.link}\n"
             f"Alt: {post.alt_text}\n"
             f"Tags: {post.tags}\n"
+            f"Url: {post.link}\n"
         )
         if self.stream:
             self.stream.write(output)
