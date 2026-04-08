@@ -60,5 +60,36 @@ class PosterInstagram(SocialPoster):
         except Exception as exc:
             return PostResult(success=False, error_message=str(exc))
 
+    def _create_media_container(self, post: Post) -> str:
+        """Create a media container and return its ID."""
+        caption = self._format_caption(post)
+        response = requests.post(
+            f"{GRAPH_API_BASE}/{self.account_id}/media",
+            data={
+                "image_url": post.image_url,
+                "caption": caption,
+                "access_token": self.access_token,
+            },
+            timeout=30,
+        )
+        response.raise_for_status()
+        return response.json()["id"]
 
+    def _publish_media(self, container_id: str) -> str:
+        response = requests.post(
+            f"{GRAPH_API_BASE}/{self.account_id}/media_publish",
+            data={
+                "creation_id": container_id,
+                "access_token": self.access_token,
+            },
+            timeout=30,
+        )
+        response.raise_for_status()
+        return response.json()["id"]
 
+    def _format_caption(self, post: Post) -> str:
+        caption = post.text
+        if post.tags:
+            tags = " ".join(f"#{tag}" for tag in post.tags if tag)
+            caption = f"{caption}\n\n{tags}"
+        return caption[:2200]
