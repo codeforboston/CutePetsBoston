@@ -204,5 +204,5 @@ class SourceRescueGroups(PetSource):
         thumbnail = attrs.get("pictureThumbnailUrl")
         if thumbnail:
             # Request a larger image instead of the 100px thumbnail
-            return re.sub(r"\?width=\d+", "?width=1080", thumbnail)
+            return re.sub(r"\?width=\d+", "?width=800", thumbnail)
         return None
