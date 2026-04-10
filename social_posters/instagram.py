@@ -59,7 +59,8 @@ class PosterInstagram(SocialPoster):
 
         try:
             container_id = self._create_media_container(post)
-            self._wait_for_container(container_id)
+            time.sleep(10)
+    
             media_id = self._publish_media(container_id)
             return PostResult(
                 success=True,
@@ -91,24 +92,7 @@ class PosterInstagram(SocialPoster):
         response.raise_for_status()
         return response.json()["id"]
 
-    def _wait_for_container(self, container_id: str, max_attempts: int = 10, interval: int = 5):
-        """Poll the container status until it's FINISHED or an error occurs."""
-        for attempt in range(max_attempts):
-            response = requests.get(
-                f"{GRAPH_API_BASE}/{container_id}",
-                params={"fields": "status_code", "access_token": self.access_token},
-                timeout=10,
-            )
-            response.raise_for_status()
-            status = response.json().get("status_code")
-            print(f"Instagram container {container_id} status: {status} (attempt {attempt + 1}/{max_attempts})")
-            if status == "FINISHED":
-                return
-            if status in ("ERROR", "EXPIRED"):
-                raise RuntimeError(f"Instagram container {container_id} status: {status}")
-            time.sleep(interval)
-        raise RuntimeError(f"Instagram container {container_id} not ready after {max_attempts * interval}s")
-
+  
     def _publish_media(self, container_id: str) -> str:
         response = requests.post(
             f"{GRAPH_API_BASE}/{self.account_id}/media_publish",
