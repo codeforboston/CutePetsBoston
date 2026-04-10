@@ -22,6 +22,7 @@ class PosterInstagram(SocialPoster):
 
     def authenticate(self) -> bool:
         if not self._is_available:
+            print("Instagram: credentials not set (INSTAGRAM_BUSINESS_ACCOUNT_ID or INSTAGRAM_PAGE_ACCESS_TOKEN missing)")
             return False
         try:
             response = requests.get(
@@ -32,7 +33,13 @@ class PosterInstagram(SocialPoster):
             response.raise_for_status()
             self._authenticated = True
             return True
-        except Exception:
+        except requests.exceptions.HTTPError as exc:
+            body = exc.response.text if exc.response is not None else "no response body"
+            print(f"Instagram auth failed (HTTP {exc.response.status_code}): {body}")
+            self._authenticated = False
+            return False
+        except Exception as exc:
+            print(f"Instagram auth failed: {exc}")
             self._authenticated = False
             return False
 
@@ -57,8 +64,15 @@ class PosterInstagram(SocialPoster):
                 post_id=media_id,
                 post_url="https://www.instagram.com/cute.pets.boston/",
             )
+        except requests.exceptions.HTTPError as exc:
+            body = exc.response.text if exc.response is not None else "no response body"
+            error = f"Instagram publish failed (HTTP {exc.response.status_code}): {body}"
+            print(error)
+            return PostResult(success=False, error_message=error)
         except Exception as exc:
-            return PostResult(success=False, error_message=str(exc))
+            error = f"Instagram publish failed: {exc}"
+            print(error)
+            return PostResult(success=False, error_message=error)
 
     def _create_media_container(self, post: Post) -> str:
         """Create a media container and return its ID."""
