@@ -59,6 +59,8 @@ class PosterInstagram(SocialPoster):
 
         try:
             container_id = self._create_media_container(post)
+            # Instagram needs time to process the uploaded image before publishing.
+            # Publishing immediately returns "Media ID is not available" (error 9007).
             time.sleep(10)
     
             media_id = self._publish_media(container_id)
