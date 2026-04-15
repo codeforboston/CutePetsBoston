@@ -121,7 +121,7 @@ class PosterBluesky(SocialPoster):
 
         city = ""
         if pet.location != "Boston, MA":
-            city = pet.location.split(",")[0]
+            city = pet.location.split(",")[0].capitalize()
 
         detail_parts = []
         if pet.age_string:

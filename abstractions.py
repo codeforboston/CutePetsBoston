@@ -121,7 +121,7 @@ class SocialPoster(ABC):
 
         city = ""
         if pet.location != "Boston, MA":
-            city = pet.location.split(",")[0]
+            city = pet.location.split(",")[0].capitalize()
 
         return Post(
             text=text,
