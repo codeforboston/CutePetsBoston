@@ -26,8 +26,8 @@ jobs:
           CUTEPETSBOSTON_RESCUEGROUPS_API_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
           INSTAGRAM_BUSINESS_ACCOUNT_ID: ${{ secrets.INSTAGRAM_BUSINESS_ACCOUNT_ID }}
           INSTAGRAM_PAGE_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_PAGE_ACCESS_TOKEN }}
-          BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
-          BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
+          BLUESKY_HANDLE: ${{ secrets.BLUESKY_TEST_HANDLE }}
+          BLUESKY_PASSWORD: ${{ secrets.BLUESKY_TEST_PASSWORD }}
         run: |
           #In order to create posts on the test accounts remove the --debugposters debug flag
           python ./main.py --debugsources --debugposters
