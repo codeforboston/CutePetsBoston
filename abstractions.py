@@ -119,6 +119,10 @@ class SocialPoster(ABC):
         if pet.adoption_url:
             text += f"\n\nAdopt {pet.name}: {pet.adoption_url}"
 
+        city = ""
+        if pet.location != "Boston, MA":
+            city = pet.location.split(",")[0].capitalize()
+
         return Post(
             text=text,
             image_url=pet.image_url,
@@ -127,6 +131,7 @@ class SocialPoster(ABC):
             tags=[
                 "adoptdontshop",
                 "rescue",
+                city,
                 pet.species,
                 pet.breed.lower().replace(" ", ""),
             ],

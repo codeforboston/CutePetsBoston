@@ -119,6 +119,10 @@ class PosterBluesky(SocialPoster):
             text += f" in {pet.location}"
         text += "."
 
+        city = ""
+        if pet.location != "Boston, MA":
+            city = pet.location.split(",")[0].capitalize()
+
         detail_parts = []
         if pet.age_string:
             detail_parts.append(pet.age_string)
@@ -137,7 +141,7 @@ class PosterBluesky(SocialPoster):
             text += f"\n\nLearn more and adopt me: {pet.adoption_url}"
 
         species_tag = "DogsOfBluesky" if pet.species == "dog" else "CatsOfBluesky"
-        tags = ["AdoptDontShop", "Boston", species_tag]
+        tags = ["AdoptDontShop", "Boston", city, species_tag]
 
         return Post(
             text=text,
