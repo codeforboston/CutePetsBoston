@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Iterable
 
+from config import CITY_NAME, CITY_STATE
+
 
 # =============================================================================
 # Pet Ingestor Interface
@@ -120,7 +122,7 @@ class SocialPoster(ABC):
             text += f"\n\nAdopt {pet.name}: {pet.adoption_url}"
 
         city = ""
-        if pet.location != "Boston, MA":
+        if pet.location != f"{CITY_NAME}, {CITY_STATE}":
             city = pet.location.split(",")[0].capitalize()
 
         return Post(

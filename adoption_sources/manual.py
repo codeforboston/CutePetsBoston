@@ -6,6 +6,7 @@ import json
 from typing import Iterable, Sequence
 
 from abstractions import AdoptablePet, PetSource
+from config import CITY_NAME, CITY_STATE
 
 _data_path = __file__.replace(".py", ".json")
 with open(_data_path) as _f:
@@ -18,7 +19,7 @@ class SourceManual(PetSource):
     def __init__(
         self,
         animals: Sequence[dict] | None = None,
-        location_label: str = "Boston, MA",
+        location_label: str = f"{CITY_NAME}, {CITY_STATE}",
         species: str = "dog",
     ) -> None:
         self._animals: Sequence[dict] = animals if animals is not None else MANUAL_SOURCE_DATA

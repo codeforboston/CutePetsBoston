@@ -14,6 +14,7 @@ import json
 import requests
 
 from abstractions import AdoptablePet, PetSource
+from config import CITY_NAME, CITY_STATE, POSTAL_CODE
 
 logger = logging.getLogger(__name__)
 
@@ -30,11 +31,11 @@ class SourceRescueGroups(PetSource):
     def __init__(
         self,
         api_key: str | None = None,
-        postal_code: str = "02108",  # Boston
+        postal_code: str = POSTAL_CODE,
         radius_miles: int = 50,
         species: str = "dogs",  # "dogs" or "cats"
         limit: int = 25,
-        location_label: str = "Boston, MA",  # For display purposes
+        location_label: str = f"{CITY_NAME}, {CITY_STATE}",
     ):
         self._api_key = api_key or os.environ.get("CUTEPETSBOSTON_RESCUEGROUPS_API_KEY")
         self.postal_code = postal_code
