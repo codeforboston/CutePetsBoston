@@ -1,0 +1,4 @@
+CITY_NAME = "Boston"
+CITY_STATE = "MA"
+CITY_HASHTAGS = ["Boston"]
+POSTAL_CODE = "02108"
