@@ -5,6 +5,7 @@ on:
     branches:
       - '**'
       - '!master'
+      - 
   workflow_dispatch:
 
 jobs:
@@ -30,4 +31,4 @@ jobs:
           BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
         run: |
           #In order to create posts on the test accounts remove the --debugposters debug flag
-          python ./main.py --debugsources --debugposters
+          python ./main.py 
