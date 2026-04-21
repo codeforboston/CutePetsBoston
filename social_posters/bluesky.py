@@ -4,6 +4,7 @@ import os
 import requests
 
 from abstractions import Post, PostResult, SocialPoster
+from config import CITY_HASHTAGS, CITY_NAME, CITY_STATE
 
 
 class PosterBluesky(SocialPoster):
@@ -120,7 +121,7 @@ class PosterBluesky(SocialPoster):
         text += "."
 
         city = ""
-        if pet.location != "Boston, MA":
+        if pet.location != f"{CITY_NAME}, {CITY_STATE}":
             city = pet.location.split(",")[0].capitalize()
 
         detail_parts = []
@@ -141,7 +142,7 @@ class PosterBluesky(SocialPoster):
             text += f"\n\nLearn more and adopt me: {pet.adoption_url}"
 
         species_tag = "DogsOfBluesky" if pet.species == "dog" else "CatsOfBluesky"
-        tags = ["AdoptDontShop", "Boston", city, species_tag]
+        tags = ["AdoptDontShop", *CITY_HASHTAGS, city, species_tag]
 
         return Post(
             text=text,
