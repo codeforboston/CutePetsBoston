@@ -20,14 +20,14 @@ def create_posters(debug=False):
     if debug:
 
         return [PosterDebug()]
-    from social_posters.instagram import PosterInstagram
+    #from social_posters.instagram import PosterInstagram
     from social_posters.bluesky import PosterBluesky
     from social_posters.mastodon import PosterMastodon
 
     posters = []
     posters.append(PosterMastodon())
     posters.append(PosterBluesky())
-    posters.append(PosterInstagram())
+    #posters.append(PosterInstagram())
     return posters
 
 
