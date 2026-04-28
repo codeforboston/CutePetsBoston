@@ -6,10 +6,10 @@ blurhash==1.1.5
 certifi==2026.2.25
 chardet==3.0.4
 charset-normalizer==3.4.4
-instagrapi>=2.3.0
+instagrapi==2.3.0
 clarifai==2.6.2
 configparser==3.8.1
-decorator==5.2.1
+decorator==4.0.2
 EasyProcess==1.1
 emoji==1.7.0
 future==1.0.0
