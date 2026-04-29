@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 
 client = Mastodon(
-    access_token=os.environ.get("MASTODON_TOKEN") or os.environ["MASTODON_TEST_TOKEN"],
+    access_token=os.environ.get("MASTODON_TEST_TOKEN"),
     api_base_url=os.environ.get("MASTODON_API_BASE_URL", "https://mastodon.social"),
 )
 
