@@ -64,5 +64,6 @@ class CreatePostersTests(unittest.TestCase):
         self.assertEqual(posters[0].platform_name, "Debug")
 
 
+
 if __name__ == "__main__":
     unittest.main()

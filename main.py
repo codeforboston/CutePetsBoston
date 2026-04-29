@@ -15,18 +15,22 @@ def main():
 
 
 def create_posters(debug=False):
-    from social_posters import PosterDebug
-
+    from social_posters.debug import PosterDebug
+    
     if debug:
-        return [PosterDebug()]
 
+        return [PosterDebug()]
     from social_posters.instagram import PosterInstagram
     from social_posters.bluesky import PosterBluesky
+    from social_posters.mastodon import PosterMastodon
 
     posters = []
+    posters.append(PosterMastodon())
     posters.append(PosterBluesky())
     posters.append(PosterInstagram())
     return posters
+
+
 
 
 def create_sources(debug=False):
@@ -78,6 +82,8 @@ def pick_pet(pets):
     if not eligible:
         return None
     return random.choice(eligible)
+
+
 
 
 if __name__ == "__main__":
