@@ -8,7 +8,7 @@ from mastodon import Mastodon
 from abstractions import Post, PostResult, SocialPoster
 
 MASTODON_CHARACTER_LIMIT = 500
-ELLIPSIS = "..."
+TRUNCATION_SUFFIX = "..."
 
 
 class PosterMastodon(SocialPoster):
@@ -86,22 +86,22 @@ class PosterMastodon(SocialPoster):
 
     def _format_caption(self, post: Post) -> str:
         tags = " ".join(f"#{tag}" for tag in post.tags if tag)
-        suffix = f"\n\n{tags}" if tags else ""
-        available_text_length = MASTODON_CHARACTER_LIMIT - len(suffix)
+        tag_suffix = f"\n\n{tags}" if tags else ""
+        available_text_length = MASTODON_CHARACTER_LIMIT - len(tag_suffix)
 
-        if available_text_length <= len(ELLIPSIS):
-            return (suffix[-MASTODON_CHARACTER_LIMIT:]).strip()
+        if available_text_length <= len(TRUNCATION_SUFFIX):
+            return (tag_suffix[-MASTODON_CHARACTER_LIMIT:]).strip()
 
         caption_text = post.text.strip()
         if len(caption_text) > available_text_length:
-            caption_text = caption_text[: available_text_length - len(ELLIPSIS)].rstrip()
-            caption_text = f"{caption_text}{ELLIPSIS}"
+            caption_text = caption_text[: available_text_length - len(TRUNCATION_SUFFIX)].rstrip()
+            caption_text = f"{caption_text}{TRUNCATION_SUFFIX}"
 
-        return f"{caption_text}{suffix}"
+        return f"{caption_text}{tag_suffix}"
 
     def _download_image(self, image_url: str) -> str:
-        parsed = urlparse(image_url)
-        ext = os.path.splitext(parsed.path)[1] or ".jpg"
+        parsed_url = urlparse(image_url)
+        ext = os.path.splitext(parsed_url.path)[1] or ".jpg"
         with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
             response = requests.get(image_url, stream=True, timeout=20)
             response.raise_for_status()
