@@ -18,6 +18,15 @@ from config import CITY_NAME, CITY_STATE, POSTAL_CODE
 
 logger = logging.getLogger(__name__)
 
+_blocklist_path = __file__.replace(".py", "_blocklist.json")
+with open(_blocklist_path) as _f:
+    _blocklist = json.loads(_f.read())
+
+# Substrings (case-insensitive) that mark a record as a placeholder rather than
+# an actual adoptable pet. Some rescues publish entries like "More Dogs Soon!"
+# to point users at their website; those should never be posted.
+PLACEHOLDER_NAME_SUBSTRINGS: tuple[str, ...] = tuple(s.lower() for s in _blocklist["name_substrings"])
+
 
 class SourceRescueGroups(PetSource):
     """
@@ -104,8 +113,12 @@ class SourceRescueGroups(PetSource):
 
         for animal in data:
             pet = self._parse_animal(animal, orgs_by_id)
-            if pet:
-                yield pet
+            if not pet:
+                continue
+            if self._is_placeholder_name(pet.name):
+                logger.info(f"Skipping placeholder record: {pet.name!r}")
+                continue
+            yield pet
 
     def _parse_animal(self, animal: dict, orgs_by_id: dict) -> AdoptablePet | None:
         """Parse a single animal record from the API response."""
@@ -162,6 +175,10 @@ class SourceRescueGroups(PetSource):
         except Exception as e:
             logger.warning(f"Failed to parse animal {animal.get('id', 'unknown')}: {e}")
             return None
+
+    def _is_placeholder_name(self, name: str) -> bool:
+        lowered = (name or "").lower()
+        return any(needle in lowered for needle in PLACEHOLDER_NAME_SUBSTRINGS)
 
     def _clean_name(self, name: str) -> str:
         """
