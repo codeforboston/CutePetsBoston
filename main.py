@@ -1,5 +1,10 @@
+import os
 import random
 import argparse
+import traceback
+
+import requests
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -8,10 +13,41 @@ def main():
 
     args = parser.parse_args()
 
-    sources = create_sources(debug=args.debugsources)
-    posters = create_posters(debug=args.debugposters)
+    try:
+        sources = create_sources(debug=args.debugsources)
+        posters = create_posters(debug=args.debugposters)
 
-    run(sources, posters)
+        run(sources, posters)
+    except Exception:
+        notify_slack_of_exception(traceback.format_exc())
+        raise
+
+
+def notify_slack_of_exception(tb_text):
+    webhook_url = os.environ.get("SLACK_WEBHOOK_URL")
+    if not webhook_url:
+        print("SLACK_WEBHOOK_URL not set; skipping Slack alert.")
+        return
+
+    workflow = os.environ.get("GITHUB_WORKFLOW", "local run")
+    repo = os.environ.get("GITHUB_REPOSITORY", "")
+    run_id = os.environ.get("GITHUB_RUN_ID")
+    run_link = (
+        f"https://github.com/{repo}/actions/runs/{run_id}"
+        if repo and run_id
+        else None
+    )
+
+    header = f"CutePetsBoston run failed in *{workflow}*"
+    if run_link:
+        header += f" (<{run_link}|view run>)"
+    text = f"{header}\n```{tb_text.strip()[-2500:]}```"
+
+    try:
+        response = requests.post(webhook_url, json={"text": text}, timeout=10)
+        response.raise_for_status()
+    except Exception as slack_exc:
+        print(f"Failed to post Slack alert: {slack_exc}")
 
 
 def create_posters(debug=False):
