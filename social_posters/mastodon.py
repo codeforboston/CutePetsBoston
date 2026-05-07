@@ -5,7 +5,8 @@ import tempfile
 import requests
 from mastodon import Mastodon
 
-from abstractions import Post, PostResult, SocialPoster
+from abstractions import Post, PostResult, SocialPoster, AdoptablePet
+from abstractions import CITY_NAME, CITY_STATE
 
 MASTODON_CHARACTER_LIMIT = 500
 TRUNCATION_SUFFIX = "..."
@@ -109,3 +110,37 @@ class PosterMastodon(SocialPoster):
                 if chunk:
                     tmp.write(chunk)
             return tmp.name
+
+    # rearrange so that link is at top
+    # need to test
+    def format_post(self, pet:AdoptablePet) -> Post:
+        """
+        Create a Post from an AdoptablePet.
+
+        Override this method to customize post formatting for specific platforms.
+        """
+        text = f"Meet {pet.name}! This adorable {pet.breed} {pet.species} is looking for a forever home in {pet.location}."
+
+        if pet.adoption_url:
+            text += f" Adopt {pet.name}: {pet.adoption_url}"   
+        
+        if pet.description:
+            text += f"\n\n{pet.description}"
+
+        city = ""
+        if pet.location != f"{CITY_NAME}, {CITY_STATE}":
+            city = pet.location.split(",")[0].capitalize()
+
+        return Post(
+            text=text,
+            image_url=pet.image_url,
+            link=pet.adoption_url,
+            alt_text=f"Photo of {pet.name}, a {pet.breed} {pet.species} available for adoption",
+            tags=[
+                "adoptdontshop",
+                "rescue",
+                city,
+                pet.species,
+                pet.breed.lower().replace(" ", ""),
+            ],
+        )
