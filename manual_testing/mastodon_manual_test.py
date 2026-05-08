@@ -2,10 +2,10 @@ import sys, os
 import time
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from abstractions import Post, AdoptablePet
+from abstractions import AdoptablePet
 from social_posters.mastodon import PosterMastodon
 
-def postExceed500WordLimitWithAdoptionLink():
+def postExceed500CharsLimitWithAdoptionLink():
     pet = AdoptablePet("Brian", 
                         "Labrador Retriever", 
                         "White Labrador", 
@@ -20,7 +20,7 @@ def postExceed500WordLimitWithAdoptionLink():
                     )
     return pet
 
-def postExceed500WordLimitWithoutAdoptionLink():
+def postExceed500CharsLimitWithoutAdoptionLink():
     pet = AdoptablePet("Vinny", 
                         "Unknown", 
                         "Unknown", 
@@ -36,7 +36,7 @@ def postExceed500WordLimitWithoutAdoptionLink():
     return pet
 
 
-def postWithin500WordLimitWithAdoptionLink():
+def postWithin500CharsLimitWithAdoptionLink():
     pet = AdoptablePet("Ernie", 
                         "Chicken", 
                         "Unknown", 
@@ -51,7 +51,7 @@ def postWithin500WordLimitWithAdoptionLink():
                     )
     return pet
 
-def postWithin500WordLimitWithoutAdoptionLink():
+def postWithin500CharsLimitWithoutAdoptionLink():
     pet = AdoptablePet("Pouncy", 
                         "Cat", 
                         "Unknown", 
@@ -67,10 +67,10 @@ def postWithin500WordLimitWithoutAdoptionLink():
     return pet
 
 testingCases = [
-    postExceed500WordLimitWithAdoptionLink,
-    postExceed500WordLimitWithoutAdoptionLink,
-    postWithin500WordLimitWithAdoptionLink,
-    postWithin500WordLimitWithoutAdoptionLink
+    postExceed500CharsLimitWithAdoptionLink,
+    postExceed500CharsLimitWithoutAdoptionLink,
+    postWithin500CharsLimitWithAdoptionLink,
+    postWithin500CharsLimitWithoutAdoptionLink
 ]
 
 def main():
