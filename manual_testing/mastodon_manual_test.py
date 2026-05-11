@@ -66,11 +66,27 @@ def postWithin500CharsLimitWithoutAdoptionLink():
                     )
     return pet
 
+def postUnicode():
+    pet = AdoptablePet("Vinny", 
+                        "Unknown", 
+                        "Unknown", 
+                        "Quahog", 
+                        "🐶❤️ 可爱的小狗 Friendly \"lap cat\" @ shelter #AdoptMe", 
+                        None, 
+                        "https://static.wikia.nocookie.net/familyguyfanon/images/e/ec/Vinny_Griffin.png/revision/latest?cb=20161129110103",
+                        None, 
+                        "Male", 
+                        None, 
+                        None
+                    )
+    return pet
+
 testingCases = [
     postExceed500CharsLimitWithAdoptionLink,
     postExceed500CharsLimitWithoutAdoptionLink,
     postWithin500CharsLimitWithAdoptionLink,
-    postWithin500CharsLimitWithoutAdoptionLink
+    postWithin500CharsLimitWithoutAdoptionLink,
+    postUnicode
 ]
 
 def main():
