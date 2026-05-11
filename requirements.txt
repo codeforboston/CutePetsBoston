@@ -7,7 +7,6 @@ Mastodon.py==2.2.1
 packaging==26.2
 pluggy==1.6.0
 Pygments==2.20.0
-pytest==9.0.3
 python-dateutil==2.9.0.post0
 requests==2.33.1
 six==1.17.0
