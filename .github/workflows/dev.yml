@@ -7,6 +7,9 @@ on:
       - '!master'
   workflow_dispatch:
 
+permissions:
+      actions: read
+
 jobs:
   run-cute-pets:
     runs-on: ubuntu-latest
@@ -22,6 +25,27 @@ jobs:
       - name: Install dependencies
         run: pip install --break-system-packages -r requirements.txt
 
+      - name: Get Previous Run ID
+        id: get_id
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Fetches the ID of the last completed run for the current workflow
+          PREVIOUS_RUN_ID=$(gh run list --workflow "${{ github.workflow }}" \
+          --status success \
+          --limit 1 \
+          --json databaseId \
+          --jq '.[0].databaseId')
+          echo "previous_run_id=$PREVIOUS_RUN_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Download previous database artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: database.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ steps.get_id.outputs.previous_run_id }}
+        continue-on-error: true 
+
       - name: Call RescueGroups API
         env:
           CUTEPETSBOSTON_RESCUEGROUPS_API_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
@@ -34,3 +58,10 @@ jobs:
         run: |
           #In order to create posts on the test accounts remove the --debugposters debug flag
           python ./main.py --debugsources --debugposters
+
+      - name: Upload database artifact
+        uses: actions/upload-artifact@v7
+        with:
+          path: database.json
+          retention-days: 14
+          archive: false
