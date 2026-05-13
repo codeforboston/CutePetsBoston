@@ -8,6 +8,7 @@ from mastodon import Mastodon
 from abstractions import Post, PostResult, SocialPoster, AdoptablePet
 from abstractions import CITY_NAME, CITY_STATE
 
+THREAD_SUFFIX = "\n\nMore details below ⬇️"
 MASTODON_CHARACTER_LIMIT = 500
 TRUNCATION_SUFFIX = "..."
 
@@ -69,10 +70,22 @@ class PosterMastodon(SocialPoster):
                 image_path,
                 description=post.alt_text or "Photo of an adoptable pet",
             )
+
+            main_caption, replies = self._format_caption_thread(post)
+
             status = self._session.status_post(
-                self._format_caption(post),
+                main_caption,
                 media_ids=[media["id"]],
             )
+
+            root_status_id = status["id"]
+
+            for reply_text in replies:
+                self._session.status_post(
+                    reply_text,
+                    in_reply_to_id=root_status_id
+                )
+
             return PostResult(
                 success=True,
                 post_id=str(status["id"]),
@@ -85,20 +98,42 @@ class PosterMastodon(SocialPoster):
             if image_path and os.path.exists(image_path):
                 os.unlink(image_path)
 
-    def _format_caption(self, post: Post) -> str:
+    def _format_caption_thread(self, post: Post) -> tuple[str, list[str]]:
         tags = " ".join(f"#{tag}" for tag in post.tags if tag)
         tag_suffix = f"\n\n{tags}" if tags else ""
-        available_text_length = MASTODON_CHARACTER_LIMIT - len(tag_suffix)
-
-        if available_text_length <= len(TRUNCATION_SUFFIX):
-            return (tag_suffix[-MASTODON_CHARACTER_LIMIT:]).strip()
 
         caption_text = post.text.strip()
-        if len(caption_text) > available_text_length:
-            caption_text = caption_text[: available_text_length - len(TRUNCATION_SUFFIX)].rstrip()
-            caption_text = f"{caption_text}{TRUNCATION_SUFFIX}"
 
-        return f"{caption_text}{tag_suffix}"
+        if len(caption_text) + len(tag_suffix) <= MASTODON_CHARACTER_LIMIT:
+            return f"{caption_text}{tag_suffix}", []
+
+        main_limit = (
+            MASTODON_CHARACTER_LIMIT 
+            - len(tag_suffix) 
+            - len(THREAD_SUFFIX)
+            - len(TRUNCATION_SUFFIX)
+        )
+
+        main_text, overflow = self._safe_truncate(caption_text, main_limit)
+        
+        main_caption = f"{main_text}{TRUNCATION_SUFFIX}{THREAD_SUFFIX}{tag_suffix}"
+        replies = self._split_reply_chunks(overflow)
+
+
+        return main_caption, replies
+    
+    def _split_reply_chunks(self, text: str) -> list[str]:
+        chunks = []
+        remaining = text.strip()
+
+        while remaining:
+            chunk, remaining = self._safe_truncate(
+                remaining,
+                MASTODON_CHARACTER_LIMIT
+            )
+            chunks.append(chunk)
+
+        return chunks
 
     def _download_image(self, image_url: str) -> str:
         parsed_url = urlparse(image_url)
@@ -110,9 +145,18 @@ class PosterMastodon(SocialPoster):
                 if chunk:
                     tmp.write(chunk)
             return tmp.name
+        
+    def _safe_truncate(self, text: str, limit: int) -> tuple[str, str]:
+        if len(text) <= limit:
+            return text, ""
 
-    # rearrange so that link is at top
-    # need to test
+        cut = text.rfind(" ", 0, limit)
+
+        if cut == -1:
+            cut = limit
+        
+        return text[:cut].rstrip(), text[cut:].strip()
+
     def format_post(self, pet:AdoptablePet) -> Post:
         """
         Create a Post from an AdoptablePet.
