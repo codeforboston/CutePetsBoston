@@ -116,7 +116,7 @@ def pick_pet(pets):
         # Add pet ID to list of posted pets
         data["posted_pets"].append({"name": selected_pet.name, "pet_id": selected_pet.pet_id, "time": datetime.now(timezone.utc).isoformat()})
         # Remove old pets
-        cutoff = datetime.now() - timedelta(weeks=12)
+        cutoff = datetime.now(timezone.utc) - timedelta(weeks=12)
         new_pets = [item for item in data["posted_pets"] if datetime.fromisoformat(item['time']) > cutoff]
         data["posted_pets"] = new_pets
         # Export json
