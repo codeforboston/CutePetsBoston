@@ -30,11 +30,7 @@ certifi==2026.4.22
 charset-normalizer==3.4.7
 decorator==5.2.1
 idna==3.13
-iniconfig==2.3.0
 Mastodon.py==2.2.1
-packaging==26.2
-pluggy==1.6.0
-Pygments==2.20.0
 python-dateutil==2.9.0.post0
 requests==2.33.1
 six==1.17.0
