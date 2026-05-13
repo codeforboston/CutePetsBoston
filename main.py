@@ -105,7 +105,7 @@ def pick_pet(pets):
         if "posted_pets" in data:
             posted_pet_ids =  {pet.pet_id for pet in data["posted_pets"]}
         else:
-            pet_ids = {}
+            posted_pet_ids = {}
             data["posted_pets"] = []
         # Check pet has an image, adoption url, and has not been posted
         eligible = [pet for pet in pets if pet.image_url and pet.adoption_url and pet.pet_id not in posted_pet_ids]
