@@ -55,7 +55,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def should_show(selected: PreviewStage, target: PreviewStage) -> bool:
+def includes_stage(selected: PreviewStage, target: PreviewStage) -> bool:
     return selected in (target, PreviewStage.ALL)
 
 
@@ -99,7 +99,7 @@ def main() -> None:
     ]
 
     for target_stage, title, renderer in sections:
-        if should_show(stage, target_stage):
+        if includes_stage(stage, target_stage):
             print_section(title)
             renderer()
 
