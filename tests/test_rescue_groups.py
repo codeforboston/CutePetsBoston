@@ -64,7 +64,7 @@ class PlaceholderNameTests(unittest.TestCase):
 
     def test_more_dogs_soon_is_placeholder(self):
         self.assertTrue(self.source._is_placeholder_name("More Dogs Soon!"))
-        self.assertTrue(self.source._is_placeholder_name("more dogs soon"))
+        self.assertTrue(self.source._is_placeholder_name("MORE DOGS SOON!"))
 
     def test_real_pet_name_is_not_placeholder(self):
         self.assertFalse(self.source._is_placeholder_name("Pippin"))

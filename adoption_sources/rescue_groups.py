@@ -9,7 +9,6 @@ import logging
 import os
 import re
 from typing import Iterator
-import json
 
 import requests
 
@@ -18,14 +17,9 @@ from config import CITY_NAME, CITY_STATE, POSTAL_CODE
 
 logger = logging.getLogger(__name__)
 
-_blocklist_path = __file__.replace(".py", "_blocklist.json")
-with open(_blocklist_path) as _f:
-    _blocklist = json.loads(_f.read())
-
-# Substrings (case-insensitive) that mark a record as a placeholder rather than
-# an actual adoptable pet. Some rescues publish entries like "More Dogs Soon!"
-# to point users at their website; those should never be posted.
-PLACEHOLDER_NAME_SUBSTRINGS: tuple[str, ...] = tuple(s.lower() for s in _blocklist["name_substrings"])
+# Some rescues publish entries like "More Dogs Soon!" to point users at their
+# website; those should never be posted. Add new names here as we encounter them.
+PLACEHOLDER_NAMES: tuple[str, ...] = ("more dogs soon!",)
 
 
 class SourceRescueGroups(PetSource):
@@ -177,8 +171,7 @@ class SourceRescueGroups(PetSource):
             return None
 
     def _is_placeholder_name(self, name: str) -> bool:
-        lowered = (name or "").lower()
-        return any(needle in lowered for needle in PLACEHOLDER_NAME_SUBSTRINGS)
+        return name.lower() in PLACEHOLDER_NAMES
 
     def _clean_name(self, name: str) -> str:
         """
