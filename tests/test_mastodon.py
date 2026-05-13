@@ -1,5 +1,70 @@
 from abstractions import Post
 from social_posters.mastodon import PosterMastodon, MASTODON_CHARACTER_LIMIT, MAX_REPLIES
+from hypothesis import given, strategies as st
+
+tag_strategy = st.lists(
+    st.one_of(st.text(min_size=0, max_size=20), st.none()),
+    max_size=10
+)
+
+text_strategy = st.text(
+    alphabet=st.characters(blacklist_categories=("Cs",)),
+    min_size=0,
+    max_size=5000
+)
+
+class TestMastodonCaptionProperties:
+    def setup_method(self):
+        self.poster = PosterMastodon.__new__(PosterMastodon)
+    
+    @given(text=text_strategy, tags=tag_strategy)
+    def test_all_parts_stay_under_mastodon_limit(self, text, tags):
+        post = Post(text=text, tags=tags)
+
+        main_caption, replies = self.poster._format_caption_thread(post)
+
+        assert len(main_caption) <= MASTODON_CHARACTER_LIMIT
+        assert all(len(reply) <= MASTODON_CHARACTER_LIMIT for reply in replies)
+
+    @given(text=text_strategy, tags=tag_strategy)
+    def test_reply_count_is_never_over_cap(self, text, tags):
+        post = Post(text=text, tags=tags)
+
+        _, replies = self.poster._format_caption_thread(post)
+
+        assert len(replies) <= MAX_REPLIES
+
+    @given(text=st.text(min_size=0, max_size=300))
+    def test_no_empty_replies(self, text):
+        post = Post(text=text)
+
+        _, replies = self.poster._format_caption_thread(post)
+
+        assert all(reply for reply in replies)
+
+    @given(text=text_strategy, tags=tag_strategy)
+    def test_debug_matches_normal_formatter(self, text, tags):
+        post = Post(text=text, tags=tags)
+
+        main_caption, replies = self.poster._format_caption_thread(post)
+        debug_main, debug_replies, debug = self.poster._format_caption_thread_with_trace(post)
+
+        assert debug_main == main_caption
+        assert debug_replies == replies
+        assert debug.main_caption == main_caption
+        assert debug.replies == replies
+
+    @given(text=text_strategy, tags=tag_strategy)
+    def test_trace_matches_regular_formatter(self, text, tags):
+        post = Post(text=text, tags=tags)
+
+        main_caption, replies = self.poster._format_caption_thread(post)
+        trace_main, trace_replies, trace = self.poster._format_caption_thread_with_trace(post)
+
+        assert trace_main == main_caption
+        assert trace_replies == replies
+        assert trace.main_caption == main_caption
+        assert trace.replies == replies
 
 
 class TestMastodonCaption:
