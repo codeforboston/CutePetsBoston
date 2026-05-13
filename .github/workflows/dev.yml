@@ -1,4 +1,4 @@
-name: RescueGroups API Post
+name: Debug Post
 
 on:
   push:

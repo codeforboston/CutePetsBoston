@@ -1,4 +1,4 @@
-name: RescueGroups API Post
+name: Prod Account Post
 
 on:
   push:
