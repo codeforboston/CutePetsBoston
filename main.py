@@ -113,6 +113,7 @@ def pick_pet(pets):
             return None
         
         selected_pet = random.choice(eligible)
+        print(selected_pet)
         # Add pet ID to list of posted pets
         data["posted_pets"].append({"name": selected_pet.name, "pet_id": selected_pet.pet_id, "time": datetime.now(timezone.utc).isoformat()})
         # Remove old pets
