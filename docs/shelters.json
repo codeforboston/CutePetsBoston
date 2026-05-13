@@ -1,0 +1,19 @@
+{
+  "shelters": [
+    {
+      "name": "MSPCA-Angell",
+      "location": "Boston, MA",
+      "url": "https://www.mspca.org/adoption/"
+    },
+    {
+      "name": "Sterling Animal Shelter",
+      "location": "Sterling, MA",
+      "url": "https://www.sterlingshelter.org/"
+    },
+    {
+      "name": "Small Dog Rescue of New England",
+      "location": "Rhode Island",
+      "url": "https://www.smalldogrescuene.org/"
+    }
+  ]
+}
