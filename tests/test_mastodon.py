@@ -1,5 +1,5 @@
 from abstractions import Post
-from social_posters.mastodon import PosterMastodon, MASTODON_CHARACTER_LIMIT
+from social_posters.mastodon import PosterMastodon, MASTODON_CHARACTER_LIMIT, MAX_REPLIES
 
 
 class TestMastodonCaption:
@@ -16,6 +16,43 @@ class TestMastodonCaption:
         )
 
         return " ".join([main_without_suffix] + replies).strip()
+
+    def test_reply_count_is_capped(self):
+        post = Post(text="hello " * 5000)
+
+        _, replies = self.poster._format_caption_thread(post)
+
+        assert len(replies) <= MAX_REPLIES
+
+    def test_last_reply_has_truncation_suffix_when_capped(self):
+        post = Post(text="hello " * 5000)
+
+        _, replies = self.poster._format_caption_thread(post)
+
+        assert len(replies) == MAX_REPLIES
+        assert replies[-1].endswith("...")
+        assert len(replies[-1]) <= MASTODON_CHARACTER_LIMIT
+    
+    def test_last_reply_has_no_truncation_suffix_when_not_capped(self):
+        post = Post(text="hello " * 300)
+
+        _, replies = self.poster._format_caption_thread(post)
+
+        assert replies
+        assert len(replies) < MAX_REPLIES
+        assert not replies[-1].endswith("...")
+
+    def test_capped_thread_does_not_preserve_all_original_text(self):
+        original_text = "hello " * 5000
+        post = Post(text=original_text)
+
+        main_caption, replies = self.poster._format_caption_thread(post)
+
+        reconstructed = self.reconstruct_text(main_caption, replies)
+
+        assert len(replies) == MAX_REPLIES
+        assert reconstructed != original_text
+        assert replies[-1].endswith("...")
     
     def test_thread_preserves_original_text_content(self):
         original_text = " ".join(f"word{i}" for i in range(300))
