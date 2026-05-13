@@ -58,5 +58,18 @@ class AdoptionUrlTests(unittest.TestCase):
         self.assertEqual(pet.adoption_url, "https://org.example.com")
 
 
+class PlaceholderNameTests(unittest.TestCase):
+    def setUp(self):
+        self.source = SourceRescueGroups(api_key="dummy")
+
+    def test_more_dogs_soon_is_placeholder(self):
+        self.assertTrue(self.source._is_placeholder_name("More Dogs Soon!"))
+        self.assertTrue(self.source._is_placeholder_name("MORE DOGS SOON!"))
+
+    def test_real_pet_name_is_not_placeholder(self):
+        self.assertFalse(self.source._is_placeholder_name("Pippin"))
+        self.assertFalse(self.source._is_placeholder_name("Buddy"))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -9,7 +9,6 @@ import logging
 import os
 import re
 from typing import Iterator
-import json
 
 import requests
 
@@ -17,6 +16,10 @@ from abstractions import AdoptablePet, PetSource
 from config import CITY_NAME, CITY_STATE, POSTAL_CODE
 
 logger = logging.getLogger(__name__)
+
+# Some rescues publish entries like "More Dogs Soon!" to point users at their
+# website; those should never be posted. Add new names here as we encounter them.
+PLACEHOLDER_NAMES: tuple[str, ...] = ("more dogs soon!",)
 
 
 class SourceRescueGroups(PetSource):
@@ -104,8 +107,12 @@ class SourceRescueGroups(PetSource):
 
         for animal in data:
             pet = self._parse_animal(animal, orgs_by_id)
-            if pet:
-                yield pet
+            if not pet:
+                continue
+            if self._is_placeholder_name(pet.name):
+                logger.info(f"Skipping placeholder record: {pet.name!r}")
+                continue
+            yield pet
 
     def _parse_animal(self, animal: dict, orgs_by_id: dict) -> AdoptablePet | None:
         """Parse a single animal record from the API response."""
@@ -162,6 +169,9 @@ class SourceRescueGroups(PetSource):
         except Exception as e:
             logger.warning(f"Failed to parse animal {animal.get('id', 'unknown')}: {e}")
             return None
+
+    def _is_placeholder_name(self, name: str) -> bool:
+        return name.lower() in PLACEHOLDER_NAMES
 
     def _clean_name(self, name: str) -> str:
         """
