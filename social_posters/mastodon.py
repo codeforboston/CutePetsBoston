@@ -11,7 +11,7 @@ from abstractions import CITY_NAME, CITY_STATE
 THREAD_SUFFIX = "\n\nMore details below ⬇️"
 MASTODON_CHARACTER_LIMIT = 500
 TRUNCATION_SUFFIX = "..."
-
+MAX_REPLIES = 5
 
 class PosterMastodon(SocialPoster):
     def __init__(self):
@@ -126,12 +126,21 @@ class PosterMastodon(SocialPoster):
         chunks = []
         remaining = text.strip()
 
-        while remaining:
+        while remaining and len(chunks) < MAX_REPLIES:
             chunk, remaining = self._safe_truncate(
                 remaining,
                 MASTODON_CHARACTER_LIMIT
             )
             chunks.append(chunk)
+        
+        if remaining and chunks:
+            last_chunk = chunks[-1]
+
+            cutoff = MASTODON_CHARACTER_LIMIT - len(TRUNCATION_SUFFIX)
+
+            last_chunk, _ = self._safe_truncate(last_chunk, cutoff)
+
+            chunks[-1] = f"{last_chunk}{TRUNCATION_SUFFIX}"
 
         return chunks
 
