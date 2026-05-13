@@ -4,6 +4,7 @@ import sys
 from dataclasses import asdict
 from enum import StrEnum
 from pprint import pprint
+from typing import Callable
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -67,30 +68,55 @@ def main() -> None:
     pet = post_exceed_500_chars_limit_with_adoption_link()
     post = poster.format_post(pet)
 
-    main_caption, replies, debug = poster._format_caption_thread_with_trace(post)
+    main_caption, replies, trace = poster._format_caption_thread_with_trace(post)
 
-    if should_show(stage, PreviewStage.PET):
-        print_section("PET")
-        pprint(pet)
+    sections: list[tuple[PreviewStage, str, Callable[[], None]]] = [
+        (
+            PreviewStage.PET,
+            "PET",
+            lambda: pprint(pet),
+        ),
+        (
+            PreviewStage.POST,
+            "POST OBJECT",
+            lambda: pprint(post),
+        ),
+        (
+            PreviewStage.DEBUG,
+            "DEBUG PIPELINE",
+            lambda: pprint(asdict(trace)),
+        ),
+        (
+            PreviewStage.MAIN,
+            "MAIN POST",
+            lambda: print_main_caption(main_caption),
+        ),
+        (
+            PreviewStage.REPLIES,
+            "REPLIES",
+            lambda: print_replies(replies),
+        ),
+    ]
 
-    if should_show(stage, PreviewStage.POST):
-        print_section("POST OBJECT")
-        pprint(post)
+    for target_stage, title, renderer in sections:
+        if should_show(stage, target_stage):
+            print_section(title)
+            renderer()
 
-    if should_show(stage, PreviewStage.DEBUG):
-        print_section("DEBUG PIPELINE")
-        pprint(asdict(debug))
 
-    if should_show(stage, PreviewStage.MAIN):
-        print_section("MAIN POST")
-        print(main_caption)
-        print(f"\nLength: {len(main_caption)}")
+def print_main_caption(main_caption: str) -> None:
+    print(main_caption)
+    print(f"\nLength: {len(main_caption)}")
 
-    if should_show(stage, PreviewStage.REPLIES):
-        for i, reply in enumerate(replies, start=1):
-            print_section(f"REPLY {i}")
-            print(reply)
-            print(f"\nLength: {len(reply)}")
+
+def print_replies(replies: list[str]) -> None:
+    if not replies:
+        print("(No replies)")
+
+    for i, reply in enumerate(replies, start=1):
+        print_section(f"REPLY {i}")
+        print(reply)
+        print(f"\nLength: {len(reply)}")
 
 
 if __name__ == "__main__":
