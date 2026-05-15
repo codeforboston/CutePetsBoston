@@ -2,6 +2,37 @@ from abstractions import Post
 from social_posters.mastodon import PosterMastodon, MASTODON_CHARACTER_LIMIT, MAX_REPLIES
 from hypothesis import given, strategies as st
 
+"""
+Testing includes:
+1. Property-based testing (Hypothesis)
+2. Unit tests
+3. Manual visual inspection in Preview file
+
+Property-based tests:
+- Generate randomized text/tag combinations.
+- Nondeterministic testing unless specify seeds.
+- Verify global invariants such as:
+        * captions never exceed Mastodon limits
+        * replies never exceed MAX_REPLIES
+        * formatter trace matches normal formatter
+        * no empty replies are produced
+
+Unit tests:
+- Validate specific expected behaviors and edge cases.
+- Examples include:
+        * truncation behavior
+        * capped thread handling
+        * reconstruction correctness
+        * no-tag formatting
+        * tag filtering
+        * word-safe truncation
+        * long text handling
+
+Manual visual inspection:
+- See Preview file for details
+"""
+
+# Generation rules for tags/texts used in testing
 tag_strategy = st.lists(
     st.one_of(st.text(min_size=0, max_size=20), st.none()),
     max_size=10

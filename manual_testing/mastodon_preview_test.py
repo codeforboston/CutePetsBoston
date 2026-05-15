@@ -25,6 +25,8 @@ see only replies part of the formatting in mastodon:
 python manual_tests/mastodon_preview.py --stage replies
 see all stages:
 python manual_tests/mastodon_preview.py --stage all (or no arg default to all)
+Extend sections to be previewed by modifying the PreviewStage class and add 
+an action to sections
 """
 class PreviewStage(StrEnum):
     PET = "pet"

@@ -14,7 +14,33 @@ MASTODON_CHARACTER_LIMIT = 500
 TRUNCATION_SUFFIX = "..."
 MAX_REPLIES = 5
 
+"""
+Mastodon implementation of the Cute Pets Boston Project
+Requires: MASTODON_TOKEN for authentication
 
+The domain that hosts our account (Mastodon.social) has 
+a 500 chars limit, we prioritize the adoption link at
+the top of the post by overriding format_post, then 
+split the exceeding chars into the replies section 
+with number of replies capped at the MAX_REPLIES. If post
+content does not exceed limit, no replies generated. If
+replies exceed MAX_REPLIES, truncate it with `...` . Replies
+are text-only and no media attached.
+
+Use the preview file within manual_testing folder to inspect 
+each phase of the pipeline when developing or debugging 
+Mastodon due to its complexity from split text. There, 
+you can choose to inspect only the pet, the formatted
+post, the main post, the replies, or the trace itself that
+contains the properties of the post. Use safe truncation to
+prevent cutting off words when splitting text. Use 
+_format_caption_thread_with_trace to create split text with
+trace.
+
+Pipeline: AdoptablePet => format_post (override formatting) =>
+_format_caption_thread_with_trace(Mastodon splitting) => 
+publish main status => publish replies (if needed) => PostResult
+"""
 @dataclass
 class MastodonFormatTrace:
     raw_text: str
