@@ -81,6 +81,8 @@ def post_unicode():
                     )
     return pet
 
+# !!!DO NOT TEST MULTIPLE CASES AT THE SAME TIME!!!
+# !!!OTHERWISE YOU MAY TRIGGER SPAM DETECTION!!! 
 testingCases = [
     post_exceed_500_chars_limit_with_adoption_link,
     post_exceed_500_chars_limit_without_adoption_link,
