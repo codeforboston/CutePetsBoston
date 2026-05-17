@@ -151,6 +151,12 @@ class PosterMastodon(SocialPoster):
 
         return status
 
+    """
+    Implement your own pipeline and consume it in a preview file
+    for debugging purposes
+    Here, we build a pipeline from AdoptablePet (upstream input)
+    -> Post -> Prepared Caption -> Caption Thread
+    """
     def build_formatting_pipeline(
         self,
         pet: AdoptablePet,
@@ -177,6 +183,10 @@ class PosterMastodon(SocialPoster):
 
         return pipeline
 
+    """
+    Pipeline for publishing a post where trace thrown away when actually publishing
+
+    """
     def _format_caption_thread_with_trace(
         self,
         post: Post,
