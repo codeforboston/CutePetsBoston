@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import os
 import tempfile
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from enum import StrEnum
 from urllib.parse import urlparse
 
 import requests
@@ -8,52 +11,39 @@ from mastodon import Mastodon
 
 from abstractions import AdoptablePet, Post, PostResult, SocialPoster
 from abstractions import CITY_NAME, CITY_STATE
+from utils.pipeline import PipelineResult, add_phase, start_pipeline
+
 
 THREAD_SUFFIX = "\n\nMore details below ⬇️"
 MASTODON_CHARACTER_LIMIT = 500
 TRUNCATION_SUFFIX = "..."
 MAX_REPLIES = 5
 
-"""
-Mastodon implementation of the Cute Pets Boston Project
-Requires: MASTODON_TOKEN for authentication
 
-The domain that hosts our account (Mastodon.social) has 
-a 500 chars limit, we prioritize the adoption link at
-the top of the post by overriding format_post, then 
-split the exceeding chars into the replies section 
-with number of replies capped at the MAX_REPLIES. If post
-content does not exceed limit, no replies generated. If
-replies exceed MAX_REPLIES, truncate it with `...` . Replies
-are text-only and no media attached.
+class MastodonPhase(StrEnum):
+    PET = "pet"
+    POST = "post"
+    PREPARED_CAPTION = "prepared_caption"
+    CAPTION_THREAD = "caption_thread"
 
-Use the preview file within manual_testing folder to inspect 
-each phase of the pipeline when developing or debugging 
-Mastodon due to its complexity from split text. There, 
-you can choose to inspect only the pet, the formatted
-post, the main post, the replies, or the trace itself that
-contains the properties of the post. Use safe truncation to
-prevent cutting off words when splitting text. Use 
-_format_caption_thread_with_trace to create split text with
-trace.
 
-Pipeline: AdoptablePet => format_post (override formatting) =>
-_format_caption_thread_with_trace(Mastodon splitting) => 
-publish main status => publish replies (if needed) => PostResult
-"""
-@dataclass
-class MastodonFormatTrace:
-    raw_text: str
+@dataclass(frozen=True)
+class PreparedCaption:
+    post: Post
     caption_text: str
     tags: list[str]
     tag_suffix: str
-    main_limit: int | None = None
-    main_text: str | None = None
-    overflow: str | None = None
-    main_caption: str | None = None
-    replies: list[str] = field(default_factory=list)
-    was_split: bool = False
-    was_capped: bool = False
+
+
+@dataclass(frozen=True)
+class CaptionThread:
+    main_caption: str
+    replies: list[str]
+    main_limit: int | None
+    main_text: str | None
+    overflow: str | None
+    was_split: bool
+    was_capped: bool
 
 
 class PosterMastodon(SocialPoster):
@@ -161,64 +151,104 @@ class PosterMastodon(SocialPoster):
 
         return status
 
+    def build_formatting_pipeline(
+        self,
+        pet: AdoptablePet,
+    ) -> PipelineResult[CaptionThread]:
+        pipeline = start_pipeline(MastodonPhase.PET, pet)
+
+        pipeline = add_phase(
+            pipeline,
+            MastodonPhase.POST,
+            self.format_post,
+        )
+
+        pipeline = add_phase(
+            pipeline,
+            MastodonPhase.PREPARED_CAPTION,
+            self._prepare_caption,
+        )
+
+        pipeline = add_phase(
+            pipeline,
+            MastodonPhase.CAPTION_THREAD,
+            self._build_caption_thread,
+        )
+
+        return pipeline
+
     def _format_caption_thread_with_trace(
         self,
         post: Post,
-    ) -> tuple[str, list[str], MastodonFormatTrace]:
-        caption_text, tag_suffix, trace = self._prepare_caption(post)
+    ) -> tuple[str, list[str], PipelineResult[CaptionThread]]:
+        pipeline = start_pipeline(MastodonPhase.POST, post)
 
-        if self._fits_single_post(caption_text, tag_suffix):
-            return self._build_single_post(caption_text, tag_suffix, trace)
-
-        main_limit = self._validated_main_limit(tag_suffix)
-        main_text, overflow = self._safe_truncate(caption_text, main_limit)
-        replies = self._split_reply_chunks(overflow)
-        main_caption = self._build_main_caption(main_text, tag_suffix)
-
-        trace = self._finalize_trace(
-            trace=trace,
-            main_limit=main_limit,
-            main_text=main_text,
-            overflow=overflow,
-            main_caption=main_caption,
-            replies=replies,
+        pipeline = add_phase(
+            pipeline,
+            MastodonPhase.PREPARED_CAPTION,
+            self._prepare_caption,
         )
 
-        return main_caption, replies, trace
+        pipeline = add_phase(
+            pipeline,
+            MastodonPhase.CAPTION_THREAD,
+            self._build_caption_thread,
+        )
+
+        if not pipeline.ok or pipeline.value is None:
+            error = pipeline.errors[0] if pipeline.errors else RuntimeError("Unknown error")
+            raise error
+
+        return pipeline.value.main_caption, pipeline.value.replies, pipeline
 
     def _format_caption_thread(self, post: Post) -> tuple[str, list[str]]:
         main_caption, replies, _ = self._format_caption_thread_with_trace(post)
         return main_caption, replies
 
-    def _prepare_caption(
-        self,
-        post: Post,
-    ) -> tuple[str, str, MastodonFormatTrace]:
+    def _prepare_caption(self, post: Post) -> PreparedCaption:
         tags, tag_suffix = self._format_tags(post.tags)
-        caption_text = post.text.strip()
 
-        trace = MastodonFormatTrace(
-            raw_text=post.text,
-            caption_text=caption_text,
+        return PreparedCaption(
+            post=post,
+            caption_text=post.text.strip(),
             tags=tags,
             tag_suffix=tag_suffix,
         )
 
-        return caption_text, tag_suffix, trace
+    def _build_caption_thread(self, prepared: PreparedCaption) -> CaptionThread:
+        caption_text = prepared.caption_text
+        tag_suffix = prepared.tag_suffix
+
+        if self._fits_single_post(caption_text, tag_suffix):
+            return CaptionThread(
+                main_caption=f"{caption_text}{tag_suffix}",
+                replies=[],
+                main_limit=None,
+                main_text=caption_text,
+                overflow="",
+                was_split=False,
+                was_capped=False,
+            )
+
+        main_limit = self._validated_main_limit(tag_suffix)
+        main_text, overflow = self._safe_truncate(caption_text, main_limit)
+        replies = self._split_reply_chunks(overflow)
+
+        main_caption = self._build_main_caption(main_text, tag_suffix)
+
+        return CaptionThread(
+            main_caption=main_caption,
+            replies=replies,
+            main_limit=main_limit,
+            main_text=main_text,
+            overflow=overflow,
+            was_split=True,
+            was_capped=replies[-1].endswith(TRUNCATION_SUFFIX) if replies else False,
+        )
 
     @staticmethod
     def _fits_single_post(caption_text: str, tag_suffix: str) -> bool:
         return len(caption_text) + len(tag_suffix) <= MASTODON_CHARACTER_LIMIT
-
-    @staticmethod
-    def _build_single_post(
-        caption_text: str,
-        tag_suffix: str,
-        trace: MastodonFormatTrace,
-    ) -> tuple[str, list[str], MastodonFormatTrace]:
-        main_caption = f"{caption_text}{tag_suffix}"
-        trace.main_caption = main_caption
-        return main_caption, [], trace
 
     def _validated_main_limit(self, tag_suffix: str) -> int:
         main_limit = self._main_caption_limit(tag_suffix)
@@ -236,29 +266,6 @@ class PosterMastodon(SocialPoster):
             f"{THREAD_SUFFIX}"
             f"{tag_suffix}"
         )
-
-    @staticmethod
-    def _finalize_trace(
-        trace: MastodonFormatTrace,
-        main_limit: int,
-        main_text: str,
-        overflow: str,
-        main_caption: str,
-        replies: list[str],
-    ) -> MastodonFormatTrace:
-        trace.main_limit = main_limit
-        trace.main_text = main_text
-        trace.overflow = overflow
-        trace.replies = replies
-        trace.main_caption = main_caption
-        trace.was_split = True
-        trace.was_capped = (
-            replies[-1].endswith(TRUNCATION_SUFFIX)
-            if replies
-            else False
-        )
-
-        return trace
 
     @staticmethod
     def _format_tags(tags: list[str]) -> tuple[list[str], str]:

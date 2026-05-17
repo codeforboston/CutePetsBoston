@@ -10,7 +10,7 @@ def post_exceed_500_chars_limit_with_adoption_link():
                         "Labrador Retriever", 
                         "White Labrador", 
                         "Quahog", 
-                        "I am a writer! Post exceeds limit with adoption link"*1000, 
+                        "I am a writer! Post exceeds limit with adoption link"*200, 
                         "http://www.davidgorman.com/4quartets/", 
                         "https://static.wikia.nocookie.net/familyguy/images/c/c2/FamilyGuy_Single_BrianWriter_R7.jpg/revision/latest?cb=20230807152447",
                         11, 
