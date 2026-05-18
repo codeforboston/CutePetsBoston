@@ -10,7 +10,7 @@ Property-based tests:
 - Verify global invariants such as:
         * captions never exceed Mastodon limits
         * replies never exceed MAX_REPLIES
-        * formatter trace matches normal formatter
+        * full formatting pipeline matches runtime formatter
         * no empty replies are produced
 
 Unit tests:
@@ -28,7 +28,7 @@ Manual visual inspection:
 - See Preview file for details
 """
 
-from abstractions import Post
+from abstractions import Post, AdoptablePet
 from hypothesis import given, strategies as st
 from social_posters.mastodon import (
     CaptionThread,
@@ -50,6 +50,75 @@ text_strategy = st.text(
     max_size=5000,
 )
 
+pet_strategy = st.builds(
+    AdoptablePet,
+    name=st.text(
+        alphabet=st.characters(blacklist_categories=("Cs",)),
+        min_size=1,
+        max_size=20,
+    ),
+    species=st.sampled_from(
+        [
+            "Dog",
+            "Cat",
+            "Rabbit",
+            "Bird",
+            "Alien",
+            "Unknown",
+        ]
+    ),
+    breed=st.text(
+        alphabet=st.characters(blacklist_categories=("Cs",)),
+        min_size=1,
+        max_size=30,
+    ),
+    location=st.text(
+        alphabet=st.characters(blacklist_categories=("Cs",)),
+        min_size=1,
+        max_size=50,
+    ),
+    description=text_strategy,
+    adoption_url=st.one_of(
+        st.none(),
+        st.just("https://example.com/adopt"),
+    ),
+    image_url=st.just("https://example.com/image.jpg"),
+    age_string=st.one_of(
+        st.none(),
+        st.text(
+            alphabet=st.characters(blacklist_categories=("Cs",)),
+            min_size=1,
+            max_size=20,
+        ),
+    ),
+    sex=st.one_of(
+        st.none(),
+        st.sampled_from(["Male", "Female", "Unknown"]),
+    ),
+    size_group=st.one_of(
+        st.none(),
+        st.sampled_from(["Small", "Medium", "Large"]),
+    ),
+    pet_id=st.one_of(
+        st.none(),
+        st.text(
+            alphabet=st.characters(blacklist_categories=("Cs",)),
+            min_size=1,
+            max_size=20,
+        ),
+    ),
+)
+
+def reconstruct_text(main_caption: str, replies: list[str]) -> str:
+    main_without_tags = main_caption.split("\n\n#")[0]
+    main_without_suffix = (
+        main_without_tags
+        .replace("...", "")
+        .replace("\n\nMore details below ⬇️", "")
+        .strip()
+    )
+
+    return " ".join([main_without_suffix] + replies).strip()
 
 class TestMastodonCaptionProperties:
     def setup_method(self):
@@ -81,31 +150,36 @@ class TestMastodonCaptionProperties:
         assert all(reply for reply in replies)
 
     @given(text=text_strategy, tags=tag_strategy)
-    def test_trace_matches_regular_formatter(self, text, tags):
+    def test_reconstruction_preserves_uncapped_threads(self, text, tags):
         post = Post(text=text, tags=tags)
 
         main_caption, replies = self.poster._format_caption_thread(post)
-        trace_main, trace_replies, pipeline = (
-            self.poster._format_caption_thread_with_trace(post)
-        )
+
+        if len(replies) < MAX_REPLIES:
+            reconstructed = reconstruct_text(main_caption, replies)
+            assert reconstructed == text.strip()
+
+    @given(pet=pet_strategy)
+    def test_pipeline_matches_regular_formatter(self, pet):
+        post = self.poster.format_post(pet)
+
+        main_caption, replies = self.poster._format_caption_thread(post)
+        pipeline = self.poster.build_formatting_pipeline(pet)
 
         assert pipeline.ok
         assert isinstance(pipeline.value, CaptionThread)
 
-        assert trace_main == main_caption
-        assert trace_replies == replies
         assert pipeline.value.main_caption == main_caption
         assert pipeline.value.replies == replies
 
-    @given(text=text_strategy, tags=tag_strategy)
-    def test_trace_records_expected_phases(self, text, tags):
-        post = Post(text=text, tags=tags)
-
-        _, _, pipeline = self.poster._format_caption_thread_with_trace(post)
+    @given(pet=pet_strategy)
+    def test_pipeline_records_expected_phases(self, pet):
+        pipeline = self.poster.build_formatting_pipeline(pet)
 
         phase_names = [phase.name for phase in pipeline.trace]
 
         assert phase_names == [
+            MastodonPhase.PET,
             MastodonPhase.POST,
             MastodonPhase.PREPARED_CAPTION,
             MastodonPhase.CAPTION_THREAD,
@@ -116,16 +190,7 @@ class TestMastodonCaption:
     def setup_method(self):
         self.poster = PosterMastodon.__new__(PosterMastodon)
 
-    def reconstruct_text(self, main_caption: str, replies: list[str]) -> str:
-        main_without_tags = main_caption.split("\n\n#")[0]
-        main_without_suffix = (
-            main_without_tags
-            .replace("...", "")
-            .replace("\n\nMore details below ⬇️", "")
-            .strip()
-        )
 
-        return " ".join([main_without_suffix] + replies).strip()
 
     def test_reply_count_is_capped(self):
         post = Post(text="hello " * 5000)
@@ -158,7 +223,7 @@ class TestMastodonCaption:
 
         main_caption, replies = self.poster._format_caption_thread(post)
 
-        reconstructed = self.reconstruct_text(main_caption, replies)
+        reconstructed = reconstruct_text(main_caption, replies)
 
         assert len(replies) == MAX_REPLIES
         assert reconstructed != original_text
@@ -170,7 +235,7 @@ class TestMastodonCaption:
 
         main_caption, replies = self.poster._format_caption_thread(post)
 
-        reconstructed = self.reconstruct_text(main_caption, replies)
+        reconstructed = reconstruct_text(main_caption, replies)
 
         assert reconstructed == original_text
 
@@ -208,7 +273,7 @@ class TestMastodonCaption:
         assert main_caption == "Meet Poppy!\n\n#AdoptDontShop #Boston"
         assert replies == []
 
-    def test_caption_stays_under_limit_and_creates_reply(self):
+    def test_spaced_long_text_creates_reply(self):
         post = Post(text="x " * 1000, tags=["AdoptDontShop", "Boston"])
 
         main_caption, replies = self.poster._format_caption_thread(post)
@@ -220,7 +285,7 @@ class TestMastodonCaption:
         assert replies
         assert all(len(reply) <= MASTODON_CHARACTER_LIMIT for reply in replies)
 
-    def test_caption_stays_under_limit_creates_reply(self):
+    def test_unspaced_long_text_creates_reply(self):
         post = Post(text="x" * 1000, tags=["AdoptDontShop", "Boston"])
 
         main_caption, replies = self.poster._format_caption_thread(post)
