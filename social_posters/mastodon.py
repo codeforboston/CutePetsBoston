@@ -183,37 +183,10 @@ class PosterMastodon(SocialPoster):
 
         return pipeline
 
-    """
-    Pipeline for publishing a post where trace thrown away when actually publishing
-
-    """
-    def _format_caption_thread_with_trace(
-        self,
-        post: Post,
-    ) -> tuple[str, list[str], PipelineResult[CaptionThread]]:
-        pipeline = start_pipeline(MastodonPhase.POST, post)
-
-        pipeline = add_phase(
-            pipeline,
-            MastodonPhase.PREPARED_CAPTION,
-            self._prepare_caption,
-        )
-
-        pipeline = add_phase(
-            pipeline,
-            MastodonPhase.CAPTION_THREAD,
-            self._build_caption_thread,
-        )
-
-        if not pipeline.ok or pipeline.value is None:
-            error = pipeline.errors[0] if pipeline.errors else RuntimeError("Unknown error")
-            raise error
-
-        return pipeline.value.main_caption, pipeline.value.replies, pipeline
-
     def _format_caption_thread(self, post: Post) -> tuple[str, list[str]]:
-        main_caption, replies, _ = self._format_caption_thread_with_trace(post)
-        return main_caption, replies
+        prepared = self._prepare_caption(post)
+        thread = self._build_caption_thread(prepared)
+        return thread.main_caption, thread.replies
 
     def _prepare_caption(self, post: Post) -> PreparedCaption:
         tags, tag_suffix = self._format_tags(post.tags)
