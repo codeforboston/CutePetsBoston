@@ -1,3 +1,18 @@
+"""
+A generic pipeline utility for building preview/debug traces.
+
+Each phase transforms the current pipeline value from one type to another:
+
+    PipelineResult[T] + Callable[[T], U] -> PipelineResult[U]
+
+For example:
+
+    AdoptablePet -> Post -> PreparedCaption -> CaptionThread
+
+The trace stores every intermediate phase value for preview/debug output,
+while `value` always represents the latest pipeline result.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field

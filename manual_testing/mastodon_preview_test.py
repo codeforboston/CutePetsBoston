@@ -1,20 +1,41 @@
 """
-How to use this to see each stage of the pipeline:
-see pet information:
+Mastodon formatting preview tool:
+
+This file visualizes different stages of the Mastodon formatting pipeline.
+
+Pipeline structure:
+AdoptablePet
+        -> Post
+        -> PreparedCaption
+        -> CaptionThread
+
+Examples:
+
+Preview raw pet input:
 python manual_tests/mastodon_preview.py --stage pet
-see post information (platform ready but not mastodon processed):
+
+Preview generated platform-independent Post:
 python manual_tests/mastodon_preview.py --stage post
-see full formatting in mastodon:
+
+Preview fully formatted Mastodon thread:
 python manual_tests/mastodon_preview.py --stage debug
-see only main thread part of the formatting in mastodon:
+
+Preview only the main Mastodon post:
 python manual_tests/mastodon_preview.py --stage main
-see only replies part of the formatting in mastodon:
+
+Preview only reply thread chunks:
 python manual_tests/mastodon_preview.py --stage replies
-see all stages:
-python manual_tests/mastodon_preview.py --stage all (or no arg default to all)
-Extend sections to be previewed by modifying the PreviewStage class and add 
-an action to sections
+
+Preview every pipeline stage:
+python manual_tests/mastodon_preview.py --stage all
+
+(default behavior is --stage all)
+
+To extend preview stages:
+1. Add a new PreviewStage enum entry
+2. Add a renderer/action for that stage
 """
+
 from __future__ import annotations
 
 import argparse
