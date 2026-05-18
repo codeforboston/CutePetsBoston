@@ -1,3 +1,9 @@
+"""
+Pipeline preview renderer.
+
+Provides utilities for rendering selected stages of a pipeline
+for debugging and inspection.
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -18,7 +24,7 @@ def print_section(title: str) -> None:
     print("=" * 60)
 
 
-def includes_stage(selected: StrEnum, target: StrEnum, all_stage: StrEnum) -> bool:
+def should_render_section(selected: StrEnum, target: StrEnum, all_stage: StrEnum) -> bool:
     return selected in (target, all_stage)
 
 
@@ -28,6 +34,6 @@ def render_sections(
     all_stage: StrEnum,
 ) -> None:
     for section in sections:
-        if includes_stage(selected, section.stage, all_stage):
+        if should_render_section(selected, section.stage, all_stage):
             print_section(section.title)
             section.render()
