@@ -6,6 +6,9 @@ on:
     # Every 4 hours
     - cron: "0 */4 * * *"
 
+permissions:
+      actions: read
+
 jobs:
   run-cute-pets:
     runs-on: ubuntu-latest
