@@ -8,7 +8,7 @@ chardet==3.0.4
 charset-normalizer
 clarifai==2.6.2
 configparser==3.8.1
-decorator==4.0.2
+decorator
 EasyProcess==1.1
 emoji==1.7.0
 future==1.0.0
