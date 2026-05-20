@@ -3,7 +3,7 @@ api-display-purposes==0.0.3
 attrs==25.4.0
 beautifulsoup4==4.14.3
 blurhash==1.1.5
-certifi==2026.2.25
+certifi
 chardet==3.0.4
 charset-normalizer==3.4.4
 clarifai==2.6.2
