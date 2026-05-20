@@ -1,10 +1,6 @@
-name: RescueGroups API Post
+name: Prod Account Post
 
 on:
-  push:
-    # We are doing this for testing purposes, but when we start posting, we should remove this line
-    branches:
-      [master]
   workflow_dispatch:
   schedule:
     # Every 4 hours
@@ -20,6 +16,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: 'pip'
 
       - name: Install dependencies
         run: pip install --break-system-packages -r requirements.txt

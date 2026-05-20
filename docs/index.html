@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CutePetsBoston</title>
+  <meta name="description" content="A Code for Boston project that posts adoptable pets from Boston-area shelters to social media." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="icon-mastodon" viewBox="0 0 24 24">
+        <path d="M21.58 13.913c-.29 1.469-2.592 3.121-5.238 3.396-1.379.184-2.737.368-4.185.276-2.368-.092-4.236-.55-4.236-.55 0 .184.014.36.043.534.314 2.297 2.353 2.434 4.284 2.5 1.948.066 3.682-.477 3.682-.477l.08 1.687s-1.36.732-3.789.84c-1.337.072-2.999-.034-4.934-.534C2.99 20.5 2.27 16.125 2.159 11.688c-.033-1.319-.013-2.563-.013-3.604C2.146 3.55 5.224 2.22 5.224 2.22 6.871.479 9.514.367 12.05.348h.063c2.537.02 5.18.13 6.738.832 0 0 3.078 1.33 3.078 5.864 0 0 .04 3.345-.349 5.869M18.319 7.16c0-1.118-.296-2.005-.886-2.66-.61-.654-1.408-.99-2.4-.99-1.148 0-2.018.43-2.605 1.291l-.567.93-.567-.93c-.587-.861-1.457-1.291-2.605-1.291-.992 0-1.79.336-2.4.99-.59.655-.886 1.542-.886 2.66v5.466h2.182V7.323c0-1.118.476-1.682 1.43-1.682 1.052 0 1.578.661 1.578 1.972v2.856h2.169V7.613c0-1.31.526-1.972 1.578-1.972.954 0 1.43.564 1.43 1.682v4.303h2.182Z"/>
+      </symbol>
+      <symbol id="icon-bluesky" viewBox="0 0 24 24">
+        <path d="M12 10.8c-1.087-2.114-4.046-6.053-6.798-7.995C2.566.944 1.561 1.266.902 1.565.139 1.908 0 3.08 0 3.768c0 .69.378 5.65.624 6.479.815 2.736 3.713 3.66 6.383 3.364.136-.02.275-.039.415-.056-.138.022-.276.04-.415.056-3.912.58-7.387 2.005-2.83 7.078 5.013 5.19 6.87-1.113 7.823-4.308.953 3.195 2.05 9.271 7.733 4.308 4.267-4.308 1.172-6.498-2.74-7.078a8.741 8.741 0 0 1-.415-.056c.14.017.279.036.415.056 2.67.297 5.568-.628 6.383-3.364.246-.828.624-5.79.624-6.478 0-.69-.139-1.861-.902-2.206-.659-.298-1.664-.62-4.3 1.24C16.046 4.748 13.087 8.687 12 10.8Z"/>
+      </symbol>
+      <symbol id="icon-instagram" viewBox="0 0 24 24">
+        <path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.897 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.897-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <header class="hero">
+    <div class="container">
+      <h1>CutePetsBoston</h1>
+      <p class="headline">Finding forever homes, one cute pet at a time.</p>
+      <p class="subheader">CutePetsBoston is a volunteer-run social media bot that shares<br />adoptable pets daily from Boston-area shelters.</p>
+      <div class="follow">
+        <span class="follow-label">Follow us:</span>
+        <nav class="social-icons" aria-label="Follow CutePetsBoston">
+        <a class="social-icon" href="https://bsky.app/profile/cutepetsboston.bsky.social" target="_blank" rel="noopener" aria-label="Bluesky">
+          <svg aria-hidden="true" focusable="false"><use href="#icon-bluesky"/></svg>
+        </a>
+        <a class="social-icon" href="https://mastodon.social/@cutepetsboston" target="_blank" rel="me noopener" aria-label="Mastodon">
+          <svg aria-hidden="true" focusable="false"><use href="#icon-mastodon"/></svg>
+        </a>
+        <a class="social-icon" href="https://www.instagram.com/cute.pets.boston/" target="_blank" rel="noopener" aria-label="Instagram">
+          <svg aria-hidden="true" focusable="false"><use href="#icon-instagram"/></svg>
+        </a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section id="shelters">
+      <h2>Featured shelters</h2>
+      <p>
+        Shelters we've confirmed featuring on the feed. Our broader pet pool comes
+        from <a href="https://rescuegroups.org/" target="_blank" rel="noopener">RescueGroups.org</a>
+        within 50 miles of Boston, so plenty of other rescues appear too.
+      </p>
+      <div id="shelter-list" class="card-grid">
+        <p class="dashboard-note">Loading shelters&hellip;</p>
+      </div>
+    </section>
+
+    <section id="recent">
+      <h2>Recent posts</h2>
+      <p>Latest pets from our <a href="https://mastodon.social/@cutepetsboston" target="_blank" rel="noopener">Mastodon</a> feed:</p>
+      <div id="post-grid" class="post-grid">
+        <p class="dashboard-note">Loading recent posts&hellip;</p>
+      </div>
+    </section>
+
+    <section id="contribute">
+      <h2>How to contribute</h2>
+      <p>
+        CutePetsBoston is a <a href="https://www.codeforboston.org/" target="_blank" rel="noopener">Code for Boston</a>
+        project. Come hack on it with us.
+      </p>
+      <div class="action-links">
+        <a class="btn btn-primary" href="https://github.com/codeforboston/CutePetsBoston/fork" target="_blank" rel="noopener">Fork on GitHub</a>
+        <a class="btn" href="https://github.com/codeforboston/CutePetsBoston" target="_blank" rel="noopener">View repo</a>
+        <a class="btn" href="https://www.meetup.com/code-for-boston/" target="_blank" rel="noopener">Code for Boston Meetup</a>
+        <a class="btn" href="https://cfb-public.slack.com/archives/C0A742DF1SP" target="_blank" rel="noopener">#cute-pets-boston on Slack</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Made with <span aria-label="love">&hearts;</span> by
+    <a href="https://www.codeforboston.org/" target="_blank" rel="noopener">Code for Boston</a>
+    volunteers.
+  </footer>
+
+  <script>
+    // Escape HTML special chars before interpolating values from JSON or the
+    // Mastodon feed into the template literals below. JS has no built-in for
+    // this, so we map each unsafe char to its HTML entity.
+    const escapeHtml = (s) =>
+      String(s).replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+      }[c]));
+
+    fetch("shelters.json")
+      .then((r) => r.json())
+      .then(({ shelters }) => {
+        const list = document.getElementById("shelter-list");
+        list.innerHTML = shelters
+          .map(
+            (s) => `
+              <a class="card" href="${escapeHtml(s.url)}" target="_blank" rel="noopener">
+                <h3>${escapeHtml(s.name)}</h3>
+                <div class="meta">${escapeHtml(s.location)}</div>
+                <span>Visit adoptions &rarr;</span>
+              </a>`
+          )
+          .join("");
+      })
+      .catch(() => {
+        document.getElementById("shelter-list").innerHTML =
+          '<p class="dashboard-note">Shelter list unavailable.</p>';
+      });
+
+    const MEDIA_NS = "http://search.yahoo.com/mrss/";
+    const POST_LIMIT = 6;
+
+    fetch("https://mastodon.social/@cutepetsboston.rss")
+      .then((r) => {
+        if (!r.ok) throw new Error("RSS request failed: " + r.status);
+        return r.text();
+      })
+      .then((xml) => {
+        const doc = new DOMParser().parseFromString(xml, "application/xml");
+        if (doc.querySelector("parsererror")) {
+          throw new Error("RSS parse error");
+        }
+        const items = Array.from(doc.querySelectorAll("item")).slice(0, POST_LIMIT);
+        const grid = document.getElementById("post-grid");
+        if (items.length === 0) {
+          grid.innerHTML = '<p class="dashboard-note">No recent posts found.</p>';
+          return;
+        }
+        grid.innerHTML = items
+          .map((item) => {
+            const link = item.querySelector("link")?.textContent || "#";
+            const pubDate = item.querySelector("pubDate")?.textContent || "";
+            const dateStr = pubDate
+              ? new Date(pubDate).toLocaleDateString(undefined, {
+                  month: "short", day: "numeric",
+                })
+              : "";
+            const descHtml = item.querySelector("description")?.textContent || "";
+            // Strip HTML to get plain-text caption
+            const tmp = document.createElement("div");
+            tmp.innerHTML = descHtml;
+            const text = (tmp.textContent || "").trim();
+            const caption = text.length > 140 ? text.slice(0, 137) + "…" : text;
+            const mediaEls = item.getElementsByTagNameNS(MEDIA_NS, "content");
+            let imgUrl = "";
+            for (const el of mediaEls) {
+              const medium = el.getAttribute("medium");
+              if (!medium || medium === "image") {
+                imgUrl = el.getAttribute("url") || "";
+                if (imgUrl) break;
+              }
+            }
+            const img = imgUrl
+              ? `<img class="post-image" src="${escapeHtml(imgUrl)}" alt="" loading="lazy" />`
+              : '<div class="post-image post-image-placeholder"></div>';
+            return `
+              <a class="post-card" href="${escapeHtml(link)}" target="_blank" rel="noopener">
+                ${img}
+                <div class="post-body">
+                  <div class="post-caption">${escapeHtml(caption) || "View post"}</div>
+                  <div class="meta">${escapeHtml(dateStr)}</div>
+                </div>
+              </a>`;
+          })
+          .join("");
+      })
+      .catch((err) => {
+        document.getElementById("post-grid").innerHTML = `
+          <p class="dashboard-note">
+            Couldn't load recent posts.
+            <a href="https://mastodon.social/@cutepetsboston" target="_blank" rel="noopener">View on Mastodon &rarr;</a>
+          </p>`;
+        console.error("Failed to load Mastodon feed:", err);
+      });
+  </script>
+</body>
+</html>
