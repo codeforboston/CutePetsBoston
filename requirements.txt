@@ -29,7 +29,7 @@ PySocks==1.7.1
 certifi==2026.4.22
 charset-normalizer==3.4.7
 decorator==5.2.1
-idna==3.13
+idna
 Mastodon.py==2.2.1
 python-dateutil==2.9.0.post0
 requests==2.33.1
