@@ -103,7 +103,7 @@ def pick_pet(pets):
             data = {}
         
         if "posted_pets" in data:
-            posted_pet_ids =  {pet.pet_id for pet in data["posted_pets"]}
+            posted_pet_ids =  {posted_pet["pet_id"] for posted_pet in data["posted_pets"]}
         else:
             posted_pet_ids = {}
             data["posted_pets"] = []
@@ -113,16 +113,15 @@ def pick_pet(pets):
             return None
         
         selected_pet = random.choice(eligible)
-        print(selected_pet)
         # Add pet ID to list of posted pets
         data["posted_pets"].append({"name": selected_pet.name, "pet_id": selected_pet.pet_id, "time": datetime.now(timezone.utc).isoformat()})
         # Remove old pets
         cutoff = datetime.now(timezone.utc) - timedelta(weeks=12)
-        new_pets = [item for item in data["posted_pets"] if datetime.fromisoformat(item['time']) > cutoff]
-        data["posted_pets"] = new_pets
+        recent_pets = [item for item in data["posted_pets"] if datetime.fromisoformat(item['time']) > cutoff]
+        data["posted_pets"] = recent_pets
         # Export json
         f.seek(0)
-        json.dump(data, f)
+        json.dump(data, f, indent=4)
         f.truncate()
         return selected_pet
 

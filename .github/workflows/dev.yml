@@ -32,7 +32,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Fetches the ID of the last completed run for the current workflow
-          PREVIOUS_RUN_ID=$(gh run list --workflow "${{ github.workflow }}" \
+          PREVIOUS_RUN_ID=$(gh run list \
+          --branch "${{ github.ref_name }}" \
+          --workflow "${{ github.workflow }}" \
           --status success \
           --limit 1 \
           --json databaseId \
