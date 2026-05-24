@@ -110,8 +110,7 @@ def pick_pet(pets):
         # Check pet has an image, adoption url, and has not been posted
         eligible = [pet for pet in pets if pet.image_url and pet.adoption_url and pet.pet_id not in posted_pet_ids]
         if not eligible:
-            sys.exit("Error: No elligible pets found.")
-            return None
+            raise ValueError("No elligible pet found")
         
         selected_pet = random.choice(eligible)
         # Add pet ID to list of posted pets
