@@ -6,7 +6,9 @@ Each phase transforms the current pipeline value from one type to another:
     PipelineResult[T] + Callable[[T], U] -> PipelineResult[U]
 
 For example:
+    T:AdoptablePet -> (T:AdoptablePet -> U:Post) outputs U:Post
 
+Whole Pipeline:
     AdoptablePet -> Post -> PreparedCaption -> CaptionThread
 
 The trace stores every intermediate phase value for preview/debug output,

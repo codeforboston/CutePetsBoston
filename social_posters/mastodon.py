@@ -73,6 +73,9 @@ class PosterMastodon(SocialPoster):
             self._auth_error = f"{type(exc).__name__}: {exc}"
             return False
 
+    """
+    Main Mastodon publishing logic
+    """
     def publish(self, post: Post) -> PostResult:
         error = self._ensure_ready_to_publish(post)
         if error:
@@ -153,7 +156,7 @@ class PosterMastodon(SocialPoster):
 
     """
     Implement your own pipeline and consume it in a preview file
-    for debugging purposes
+    for previewing/debugging purposes
     Here, we build a pipeline from AdoptablePet (upstream input)
     -> Post -> Prepared Caption -> Caption Thread
     """
@@ -310,6 +313,9 @@ class PosterMastodon(SocialPoster):
 
         return text[:cut].rstrip(), text[cut:].strip()
 
+    """
+    Override abstractions.py method
+    """
     def format_post(self, pet: AdoptablePet) -> Post:
         text = (
             f"Meet {pet.name}! This adorable {pet.breed} {pet.species} "
