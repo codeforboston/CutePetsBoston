@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from abstractions import AdoptablePet
 from social_posters.mastodon import PosterMastodon
 
-def postExceed500CharsLimitWithAdoptionLink():
+def post_exceed_500_chars_limit_with_adoption_link():
     pet = AdoptablePet("Brian", 
                         "Labrador Retriever", 
                         "White Labrador", 
@@ -20,7 +20,7 @@ def postExceed500CharsLimitWithAdoptionLink():
                     )
     return pet
 
-def postExceed500CharsLimitWithoutAdoptionLink():
+def post_exceed_500_chars_limit_without_adoption_link():
     pet = AdoptablePet("Vinny", 
                         "Unknown", 
                         "Unknown", 
@@ -36,7 +36,7 @@ def postExceed500CharsLimitWithoutAdoptionLink():
     return pet
 
 
-def postWithin500CharsLimitWithAdoptionLink():
+def post_within_500_chars_limit_with_adoption_link():
     pet = AdoptablePet("Ernie", 
                         "Chicken", 
                         "Unknown", 
@@ -51,7 +51,7 @@ def postWithin500CharsLimitWithAdoptionLink():
                     )
     return pet
 
-def postWithin500CharsLimitWithoutAdoptionLink():
+def post_within_500_chars_limit_without_adoption_link():
     pet = AdoptablePet("Pouncy", 
                         "Cat", 
                         "Unknown", 
@@ -66,7 +66,7 @@ def postWithin500CharsLimitWithoutAdoptionLink():
                     )
     return pet
 
-def postUnicode():
+def post_unicode():
     pet = AdoptablePet("Vinny", 
                         "Unknown", 
                         "Unknown", 
@@ -82,11 +82,11 @@ def postUnicode():
     return pet
 
 testingCases = [
-    postExceed500CharsLimitWithAdoptionLink,
-    postExceed500CharsLimitWithoutAdoptionLink,
-    postWithin500CharsLimitWithAdoptionLink,
-    postWithin500CharsLimitWithoutAdoptionLink,
-    postUnicode
+    post_exceed_500_chars_limit_with_adoption_link,
+    post_exceed_500_chars_limit_without_adoption_link,
+    post_within_500_chars_limit_with_adoption_link,
+    post_within_500_chars_limit_without_adoption_link,
+    post_unicode
 ]
 
 def main():
