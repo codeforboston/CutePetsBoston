@@ -6,6 +6,9 @@ on:
     # Every 4 hours
     - cron: "0 */4 * * *"
 
+permissions:
+      actions: read
+
 jobs:
   run-cute-pets:
     runs-on: ubuntu-latest
@@ -21,6 +24,30 @@ jobs:
       - name: Install dependencies
         run: pip install --break-system-packages -r requirements.txt
 
+      - name: Get Previous Run ID
+        continue-on-error: true 
+        id: get_id
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Fetches the ID of the last completed run for the current workflow
+          PREVIOUS_RUN_ID=$(gh run list \
+          --branch "${{ github.ref_name }}" \
+          --workflow "${{ github.workflow }}" \
+          --status success \
+          --limit 1 \
+          --json databaseId \
+          --jq '.[0].databaseId')
+          echo "previous_run_id=$PREVIOUS_RUN_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Download previous database artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: database.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ steps.get_id.outputs.previous_run_id }}
+        continue-on-error: true 
+
       - name: Call RescueGroups API
         env:
           CUTEPETSBOSTON_RESCUEGROUPS_API_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
@@ -32,3 +59,10 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           APP_ENV: prod
         run: python ./main.py
+
+      - name: Upload database artifact
+        uses: actions/upload-artifact@v7
+        with:
+          path: database.json
+          retention-days: 14
+          archive: false
