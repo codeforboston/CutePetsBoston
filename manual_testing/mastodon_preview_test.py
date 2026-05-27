@@ -12,22 +12,22 @@ AdoptablePet
 Examples:
 
 Preview raw pet input:
-python manual_tests/mastodon_preview.py --stage pet
+python manual_testing/mastodon_preview.py --stage pet
 
 Preview generated platform-independent Post:
-python manual_tests/mastodon_preview.py --stage post
+python manual_testing/mastodon_preview.py --stage post
 
 Preview fully formatted Mastodon thread:
-python manual_tests/mastodon_preview.py --stage debug
+python manual_testing/mastodon_preview.py --stage debug
 
 Preview only the main Mastodon post:
-python manual_tests/mastodon_preview.py --stage main
+python manual_testing/mastodon_preview.py --stage main
 
 Preview only reply thread chunks:
-python manual_tests/mastodon_preview.py --stage replies
+python manual_testing/mastodon_preview.py --stage replies
 
 Preview every pipeline stage:
-python manual_tests/mastodon_preview.py --stage all
+python manual_testing/mastodon_preview.py --stage all
 
 (default behavior is --stage all)
 
