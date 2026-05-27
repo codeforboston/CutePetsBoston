@@ -83,7 +83,7 @@ def post_unicode():
 
 # !!!DO NOT TEST MULTIPLE CASES AT THE SAME TIME!!!
 # !!!OTHERWISE YOU MAY TRIGGER SPAM DETECTION!!! 
-testingCases = [
+testing_cases = [
     post_exceed_500_chars_limit_with_adoption_link,
     post_exceed_500_chars_limit_without_adoption_link,
     post_within_500_chars_limit_with_adoption_link,
@@ -100,7 +100,7 @@ def main():
     
     print("Authenticated to Mastodon!")
 
-    for pet in testingCases:
+    for pet in testing_cases:
         pet_instance = pet()
         
         post = poster.format_post(pet_instance)
