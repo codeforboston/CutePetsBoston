@@ -1,5 +1,6 @@
 from abstractions import AdoptablePet, Post
 from hypothesis import given, strategies as st
+import pytest
 from social_posters.mastodon import (
     PosterMastodon,
     MASTODON_CHARACTER_LIMIT,
@@ -11,6 +12,11 @@ tag_strategy = st.lists(
     st.one_of(st.text(min_size=0, max_size=20), st.none()),
     max_size=10,
 )
+
+# long_tag_strategy = st.lists(
+#     st.one_of(st.text(min_size=501, max_size=1000000), st.none()),
+#     max_size=10,
+# )
 
 text_strategy = st.text(
     alphabet=st.characters(blacklist_categories=("Cs",)),
@@ -102,6 +108,13 @@ class TestMastodonCaptionProperties:
 
         assert len(main_caption) <= MASTODON_CHARACTER_LIMIT
         assert all(len(reply) <= MASTODON_CHARACTER_LIMIT for reply in replies)
+
+    # @given(text=text_strategy, tags=long_tag_strategy)
+    # def test_splitting_with_tags_too_long(self, text, tags):
+    #     post = Post(text=text, tags=tags)
+        
+        #with pytest.raises(ValueError):
+        #    self.poster._format_caption_thread(post)
 
     @given(text=text_strategy, tags=tag_strategy)
     def test_reply_count_is_never_over_cap(self, text, tags):
