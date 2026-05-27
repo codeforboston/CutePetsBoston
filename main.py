@@ -1,7 +1,11 @@
 import os
 import random
 import argparse
+import json
+import sys
 import traceback
+from pathlib import Path
+from datetime import datetime, timezone, timedelta
 
 import requests
 
@@ -87,10 +91,39 @@ def run(sources, posters):
 
 
 def pick_pet(pets):
-    eligible = [pet for pet in pets if pet.image_url and pet.adoption_url]
-    if not eligible:
-        return None
-    return random.choice(eligible)
+    Path("database.json").touch(exist_ok=True)
+    # Open file
+    with open("database.json", "r+") as f:
+        # Load json
+        try:
+            data = json.load(f)
+        except (json.JSONDecodeError, ValueError) as e:
+            print(f"{type(e).__name__}:{e}", file=sys.stderr)
+            traceback.print_exc()
+            data = {}
+        
+        if "posted_pets" in data:
+            posted_pet_ids =  {posted_pet["pet_id"] for posted_pet in data["posted_pets"]}
+        else:
+            posted_pet_ids = {}
+            data["posted_pets"] = []
+        # Check pet has an image, adoption url, and has not been posted
+        eligible = [pet for pet in pets if pet.image_url and pet.adoption_url and pet.pet_id not in posted_pet_ids]
+        if not eligible:
+            raise ValueError("No elligible pet found")
+        
+        selected_pet = random.choice(eligible)
+        # Add pet ID to list of posted pets
+        data["posted_pets"].append({"name": selected_pet.name, "pet_id": selected_pet.pet_id, "posted_at": datetime.now(timezone.utc).isoformat()})
+        # Remove old pets
+        cutoff = datetime.now(timezone.utc) - timedelta(weeks=12)
+        recent_pets = [item for item in data["posted_pets"] if datetime.fromisoformat(item['posted_at']) > cutoff]
+        data["posted_pets"] = recent_pets
+        # Export json
+        f.seek(0)
+        json.dump(data, f, indent=4)
+        f.truncate()
+        return selected_pet
 
 
 # Slack incoming-webhook messages have a ~40k-char limit; cap the traceback

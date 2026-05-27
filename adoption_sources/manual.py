@@ -36,6 +36,7 @@ class SourceManual(PetSource):
 
     def _build_pet(self, animal: dict) -> AdoptablePet:
         attrs = animal.get("attributes", {})
+        animal_id = animal.get("id", "")
         return AdoptablePet(
             name=attrs.get("name", "Unknown"),
             species=self.species,
@@ -44,6 +45,7 @@ class SourceManual(PetSource):
             description=(attrs.get("descriptionText") or "").strip(),
             adoption_url=self._adoption_url(attrs.get("slug")),
             image_url=attrs.get("pictureThumbnailUrl"),
+            pet_id=animal_id,
         )
 
     @staticmethod
