@@ -114,10 +114,10 @@ def pick_pet(pets):
         
         selected_pet = random.choice(eligible)
         # Add pet ID to list of posted pets
-        data["posted_pets"].append({"name": selected_pet.name, "pet_id": selected_pet.pet_id, "time": datetime.now(timezone.utc).isoformat()})
+        data["posted_pets"].append({"name": selected_pet.name, "pet_id": selected_pet.pet_id, "posted_at": datetime.now(timezone.utc).isoformat()})
         # Remove old pets
         cutoff = datetime.now(timezone.utc) - timedelta(weeks=12)
-        recent_pets = [item for item in data["posted_pets"] if datetime.fromisoformat(item['time']) > cutoff]
+        recent_pets = [item for item in data["posted_pets"] if datetime.fromisoformat(item['posted_at']) > cutoff]
         data["posted_pets"] = recent_pets
         # Export json
         f.seek(0)
