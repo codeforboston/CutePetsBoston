@@ -85,10 +85,10 @@ def post_unicode():
 # !!!OTHERWISE YOU MAY TRIGGER SPAM DETECTION!!! 
 testingCases = [
     post_exceed_500_chars_limit_with_adoption_link,
-    post_exceed_500_chars_limit_without_adoption_link,
-    post_within_500_chars_limit_with_adoption_link,
-    post_within_500_chars_limit_without_adoption_link,
-    post_unicode
+    #post_exceed_500_chars_limit_without_adoption_link,
+    #post_within_500_chars_limit_with_adoption_link,
+    #post_within_500_chars_limit_without_adoption_link,
+    #post_unicode,
 ]
 
 def main():

@@ -2,8 +2,6 @@ from __future__ import annotations
 
 import os
 import tempfile
-from dataclasses import dataclass
-from enum import StrEnum
 from urllib.parse import urlparse
 
 import requests
@@ -11,39 +9,12 @@ from mastodon import Mastodon
 
 from abstractions import AdoptablePet, Post, PostResult, SocialPoster
 from abstractions import CITY_NAME, CITY_STATE
-from utils.pipeline import PipelineResult, add_phase, start_pipeline
 
 
 THREAD_SUFFIX = "\n\nMore details below ⬇️"
 MASTODON_CHARACTER_LIMIT = 500
 TRUNCATION_SUFFIX = "..."
 MAX_REPLIES = 5
-
-
-class MastodonPhase(StrEnum):
-    PET = "pet"
-    POST = "post"
-    PREPARED_CAPTION = "prepared_caption"
-    CAPTION_THREAD = "caption_thread"
-
-
-@dataclass(frozen=True)
-class PreparedCaption:
-    post: Post
-    caption_text: str
-    tags: list[str]
-    tag_suffix: str
-
-
-@dataclass(frozen=True)
-class CaptionThread:
-    main_caption: str
-    replies: list[str]
-    main_limit: int | None
-    main_text: str | None
-    overflow: str | None
-    was_split: bool
-    was_capped: bool
 
 
 class PosterMastodon(SocialPoster):
@@ -151,111 +122,39 @@ class PosterMastodon(SocialPoster):
 
         return status
 
-    """
-    Implement your own pipeline and consume it in a preview file
-    for debugging purposes
-    Here, we build a pipeline from AdoptablePet (upstream input)
-    -> Post -> Prepared Caption -> Caption Thread
-    """
-    def build_formatting_pipeline(
-        self,
-        pet: AdoptablePet,
-    ) -> PipelineResult[CaptionThread]:
-        pipeline = start_pipeline(MastodonPhase.PET, pet)
-
-        pipeline = add_phase(
-            pipeline,
-            MastodonPhase.POST,
-            self.format_post,
-        )
-
-        pipeline = add_phase(
-            pipeline,
-            MastodonPhase.PREPARED_CAPTION,
-            self._prepare_caption,
-        )
-
-        pipeline = add_phase(
-            pipeline,
-            MastodonPhase.CAPTION_THREAD,
-            self._build_caption_thread,
-        )
-
-        return pipeline
-
     def _format_caption_thread(self, post: Post) -> tuple[str, list[str]]:
-        prepared = self._prepare_caption(post)
-        thread = self._build_caption_thread(prepared)
-        return thread.main_caption, thread.replies
-
-    def _prepare_caption(self, post: Post) -> PreparedCaption:
-        tags, tag_suffix = self._format_tags(post.tags)
-
-        return PreparedCaption(
-            post=post,
-            caption_text=post.text.strip(),
-            tags=tags,
-            tag_suffix=tag_suffix,
-        )
-
-    def _build_caption_thread(self, prepared: PreparedCaption) -> CaptionThread:
-        caption_text = prepared.caption_text
-        tag_suffix = prepared.tag_suffix
+        caption_text = post.text.strip()
+        tag_suffix = self._format_tag_suffix(post.tags)
 
         if self._fits_single_post(caption_text, tag_suffix):
-            return CaptionThread(
-                main_caption=f"{caption_text}{tag_suffix}",
-                replies=[],
-                main_limit=None,
-                main_text=caption_text,
-                overflow="",
-                was_split=False,
-                was_capped=False,
-            )
+            return f"{caption_text}{tag_suffix}", []
 
-        main_limit = self._validated_main_limit(tag_suffix)
-        main_text, overflow = self._safe_truncate(caption_text, main_limit)
-        replies = self._split_reply_chunks(overflow)
-
-        main_caption = self._build_main_caption(main_text, tag_suffix)
-
-        return CaptionThread(
-            main_caption=main_caption,
-            replies=replies,
-            main_limit=main_limit,
-            main_text=main_text,
-            overflow=overflow,
-            was_split=True,
-            was_capped=replies[-1].endswith(TRUNCATION_SUFFIX) if replies else False,
-        )
-
-    @staticmethod
-    def _fits_single_post(caption_text: str, tag_suffix: str) -> bool:
-        return len(caption_text) + len(tag_suffix) <= MASTODON_CHARACTER_LIMIT
-
-    def _validated_main_limit(self, tag_suffix: str) -> int:
         main_limit = self._main_caption_limit(tag_suffix)
 
         if main_limit <= 0:
             raise ValueError("Tags are too long to fit in a Mastodon post.")
 
-        return main_limit
+        main_text, overflow = self._safe_truncate(caption_text, main_limit)
+        replies = self._split_reply_chunks(overflow)
 
-    @staticmethod
-    def _build_main_caption(main_text: str, tag_suffix: str) -> str:
-        return (
+        main_caption = (
             f"{main_text}"
             f"{TRUNCATION_SUFFIX}"
             f"{THREAD_SUFFIX}"
             f"{tag_suffix}"
         )
 
+        return main_caption, replies
+
     @staticmethod
-    def _format_tags(tags: list[str]) -> tuple[list[str], str]:
+    def _fits_single_post(caption_text: str, tag_suffix: str) -> bool:
+        return len(caption_text) + len(tag_suffix) <= MASTODON_CHARACTER_LIMIT
+
+    @staticmethod
+    def _format_tag_suffix(tags: list[str]) -> str:
         clean_tags = [tag for tag in tags if tag]
         tag_text = " ".join(f"#{tag}" for tag in clean_tags)
-        tag_suffix = f"\n\n{tag_text}" if tag_text else ""
-        return clean_tags, tag_suffix
+        return f"\n\n{tag_text}" if tag_text else ""
 
     @staticmethod
     def _main_caption_limit(tag_suffix: str) -> int:

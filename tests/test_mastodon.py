@@ -1,38 +1,6 @@
-"""
-Testing includes:
-1. Property-based testing (Hypothesis)
-2. Unit tests
-3. Manual visual inspection in Preview file
-
-Property-based tests:
-- Generate randomized text/tag combinations.
-- Nondeterministic testing unless specify seeds.
-- Verify global invariants such as:
-        * captions never exceed Mastodon limits
-        * replies never exceed MAX_REPLIES
-        * full formatting pipeline matches runtime formatter
-        * no empty replies are produced
-
-Unit tests:
-- Validate specific expected behaviors and edge cases.
-- Examples include:
-        * truncation behavior
-        * capped thread handling
-        * reconstruction correctness
-        * no-tag formatting
-        * tag filtering
-        * word-safe truncation
-        * long text handling
-
-Manual visual inspection:
-- See Preview file for details
-"""
-
-from abstractions import Post, AdoptablePet
+from abstractions import AdoptablePet, Post
 from hypothesis import given, strategies as st
 from social_posters.mastodon import (
-    CaptionThread,
-    MastodonPhase,
     PosterMastodon,
     MASTODON_CHARACTER_LIMIT,
     MAX_REPLIES,
@@ -109,6 +77,7 @@ pet_strategy = st.builds(
     ),
 )
 
+
 def reconstruct_text(main_caption: str, replies: list[str]) -> str:
     main_without_tags = main_caption.split("\n\n#")[0]
     main_without_suffix = (
@@ -119,6 +88,7 @@ def reconstruct_text(main_caption: str, replies: list[str]) -> str:
     )
 
     return " ".join([main_without_suffix] + replies).strip()
+
 
 class TestMastodonCaptionProperties:
     def setup_method(self):
@@ -160,37 +130,19 @@ class TestMastodonCaptionProperties:
             assert reconstructed == text.strip()
 
     @given(pet=pet_strategy)
-    def test_pipeline_matches_regular_formatter(self, pet):
+    def test_format_post_output_stays_under_mastodon_limit_after_splitting(self, pet):
         post = self.poster.format_post(pet)
 
         main_caption, replies = self.poster._format_caption_thread(post)
-        pipeline = self.poster.build_formatting_pipeline(pet)
 
-        assert pipeline.ok
-        assert isinstance(pipeline.value, CaptionThread)
-
-        assert pipeline.value.main_caption == main_caption
-        assert pipeline.value.replies == replies
-
-    @given(pet=pet_strategy)
-    def test_pipeline_records_expected_phases(self, pet):
-        pipeline = self.poster.build_formatting_pipeline(pet)
-
-        phase_names = [phase.name for phase in pipeline.trace]
-
-        assert phase_names == [
-            MastodonPhase.PET,
-            MastodonPhase.POST,
-            MastodonPhase.PREPARED_CAPTION,
-            MastodonPhase.CAPTION_THREAD,
-        ]
+        assert len(main_caption) <= MASTODON_CHARACTER_LIMIT
+        assert all(len(reply) <= MASTODON_CHARACTER_LIMIT for reply in replies)
+        assert len(replies) <= MAX_REPLIES
 
 
 class TestMastodonCaption:
     def setup_method(self):
         self.poster = PosterMastodon.__new__(PosterMastodon)
-
-
 
     def test_reply_count_is_capped(self):
         post = Post(text="hello " * 5000)
