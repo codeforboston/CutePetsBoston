@@ -45,10 +45,28 @@ class PosterMastodon(SocialPoster):
             return False
 
     def publish(self, post: Post) -> PostResult:
-        error = self._ensure_ready_to_publish(post)
-        if error:
-            return error
+        if not self._is_available:
+            return PostResult(
+                success=False,
+                error_message="Mastodon credentials not available.",
+            )
 
+        if not post.image_url:
+            return PostResult(
+                success=False,
+                error_message="Mastodon posts require an image URL.",
+            )
+
+        if not self._session and not self.authenticate():
+            return PostResult(
+                success=False,
+                error_message=(
+                    "Mastodon authentication failed."
+                    if not self._auth_error
+                    else f"Mastodon authentication failed: {self._auth_error}"
+                ),
+            )
+        
         image_path = None
 
         try:
@@ -75,31 +93,6 @@ class PosterMastodon(SocialPoster):
             self._session = None
             if image_path and os.path.exists(image_path):
                 os.unlink(image_path)
-
-    def _ensure_ready_to_publish(self, post: Post) -> PostResult | None:
-        if not self._is_available:
-            return PostResult(
-                success=False,
-                error_message="Mastodon credentials not available.",
-            )
-
-        if not post.image_url:
-            return PostResult(
-                success=False,
-                error_message="Mastodon posts require an image URL.",
-            )
-
-        if not self._session and not self.authenticate():
-            return PostResult(
-                success=False,
-                error_message=(
-                    "Mastodon authentication failed."
-                    if not self._auth_error
-                    else f"Mastodon authentication failed: {self._auth_error}"
-                ),
-            )
-
-        return None
 
     def _post_thread(
         self,
