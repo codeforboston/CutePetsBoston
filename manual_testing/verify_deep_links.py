@@ -109,7 +109,8 @@ def post_pet(pet, do_post: bool) -> bool:
     """Preview a pet's Bluesky post and optionally publish it. Returns success."""
     poster = PosterBluesky()
     post = poster.format_post(pet)
-    deep = "#action_0=pet" in (pet.adoption_url or "")
+    url = pet.adoption_url or ""
+    deep = "#action_0=pet" in url or "mspca.org/pets/" in url
     print("\n" + "=" * 70)
     print(f"SELECTED: {pet.name}  [pet_id={pet.pet_id}]  ({pet.location})")
     label = "DEEP LINK (should open the pet)" if deep else "FALLBACK LINK (NOT pet-specific)"

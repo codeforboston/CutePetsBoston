@@ -25,6 +25,7 @@ class AdoptablePet:
     sex: str | None = None
     size_group: str | None = None
     pet_id: str | None = None
+    rescue_id: str | None = None  # shelter's own animal id (RescueGroups "rescueId")
 
 
 class PetSource(ABC):

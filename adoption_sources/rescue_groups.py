@@ -152,9 +152,16 @@ class SourceRescueGroups(PetSource):
                 None
             )
 
-            # For orgs that embed the RescueGroups toolkit, rebuild a deep link to
-            # this specific pet; otherwise keep the org landing page from above.
-            adoption_url = reconstruct_adoption_url(url_candidates, animal_id) or adoption_url
+            # Shelter's own animal id (e.g. MSPCA's "A468573"); some orgs' deep
+            # links are keyed on this rather than the RescueGroups id.
+            rescue_id = attrs.get("rescueId")
+
+            # For shelters we have a template for, rebuild a deep link to this
+            # specific pet; otherwise keep the org landing page from above.
+            adoption_url = (
+                reconstruct_adoption_url(url_candidates, animal_id, rescue_id)
+                or adoption_url
+            )
 
             # Get best available image
             image_url = self._get_image_url(attrs)
@@ -175,6 +182,7 @@ class SourceRescueGroups(PetSource):
                 sex=attrs.get("sex"),
                 size_group=attrs.get("sizeGroup"),
                 pet_id=animal_id,
+                rescue_id=rescue_id,
             )
         except Exception as e:
             logger.warning(f"Failed to parse animal {animal.get('id', 'unknown')}: {e}")

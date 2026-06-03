@@ -48,8 +48,18 @@ class ReconstructAdoptionUrlTests(unittest.TestCase):
             "https://sterlingshelter.org/pet-finder/#action_0=pet&animalID_0=42&petIndex_0=-1",
         )
 
+    def test_mspca_uses_lowercased_rescue_id(self):
+        self.assertEqual(
+            reconstruct_adoption_url(["http://www.mspca.org/boston"], "22301016", rescue_id="A467410"),
+            "https://www.mspca.org/pets/a467410/",
+        )
+
+    def test_mspca_without_rescue_id_returns_none(self):
+        # MSPCA's template needs rescue_id, not the RescueGroups pet_id.
+        self.assertIsNone(reconstruct_adoption_url(["http://www.mspca.org/boston"], "22301016"))
+
     def test_unknown_domain_returns_none(self):
-        self.assertIsNone(reconstruct_adoption_url(["https://www.mspca.org/adoption-search/"], "5"))
+        self.assertIsNone(reconstruct_adoption_url(["https://www.example.org/adoption-search/"], "5"))
 
     def test_missing_pet_id_returns_none(self):
         self.assertIsNone(reconstruct_adoption_url(["https://sterlingshelter.org/"], None))

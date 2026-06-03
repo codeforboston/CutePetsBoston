@@ -20,14 +20,29 @@ falls back to whatever URL the API provided.
 from typing import Iterable
 from urllib.parse import urlparse
 
-# Domain -> deep-link template. Verified to embed the RescueGroups toolkit v3.
-# The page path differs per org, so each domain carries its own full template.
-# The trailing ``petIndex_0=-1`` is the toolkit's "standalone pet, not part of a
-# browsed result list" sentinel. Without it the widget can fall back to showing
-# the full list instead of the specific animal.
-PET_FINDER_TEMPLATES: dict[str, str] = {
-    "sterlingshelter.org": "https://sterlingshelter.org/pet-finder/#action_0=pet&animalID_0={pet_id}&petIndex_0=-1",
-    "smalldogrescuene.org": "https://www.smalldogrescuene.org/adoptable-dogs/#action_0=pet&animalID_0={pet_id}&petIndex_0=-1",
+# Domain -> (template, id_key). Each org's pet page is reachable from one of the
+# ids we get from the API:
+#   * "pet_id"          -- the RescueGroups numeric animal id (toolkit shelters).
+#   * "rescue_id_lower" -- the shelter's own animal id (RescueGroups "rescueId"),
+#                          lowercased (MSPCA's /pets/a######/ urls).
+# The template uses a single ``{id}`` placeholder filled with that id.
+#
+# Sterling & SmallDog embed the RescueGroups toolkit v3; the trailing
+# ``petIndex_0=-1`` is the toolkit's "standalone pet, not part of a browsed list"
+# sentinel -- without it the widget can show the full list instead of the animal.
+PET_FINDER_TEMPLATES: dict[str, tuple[str, str]] = {
+    "sterlingshelter.org": (
+        "https://sterlingshelter.org/pet-finder/#action_0=pet&animalID_0={id}&petIndex_0=-1",
+        "pet_id",
+    ),
+    "smalldogrescuene.org": (
+        "https://www.smalldogrescuene.org/adoptable-dogs/#action_0=pet&animalID_0={id}&petIndex_0=-1",
+        "pet_id",
+    ),
+    "mspca.org": (
+        "https://www.mspca.org/pets/{id}/",
+        "rescue_id_lower",
+    ),
 }
 
 
@@ -43,40 +58,51 @@ def _domain_of(url: str | None) -> str | None:
     return netloc[4:] if netloc.startswith("www.") else netloc
 
 
-def _template_for_domain(domain: str | None) -> str | None:
+def _template_for_domain(domain: str | None) -> tuple[str, str] | None:
     if not domain:
         return None
     # Exact match or any subdomain of a known org (e.g. adopt.sterlingshelter.org).
-    for known, template in PET_FINDER_TEMPLATES.items():
+    for known, entry in PET_FINDER_TEMPLATES.items():
         if domain == known or domain.endswith("." + known):
-            return template
+            return entry
     return None
 
 
 def is_supported_org(url: str | None) -> bool:
-    """True if ``url``'s domain is a shelter we can build deep links for."""
+    """True if ``url``'s domain is a shelter we have a deep-link template for."""
     return _template_for_domain(_domain_of(url)) is not None
 
 
 def reconstruct_adoption_url(
-    candidate_urls: Iterable[str | None], pet_id: str | None
+    candidate_urls: Iterable[str | None],
+    pet_id: str | None,
+    rescue_id: str | None = None,
 ) -> str | None:
     """Build a deep link to a specific pet, or ``None`` if we can't.
 
     Args:
         candidate_urls: URLs from the API that might reveal the org's domain
             (adoption URL, org adoption URL, org website, ...). Checked in order;
-            the first whose domain matches a known toolkit org wins.
-        pet_id: The RescueGroups animal id (``AdoptablePet.pet_id``).
+            the first whose domain matches a known org wins.
+        pet_id: The RescueGroups numeric animal id (``AdoptablePet.pet_id``).
+        rescue_id: The shelter's own animal id (``AdoptablePet.rescue_id`` /
+            RescueGroups "rescueId"), used by orgs like MSPCA.
 
     Returns:
-        A reconstructed deep link, or ``None`` when no candidate domain is a
-        known toolkit org or ``pet_id`` is missing.
+        A reconstructed deep link, or ``None`` when no candidate domain is known
+        or the id that org's template needs is missing.
     """
-    if not pet_id:
-        return None
+    ids = {
+        "pet_id": pet_id or None,
+        "rescue_id_lower": rescue_id.lower() if rescue_id else None,
+    }
     for url in candidate_urls:
-        template = _template_for_domain(_domain_of(url))
-        if template:
-            return template.format(pet_id=pet_id)
+        entry = _template_for_domain(_domain_of(url))
+        if not entry:
+            continue
+        template, id_key = entry
+        id_value = ids.get(id_key)
+        if id_value:
+            return template.format(id=id_value)
+        # Domain matched but we lack the id it needs -> fall back (try next url).
     return None
