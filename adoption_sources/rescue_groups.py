@@ -11,6 +11,8 @@ import re
 from typing import Iterator
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 from abstractions import AdoptablePet, PetSource
 from config import CITY_NAME, CITY_STATE, POSTAL_CODE
@@ -20,6 +22,27 @@ logger = logging.getLogger(__name__)
 # Some rescues publish entries like "More Dogs Soon!" to point users at their
 # website; those should never be posted. Add new names here as we encounter them.
 PLACEHOLDER_NAMES: tuple[str, ...] = ("more dogs soon!",)
+
+# The RescueGroups API occasionally times out or returns a transient 5xx. A
+# single hiccup shouldn't fail the whole run, so retry a few times with
+# exponential backoff (0s, 2s, 4s, 8s between attempts).
+RETRY_TOTAL = 4
+RETRY_BACKOFF_FACTOR = 1
+
+
+def _session_with_retries() -> requests.Session:
+    """Build a requests Session that retries transient errors with backoff."""
+    retry = Retry(
+        total=RETRY_TOTAL,
+        backoff_factor=RETRY_BACKOFF_FACTOR,
+        status_forcelist=(429, 500, 502, 503, 504),
+        # We only POST, so POST must be opted in (it isn't retried by default).
+        allowed_methods=frozenset({"POST"}),
+        raise_on_status=False,
+    )
+    session = requests.Session()
+    session.mount("https://", HTTPAdapter(max_retries=retry))
+    return session
 
 
 class SourceRescueGroups(PetSource):
@@ -92,7 +115,8 @@ class SourceRescueGroups(PetSource):
             f"Fetching {self.species} from RescueGroups within {self.radius_miles} miles of {self.postal_code}"
         )
 
-        response = requests.post(url, json=payload, headers=headers, timeout=30)
+        session = _session_with_retries()
+        response = session.post(url, json=payload, headers=headers, timeout=30)
         response.raise_for_status()
 
         body = response.json()
