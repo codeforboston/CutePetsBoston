@@ -93,6 +93,8 @@ class SourceRescueGroups(PetSource):
         )
 
         response = requests.post(url, json=payload, headers=headers, timeout=30)
+        print("Temporarily print resposne")
+        print(response)
         response.raise_for_status()
 
         body = response.json()
