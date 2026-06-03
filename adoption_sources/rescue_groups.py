@@ -13,6 +13,7 @@ from typing import Iterator
 import requests
 
 from abstractions import AdoptablePet, PetSource
+from adoption_sources.pet_links import reconstruct_adoption_url
 from config import CITY_NAME, CITY_STATE, POSTAL_CODE
 
 logger = logging.getLogger(__name__)
@@ -140,11 +141,20 @@ class SourceRescueGroups(PetSource):
                 .get("id")
             )
             org_attrs = orgs_by_id.get(org_id, {}) if org_id else {}
+            url_candidates = (
+                attrs.get("adoptionUrl"),
+                org_attrs.get("adoptionUrl"),
+                org_attrs.get("url"),
+            )
             adoption_url = next(
-                (u for u in (attrs.get("adoptionUrl"), org_attrs.get("adoptionUrl"), org_attrs.get("url"))
+                (u for u in url_candidates
                  if u and u.strip().rstrip("/") not in ("http:", "https:", "http://", "https://")),
                 None
             )
+
+            # For orgs that embed the RescueGroups toolkit, rebuild a deep link to
+            # this specific pet; otherwise keep the org landing page from above.
+            adoption_url = reconstruct_adoption_url(url_candidates, animal_id) or adoption_url
 
             # Get best available image
             image_url = self._get_image_url(attrs)
