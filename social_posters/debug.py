@@ -4,8 +4,6 @@ from abstractions import AdoptablePet, Post, PostResult, SocialPoster
 
 
 class PosterDebug(SocialPoster):
-    def __init__(self, stream=None):
-        self.stream = stream
 
     @property
     def platform_name(self) -> str:
@@ -24,8 +22,5 @@ class PosterDebug(SocialPoster):
             f"Tags: {post.tags}\n"
             f"Url: {post.link}\n"
         )
-        if self.stream:
-            self.stream.write(output)
-        else:
-            print(output)
+        print(output)
         return PostResult(success=True, post_id="debug")
