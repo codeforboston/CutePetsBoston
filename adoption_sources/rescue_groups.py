@@ -97,8 +97,8 @@ class SourceRescueGroups(PetSource):
 
         body = response.json()
         data = body.get("data", [])
-        print("Temporarily print resposne body")
-        print(body)
+        print("Temporarily print response body")
+        print(json.dumps(data, indent=4))
         logger.info(f"Received {len(data)} pets from RescueGroups")
 
         orgs_by_id = {
