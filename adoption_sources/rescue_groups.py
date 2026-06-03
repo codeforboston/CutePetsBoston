@@ -93,7 +93,7 @@ class SourceRescueGroups(PetSource):
             f"Fetching {self.species} from RescueGroups within {self.radius_miles} miles of {self.postal_code}"
         )
 
-        response = requests.post(url, json=payload, headers=headers, timeout=30)
+        response = requests.get(url, json=payload, headers=headers, timeout=30)
         response.raise_for_status()
 
         body = response.json()
