@@ -30,7 +30,7 @@ class SourceRescueGroups(PetSource):
     Requires CUTEPETSBOSTON_RESCUEGROUPS_API_KEY environment variable or api_key constructor arg.
     """
 
-    BASE_URL = "https://api.rescuegroups.org/v5/public/animals/search"
+    BASE_URL = "https://api.rescuegroups.org/v5/public/orgs/8866"
 
     def __init__(
         self,
@@ -70,22 +70,22 @@ class SourceRescueGroups(PetSource):
             )
         
         url = (
-            f"{self.BASE_URL}/available/{self.species}/haspic"
-            f"?include=orgs,breeds,locations"
-            f"&sort=random"
-            f"&limit={self.limit}"
+            f"{self.BASE_URL}"
+            # f"?include=orgs,breeds,locations"
+            # f"&sort=random"
+            # f"&limit={self.limit}"
         )
         headers = {
             "Content-Type": "application/vnd.api+json",
             "Authorization": self._api_key,
         }
         payload = {
-            "data": {
-                "filterRadius": {
-                    "miles": self.radius_miles,
-                    "postalcode": self.postal_code,
-                }
-            }
+            # "data": {
+            #     "filterRadius": {
+            #         "miles": self.radius_miles,
+            #         "postalcode": self.postal_code,
+            #     }
+            # }
         }
 
 
