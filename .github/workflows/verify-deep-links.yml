@@ -43,4 +43,4 @@ jobs:
           BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
           BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
         run: |
-          python manual_testing/verify_deep_links.py --post --max-pulls "${{ inputs.max_pulls || '8' }}"
+          python manual_testing/verify_deep_links.py --post --shelters smalldogrescuene.org,mspca.org --max-pulls "${{ inputs.max_pulls || '12' }}"
