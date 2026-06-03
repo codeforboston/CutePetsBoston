@@ -22,9 +22,12 @@ from urllib.parse import urlparse
 
 # Domain -> deep-link template. Verified to embed the RescueGroups toolkit v3.
 # The page path differs per org, so each domain carries its own full template.
+# The trailing ``petIndex_0=-1`` is the toolkit's "standalone pet, not part of a
+# browsed result list" sentinel. Without it the widget can fall back to showing
+# the full list instead of the specific animal.
 PET_FINDER_TEMPLATES: dict[str, str] = {
-    "sterlingshelter.org": "https://sterlingshelter.org/pet-finder/#action_0=pet&animalID_0={pet_id}",
-    "smalldogrescuene.org": "https://www.smalldogrescuene.org/adoptable-dogs/#action_0=pet&animalID_0={pet_id}",
+    "sterlingshelter.org": "https://sterlingshelter.org/pet-finder/#action_0=pet&animalID_0={pet_id}&petIndex_0=-1",
+    "smalldogrescuene.org": "https://www.smalldogrescuene.org/adoptable-dogs/#action_0=pet&animalID_0={pet_id}&petIndex_0=-1",
 }
 
 

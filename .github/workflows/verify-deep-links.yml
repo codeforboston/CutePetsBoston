@@ -43,4 +43,9 @@ jobs:
           BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
           BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
         run: |
-          python manual_testing/verify_deep_links.py --post --shelters smalldogrescuene.org,mspca.org --max-pulls "${{ inputs.max_pulls || '12' }}"
+          echo "::group::Inspect MSPCA raw API record (no post)"
+          python manual_testing/verify_deep_links.py --inspect mspca.org --max-pulls "${{ inputs.max_pulls || '12' }}"
+          echo "::endgroup::"
+          echo "::group::Post one SmallDog pet with fixed deep link"
+          python manual_testing/verify_deep_links.py --post --shelters smalldogrescuene.org --max-pulls "${{ inputs.max_pulls || '12' }}"
+          echo "::endgroup::"

@@ -24,19 +24,19 @@ class ReconstructAdoptionUrlTests(unittest.TestCase):
     def test_sterling_deep_link(self):
         self.assertEqual(
             reconstruct_adoption_url(["https://sterlingshelter.org/"], "22506352"),
-            "https://sterlingshelter.org/pet-finder/#action_0=pet&animalID_0=22506352",
+            "https://sterlingshelter.org/pet-finder/#action_0=pet&animalID_0=22506352&petIndex_0=-1",
         )
 
     def test_smalldog_deep_link(self):
         self.assertEqual(
             reconstruct_adoption_url(["https://www.smalldogrescuene.org/"], "999"),
-            "https://www.smalldogrescuene.org/adoptable-dogs/#action_0=pet&animalID_0=999",
+            "https://www.smalldogrescuene.org/adoptable-dogs/#action_0=pet&animalID_0=999&petIndex_0=-1",
         )
 
     def test_matches_via_subdomain(self):
         self.assertEqual(
             reconstruct_adoption_url(["https://adopt.sterlingshelter.org/foo"], "1"),
-            "https://sterlingshelter.org/pet-finder/#action_0=pet&animalID_0=1",
+            "https://sterlingshelter.org/pet-finder/#action_0=pet&animalID_0=1&petIndex_0=-1",
         )
 
     def test_first_matching_candidate_wins(self):
@@ -45,7 +45,7 @@ class ReconstructAdoptionUrlTests(unittest.TestCase):
             reconstruct_adoption_url(
                 [None, "https://rescuegroups.org/foo", "https://sterlingshelter.org/"], "42"
             ),
-            "https://sterlingshelter.org/pet-finder/#action_0=pet&animalID_0=42",
+            "https://sterlingshelter.org/pet-finder/#action_0=pet&animalID_0=42&petIndex_0=-1",
         )
 
     def test_unknown_domain_returns_none(self):
@@ -75,7 +75,7 @@ class ParseAnimalIntegrationTests(unittest.TestCase):
         pet = self.source._parse_animal(self._animal(), orgs)
         self.assertEqual(
             pet.adoption_url,
-            "https://sterlingshelter.org/pet-finder/#action_0=pet&animalID_0=22506352",
+            "https://sterlingshelter.org/pet-finder/#action_0=pet&animalID_0=22506352&petIndex_0=-1",
         )
 
     def test_non_toolkit_org_keeps_landing_url(self):

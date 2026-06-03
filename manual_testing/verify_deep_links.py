@@ -24,10 +24,14 @@ Usage (from repo root)::
 """
 
 import argparse
+import json
 import os
 import random
+import re
 import sys
 from pathlib import Path
+
+import requests
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
@@ -130,8 +134,52 @@ def post_pet(pet, do_post: bool) -> bool:
     return False
 
 
+def inspect_domain(domain: str, pulls: int, limit: int) -> None:
+    """Dump the FULL raw RescueGroups record for pets from `domain`.
+
+    Used to hunt for a shelter-internal id (e.g. MSPCA's `a467410`) that we'd
+    need to build that shelter's deep link. Does not post anything.
+    """
+    src = SourceRescueGroups(limit=limit)
+    url = (f"{src.BASE_URL}/available/{src.species}/haspic"
+           f"?include=orgs,breeds,locations&sort=random&limit={limit}")
+    headers = {"Content-Type": "application/vnd.api+json", "Authorization": src._api_key}
+    payload = {"data": {"filterRadius": {"miles": src.radius_miles, "postalcode": src.postal_code}}}
+
+    shown = 0
+    for i in range(pulls):
+        body = requests.post(url, json=payload, headers=headers, timeout=30).json()
+        orgs = {it["id"]: it.get("attributes", {})
+                for it in body.get("included", []) if it.get("type") == "orgs"}
+        for animal in body.get("data", []):
+            org_id = (animal.get("relationships", {}).get("orgs", {})
+                      .get("data", [{}])[0].get("id"))
+            org = orgs.get(org_id, {})
+            if domain not in (org.get("url") or "") and domain not in (org.get("adoptionUrl") or ""):
+                continue
+            shown += 1
+            print(f"\n===== {domain} pet (rescuegroups id={animal.get('id')}) =====")
+            print("ANIMAL attributes:")
+            print(json.dumps(animal.get("attributes", {}), indent=2)[:3000])
+            print("ORG attributes:")
+            print(json.dumps(org, indent=2)[:1500])
+            blob = json.dumps(animal) + json.dumps(org)
+            candidates = sorted(set(re.findall(r"a\d{4,8}", blob, flags=re.IGNORECASE)))
+            print(f"Possible shelter-internal ids (a##### pattern): {candidates}")
+            if shown >= 3:
+                return
+        print(f"  pull {i + 1}: {shown} {domain} pets dumped so far")
+        if shown:
+            return
+    if not shown:
+        print(f"No {domain} pets found in {pulls} pulls.")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--inspect", type=str, default="",
+                        help="Dump raw API records for pets from this shelter domain "
+                             "(e.g. mspca.org) and exit. Does not post.")
     parser.add_argument("--post", action="store_true",
                         help="Actually publish to Bluesky (default is a dry-run preview).")
     parser.add_argument("--shelters", type=str, default="",
@@ -147,6 +195,10 @@ def main() -> int:
     if not os.environ.get("CUTEPETSBOSTON_RESCUEGROUPS_API_KEY"):
         print("CUTEPETSBOSTON_RESCUEGROUPS_API_KEY not set (put it in .env).", file=sys.stderr)
         return 1
+
+    if args.inspect:
+        inspect_domain(args.inspect, args.max_pulls, args.limit)
+        return 0
 
     domains = [d.strip() for d in args.shelters.split(",") if d.strip()] or None
     print(f"Searching (up to {args.max_pulls} pulls)...")
