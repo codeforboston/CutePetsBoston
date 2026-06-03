@@ -21,6 +21,9 @@ permissions: {}
 jobs:
   verify:
     runs-on: ubuntu-latest
+    # Posts to the LIVE Bluesky account, so only run on an explicit manual
+    # dispatch or when a push commit opts in with "[verify-post]" in its message.
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[verify-post]')
     steps:
       - name: Checkout repo
         uses: actions/checkout@v6
@@ -37,7 +40,7 @@ jobs:
       - name: Find pet, reconstruct link, post to Bluesky test
         env:
           CUTEPETSBOSTON_RESCUEGROUPS_API_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
-          BLUESKY_HANDLE: ${{ secrets.BLUESKY_TEST_HANDLE }}
-          BLUESKY_PASSWORD: ${{ secrets.BLUESKY_TEST_PASSWORD }}
+          BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
+          BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
         run: |
           python manual_testing/verify_deep_links.py --post --max-pulls "${{ inputs.max_pulls || '8' }}"
