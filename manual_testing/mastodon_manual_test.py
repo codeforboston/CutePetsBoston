@@ -66,6 +66,21 @@ def post_within_500_chars_limit_without_adoption_link():
                     )
     return pet
 
+def post_about_800_chars_with_adoption_link():
+    pet = AdoptablePet("Kool-Aid Man", 
+                        "Unknown", 
+                        "Unknown", 
+                        "Quahog", 
+                        "OH YEAH!"*100, 
+                        None, 
+                        "https://static.wikia.nocookie.net/familyguy/images/8/8b/Koolaid.jpg/revision/latest?cb=20090128174245",
+                        None, 
+                        "Unknown", 
+                        None, 
+                        None
+                    )
+    return pet
+
 def post_unicode():
     pet = AdoptablePet("Vinny", 
                         "Unknown", 
@@ -82,7 +97,8 @@ def post_unicode():
     return pet
 
 testing_cases = [
-    post_exceed_500_chars_limit_with_adoption_link,
+    #post_exceed_500_chars_limit_with_adoption_link,
+    post_about_800_chars_with_adoption_link,
     #post_exceed_500_chars_limit_without_adoption_link,
     #post_within_500_chars_limit_with_adoption_link,
     #post_within_500_chars_limit_without_adoption_link,
