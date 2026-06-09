@@ -1,7 +1,10 @@
 import unittest
+import uuid
 
 from abstractions import AdoptablePet, Post, PostResult
-from main import create_posters, run
+from adoption_sources import SourceManual
+from adoption_sources.rescue_groups import SourceRescueGroups
+from main import create_posters, create_sources, run
 
 
 class FakeSource:
@@ -34,6 +37,7 @@ class FakePoster:
 
 class RunFlowTests(unittest.TestCase):
     def test_run_calls_source_and_posters(self):
+        pet_id = f"test-poppy-{uuid.uuid4()}"
         pet = AdoptablePet(
             name="Poppy",
             species="dog",
@@ -41,6 +45,7 @@ class RunFlowTests(unittest.TestCase):
             location="Boston, MA",
             image_url="https://example.com/poppy.jpg",
             adoption_url="https://example.com/adopt/poppy",
+            pet_id=pet_id,
         )
         source = FakeSource([pet])
         poster_one = FakePoster()
@@ -54,6 +59,54 @@ class RunFlowTests(unittest.TestCase):
         self.assertTrue(poster_two.format_called)
         self.assertTrue(poster_two.publish_called)
         self.assertEqual(len(results), 2)
+
+    def test_run_with_mixed_species_pool(self):
+        dog = AdoptablePet(
+            name="Rex",
+            species="dog",
+            breed="mutt",
+            location="Boston, MA",
+            image_url="https://example.com/rex.jpg",
+            adoption_url="https://example.com/adopt/rex",
+            pet_id=f"test-dog-{uuid.uuid4()}",
+        )
+        cat = AdoptablePet(
+            name="Luna",
+            species="cat",
+            breed="tabby",
+            location="Boston, MA",
+            image_url="https://example.com/luna.jpg",
+            adoption_url="https://example.com/adopt/luna",
+            pet_id=f"test-cat-{uuid.uuid4()}",
+        )
+        source = FakeSource([dog, cat])
+        poster = FakePoster()
+
+        results = run([source], [poster])
+
+        self.assertTrue(poster.format_called)
+        self.assertTrue(poster.publish_called)
+        self.assertEqual(len(results), 1)
+
+
+class CreateSourcesTests(unittest.TestCase):
+    def test_prod_returns_rescuegroups_for_each_species(self):
+        sources = create_sources(debug=False)
+
+        self.assertEqual(len(sources), 2)
+        self.assertIsInstance(sources[0], SourceRescueGroups)
+        self.assertIsInstance(sources[1], SourceRescueGroups)
+        self.assertEqual(sources[0].species, "dogs")
+        self.assertEqual(sources[1].species, "cats")
+
+    def test_debug_returns_manual_sources_for_dogs_and_cats(self):
+        sources = create_sources(debug=True)
+
+        self.assertEqual(len(sources), 2)
+        self.assertIsInstance(sources[0], SourceManual)
+        self.assertIsInstance(sources[1], SourceManual)
+        self.assertEqual(sources[0].species, "dog")
+        self.assertEqual(sources[1].species, "cat")
 
 
 class CreatePostersTests(unittest.TestCase):

@@ -47,14 +47,24 @@ def create_posters(debug=False):
 
 
 def create_sources(debug=False):
+    import json
+    from pathlib import Path
+
     from adoption_sources import SourceRescueGroups, SourceManual
-    
+    from config import PET_SPECIES
+
     if debug:
-        return [SourceManual()]
+        cat_fixture_path = Path(__file__).parent / "tests" / "fixtures" / "sample_cats.json"
+        with open(cat_fixture_path) as f:
+            cat_animals = json.load(f)
+        return [
+            SourceManual(species="dog"),
+            SourceManual(species="cat", animals=cat_animals),
+        ]
 
     sources = []
-
-    sources.append(SourceRescueGroups())
+    for species in PET_SPECIES:
+        sources.append(SourceRescueGroups(species=species))
 
     return sources
 

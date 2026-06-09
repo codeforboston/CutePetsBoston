@@ -22,7 +22,9 @@ logger = logging.getLogger(__name__)
 
 # Some rescues publish entries like "More Dogs Soon!" to point users at their
 # website; those should never be posted. Add new names here as we encounter them.
-PLACEHOLDER_NAMES: tuple[str, ...] = ("more dogs soon!",)
+PLACEHOLDER_NAMES: tuple[str, ...] = ("more dogs soon!", "more cats soon!")
+
+SPECIES_SINGULAR = {"dogs": "dog", "cats": "cat"}
 
 # The RescueGroups API occasionally times out or returns a transient 5xx. A
 # single hiccup shouldn't fail the whole run, so retry a few times with
@@ -148,8 +150,7 @@ class SourceRescueGroups(PetSource):
             # Extract and clean the name
             name = self._clean_name(attrs.get("name", "Unknown"))
 
-            # Determine species from the endpoint we queried
-            species = "dog" if self.species == "dogs" else "cat"
+            species = SPECIES_SINGULAR[self.species]
 
             # Get breed info
             breed = attrs.get("breedString", attrs.get("breedPrimary", "Mixed"))

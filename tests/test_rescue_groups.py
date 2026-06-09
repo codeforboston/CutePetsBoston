@@ -70,6 +70,30 @@ class PlaceholderNameTests(unittest.TestCase):
         self.assertFalse(self.source._is_placeholder_name("Pippin"))
         self.assertFalse(self.source._is_placeholder_name("Buddy"))
 
+    def test_more_cats_soon_is_placeholder(self):
+        self.assertTrue(self.source._is_placeholder_name("More Cats Soon!"))
+        self.assertTrue(self.source._is_placeholder_name("MORE CATS SOON!"))
+
+
+class SpeciesMappingTests(unittest.TestCase):
+    def test_dogs_source_maps_to_dog_species(self):
+        source = SourceRescueGroups(api_key="dummy", species="dogs")
+        animal = _make_animal()
+        orgs = {"org1": _make_org(url="https://org.example.com")}
+
+        pet = source._parse_animal(animal, orgs)
+
+        self.assertEqual(pet.species, "dog")
+
+    def test_cats_source_maps_to_cat_species(self):
+        source = SourceRescueGroups(api_key="dummy", species="cats")
+        animal = _make_animal()
+        orgs = {"org1": _make_org(url="https://org.example.com")}
+
+        pet = source._parse_animal(animal, orgs)
+
+        self.assertEqual(pet.species, "cat")
+
 
 if __name__ == "__main__":
     unittest.main()
