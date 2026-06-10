@@ -30,4 +30,4 @@ image.png
 .env.local
 
 # Ignore because this is used by github artifacts
-data.json
+database.json
