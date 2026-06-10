@@ -15,6 +15,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 from abstractions import AdoptablePet, PetSource
+from adoption_sources.pet_links import reconstruct_adoption_url
 from config import CITY_NAME, CITY_STATE, POSTAL_CODE
 
 logger = logging.getLogger(__name__)
@@ -164,10 +165,26 @@ class SourceRescueGroups(PetSource):
                 .get("id")
             )
             org_attrs = orgs_by_id.get(org_id, {}) if org_id else {}
+            url_candidates = (
+                attrs.get("adoptionUrl"),
+                org_attrs.get("adoptionUrl"),
+                org_attrs.get("url"),
+            )
             adoption_url = next(
-                (u for u in (attrs.get("adoptionUrl"), org_attrs.get("adoptionUrl"), org_attrs.get("url"))
+                (u for u in url_candidates
                  if u and u.strip().rstrip("/") not in ("http:", "https:", "http://", "https://")),
                 None
+            )
+
+            # Shelter's own animal id (e.g. MSPCA's "A468573"); some orgs' deep
+            # links are keyed on this rather than the RescueGroups id.
+            rescue_id = attrs.get("rescueId")
+
+            # For shelters we have a template for, rebuild a deep link to this
+            # specific pet; otherwise keep the org landing page from above.
+            adoption_url = (
+                reconstruct_adoption_url(url_candidates, animal_id, rescue_id)
+                or adoption_url
             )
 
             # Get best available image
@@ -189,6 +206,7 @@ class SourceRescueGroups(PetSource):
                 sex=attrs.get("sex"),
                 size_group=attrs.get("sizeGroup"),
                 pet_id=animal_id,
+                rescue_id=rescue_id,
             )
         except Exception as e:
             logger.warning(f"Failed to parse animal {animal.get('id', 'unknown')}: {e}")
