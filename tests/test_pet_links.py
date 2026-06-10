@@ -71,22 +71,18 @@ class ParseAnimalIntegrationTests(unittest.TestCase):
 
     def setUp(self):
         self.source = SourceRescueGroups(api_key="dummy")
-        self.species_by_id = {"8": {"plural": "dogs"}}
 
     def _animal(self):
         return {
             "type": "animals",
             "id": "22506352",
             "attributes": {"name": "Ketchup", "breedString": "Lab Mix"},
-            "relationships": {
-                "orgs": {"data": [{"type": "orgs", "id": "org1"}]},
-                "species": {"data": [{"type": "species", "id": "8"}]},
-            },
+            "relationships": {"orgs": {"data": [{"type": "orgs", "id": "org1"}]}},
         }
 
     def test_toolkit_org_gets_deep_link(self):
         orgs = {"org1": {"city": "Sterling", "state": "MA", "url": "https://sterlingshelter.org/"}}
-        pet = self.source._parse_animal(self._animal(), orgs, self.species_by_id)
+        pet = self.source._parse_animal(self._animal(), orgs)
         self.assertEqual(
             pet.adoption_url,
             "https://sterlingshelter.org/pet-finder/#action_0=pet&animalID_0=22506352&petIndex_0=-1",
@@ -94,7 +90,7 @@ class ParseAnimalIntegrationTests(unittest.TestCase):
 
     def test_non_toolkit_org_keeps_landing_url(self):
         orgs = {"org1": {"city": "Boston", "state": "MA", "url": "https://www.mspca.org/"}}
-        pet = self.source._parse_animal(self._animal(), orgs, self.species_by_id)
+        pet = self.source._parse_animal(self._animal(), orgs)
         self.assertEqual(pet.adoption_url, "https://www.mspca.org/")
 
 
