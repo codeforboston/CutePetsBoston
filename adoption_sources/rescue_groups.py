@@ -116,7 +116,7 @@ class SourceRescueGroups(PetSource):
         )
 
         session = _session_with_retries()
-        response = session.post(url, json=payload, headers=headers, timeout=30)
+        response = session.get(url, json=payload, headers=headers, timeout=30)
         response.raise_for_status()
 
         body = response.json()
