@@ -1,13 +1,20 @@
-import os
-import random
 import argparse
 import json
+import os
+import random
 import sys
 import traceback
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from datetime import datetime, timezone, timedelta
 
 import requests
+
+from adoption_sources import SourceManual, SourceRescueGroups
+from config import PET_SPECIES
+from social_posters.bluesky import PosterBluesky
+from social_posters.debug import PosterDebug
+from social_posters.instagram import PosterInstagram
+from social_posters.mastodon import PosterMastodon
 
 
 def main():
@@ -28,14 +35,9 @@ def main():
 
 
 def create_posters(debug=False):
-    from social_posters.debug import PosterDebug
-    
     if debug:
 
         return [PosterDebug()]
-    from social_posters.instagram import PosterInstagram
-    from social_posters.bluesky import PosterBluesky
-    from social_posters.mastodon import PosterMastodon
 
     posters = []
     posters.append(PosterMastodon())
@@ -47,12 +49,6 @@ def create_posters(debug=False):
 
 
 def create_sources(debug=False):
-    import json
-    from pathlib import Path
-
-    from adoption_sources import SourceRescueGroups, SourceManual
-    from config import PET_SPECIES
-
     if debug:
         cat_fixture_path = Path(__file__).parent / "tests" / "fixtures" / "sample_cats.json"
         with open(cat_fixture_path) as f:
