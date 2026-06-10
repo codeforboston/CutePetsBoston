@@ -67,6 +67,7 @@ def run(sources, posters):
     for source in sources:
         try:
             pets.extend(list(source.fetch_pets()))
+            print(pets)
         except ValueError as exc:
             raise SystemExit(str(exc)) from exc
 
