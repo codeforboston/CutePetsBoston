@@ -10,7 +10,6 @@ from pathlib import Path
 import requests
 
 from adoption_sources import SourceManual, SourceRescueGroups
-from config import PET_SPECIES
 from social_posters.bluesky import PosterBluesky
 from social_posters.debug import PosterDebug
 from social_posters.instagram import PosterInstagram
@@ -59,9 +58,7 @@ def create_sources(debug=False):
         ]
 
     sources = []
-    for species in PET_SPECIES:
-        sources.append(SourceRescueGroups(species=species))
-
+    sources.append(SourceRescueGroups())
     return sources
 
 

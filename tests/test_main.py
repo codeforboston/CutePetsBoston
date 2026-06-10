@@ -90,14 +90,12 @@ class RunFlowTests(unittest.TestCase):
 
 
 class CreateSourcesTests(unittest.TestCase):
-    def test_prod_returns_rescuegroups_for_each_species(self):
+    def test_prod_returns_single_rescuegroups_source(self):
         sources = create_sources(debug=False)
 
-        self.assertEqual(len(sources), 2)
+        self.assertEqual(len(sources), 1)
         self.assertIsInstance(sources[0], SourceRescueGroups)
-        self.assertIsInstance(sources[1], SourceRescueGroups)
-        self.assertEqual(sources[0].species, "dogs")
-        self.assertEqual(sources[1].species, "cats")
+        self.assertEqual(sources[0].species, ("dogs", "cats"))
 
     def test_debug_returns_manual_sources_for_dogs_and_cats(self):
         sources = create_sources(debug=True)
@@ -115,7 +113,6 @@ class CreatePostersTests(unittest.TestCase):
 
         self.assertEqual(len(posters), 1)
         self.assertEqual(posters[0].platform_name, "Debug")
-
 
 
 if __name__ == "__main__":
