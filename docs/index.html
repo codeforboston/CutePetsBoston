@@ -118,6 +118,20 @@
     const MEDIA_NS = "http://search.yahoo.com/mrss/";
     const POST_LIMIT = 6;
 
+    // First image attachment on an RSS <item>, or "" if none. Caption-overflow
+    // thread replies carry no media, so this also tells main posts from replies.
+    const itemImageUrl = (item) => {
+      const mediaElements = item.getElementsByTagNameNS(MEDIA_NS, "content");
+      for (const mediaElement of mediaElements) {
+        const medium = mediaElement.getAttribute("medium");
+        if (!medium || medium === "image") {
+          const url = mediaElement.getAttribute("url") || "";
+          if (url) return url;
+        }
+      }
+      return "";
+    };
+
     fetch("https://mastodon.social/@cutepetsboston.rss")
       .then((r) => {
         if (!r.ok) throw new Error("RSS request failed: " + r.status);
@@ -128,14 +142,17 @@
         if (doc.querySelector("parsererror")) {
           throw new Error("RSS parse error");
         }
-        const items = Array.from(doc.querySelectorAll("item")).slice(0, POST_LIMIT);
+        const posts = Array.from(doc.querySelectorAll("item"))
+          .map((item) => ({ item, imageUrl: itemImageUrl(item) }))
+          .filter(({ imageUrl }) => imageUrl)
+          .slice(0, POST_LIMIT);
         const grid = document.getElementById("post-grid");
-        if (items.length === 0) {
+        if (posts.length === 0) {
           grid.innerHTML = '<p class="dashboard-note">No recent posts found.</p>';
           return;
         }
-        grid.innerHTML = items
-          .map((item) => {
+        grid.innerHTML = posts
+          .map(({ item, imageUrl }) => {
             const link = item.querySelector("link")?.textContent || "#";
             const pubDate = item.querySelector("pubDate")?.textContent || "";
             const dateStr = pubDate
@@ -149,21 +166,10 @@
             tmp.innerHTML = descHtml;
             const text = (tmp.textContent || "").trim();
             const caption = text.length > 140 ? text.slice(0, 137) + "…" : text;
-            const mediaEls = item.getElementsByTagNameNS(MEDIA_NS, "content");
-            let imgUrl = "";
-            for (const el of mediaEls) {
-              const medium = el.getAttribute("medium");
-              if (!medium || medium === "image") {
-                imgUrl = el.getAttribute("url") || "";
-                if (imgUrl) break;
-              }
-            }
-            const img = imgUrl
-              ? `<img class="post-image" src="${escapeHtml(imgUrl)}" alt="" loading="lazy" />`
-              : '<div class="post-image post-image-placeholder"></div>';
+            const imageTag = `<img class="post-image" src="${escapeHtml(imageUrl)}" alt="" loading="lazy" />`;
             return `
               <a class="post-card" href="${escapeHtml(link)}" target="_blank" rel="noopener">
-                ${img}
+                ${imageTag}
                 <div class="post-body">
                   <div class="post-caption">${escapeHtml(caption) || "View post"}</div>
                   <div class="meta">${escapeHtml(dateStr)}</div>
