@@ -203,11 +203,6 @@ class SourceRescueGroups(PetSource):
             r"\*\*Home for the Holidays.*?\*\*", "", text, flags=re.IGNORECASE
         )
 
-        # Trim to reasonable length for social posts
-        text = text.strip()
-        if len(text) > 500:
-            text = text[:497] + "..."
-
         return text
 
     def _get_image_url(self, attrs: dict) -> str | None:
