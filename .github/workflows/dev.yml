@@ -8,7 +8,10 @@ on:
   workflow_dispatch:
 
 permissions:
-      actions: read
+  actions: read
+
+env:
+  LOG_API_RESPONSE: 'true'
 
 # Limits to executing one workflow in a concurrency group at any time
 # Will queue 1 PENDING workflow run. New incoming runs cancel & replace the pending run
@@ -66,11 +69,19 @@ jobs:
           APP_ENV: dev
         run: |
           #In order to create posts on the test accounts remove the --debugposters debug flag
-          python ./main.py --debugsources --debugposters
+          python ./main.py --debugsources --debugposters ${{ env.LOG_API_RESPONSE == 'true' && '--logapi' || ''}}
 
       - name: Upload database artifact
         uses: actions/upload-artifact@v7
         with:
           path: database.json
+          retention-days: 1
+          archive: false
+        
+      - name: Upload API Log artifact
+        if: env.LOG_API_RESPONSE == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          path: api_response.json
           retention-days: 1
           archive: false
