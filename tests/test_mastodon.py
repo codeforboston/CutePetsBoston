@@ -1,5 +1,5 @@
 from abstractions import AdoptablePet, Post
-from hypothesis import given, strategies as st
+from hypothesis import given, strategies as st, assume
 import pytest
 from social_posters.mastodon import (
     PosterMastodon,
@@ -21,6 +21,14 @@ long_tag_strategy = st.lists(
     ),
     min_size=1,
     max_size=3,
+)
+
+caption_text = st.text(
+    alphabet=st.characters(
+        blacklist_categories=("Cs", "Cc"),
+    ),
+    min_size=0,
+    max_size=5000,
 )
 
 text_strategy = st.text(
@@ -156,6 +164,35 @@ class TestMastodonCaptionProperties:
         assert len(main_caption) <= MASTODON_CHARACTER_LIMIT
         assert all(len(reply) <= MASTODON_CHARACTER_LIMIT for reply in replies)
         assert len(replies) <= MAX_REPLIES
+    
+    @given(
+            text=caption_text,
+            limit=st.integers(min_value=1, max_value=10),
+           )
+    def test_safe_truncate_correctly(self, text, limit):
+        fst, snd = self.poster._safe_truncate(text, limit)
+
+        assert len(fst) <= limit 
+
+        if len(text) <= limit:
+            assert fst == text
+            assert snd == ""
+        else:
+            assert fst == fst.rstrip()
+            assert snd == snd.strip()
+
+    @given(
+            text=st.text(),
+            limit=st.integers(min_value=1, max_value=10),
+            )
+    def test_safe_truncate_nothing(self, text, limit):
+        assume(len(text) <= limit)
+        fst, snd = self.poster._safe_truncate(text, limit)
+
+
+        assert fst == text
+        assert snd == ""
+
 
 
 class TestMastodonCaption:
