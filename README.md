@@ -46,6 +46,11 @@ To run only the Mastodon poster locally or in GitHub Actions:
 
     POSTER_PLATFORMS=mastodon python main.py
 
+To inspect the live RescueGroups input and each read-only transformation without
+publishing or modifying `database.json`:
+
+    python manual_testing/pipeline_inspector.py --sample-size all
+
 # History
 
 This project was originally started by [Becky Boone](https://github.com/boonrs) and [Drew](https://github.com/drewrwilson) during their fellowship at Code for America in 2014.
