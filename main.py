@@ -4,13 +4,17 @@ import argparse
 import json
 import sys
 import traceback
+import logging
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
 
 import requests
 
+logger = logging.getLogger(__name__)
 
 def main():
+    logging.basicConfig(filename='cutepets.log', level=logging.info)
+    logger.debug('Log started')
     parser = argparse.ArgumentParser()
     parser.add_argument("--debugsources", action="store_true") # this defaults to False
     parser.add_argument("--debugposters", action="store_true") # this defaults to False
