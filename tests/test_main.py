@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 
 from abstractions import AdoptablePet, Post, PostResult
 from main import create_posters, run
@@ -46,7 +47,8 @@ class RunFlowTests(unittest.TestCase):
         poster_one = FakePoster()
         poster_two = FakePoster()
 
-        results = run([source], [poster_one, poster_two])
+        with patch("main.pick_pet", return_value=pet):
+            results = run([source], [poster_one, poster_two])
 
         self.assertTrue(source.fetch_called)
         self.assertTrue(poster_one.format_called)
@@ -64,6 +66,17 @@ class CreatePostersTests(unittest.TestCase):
         self.assertEqual(posters[0].platform_name, "Debug")
 
 
+    def test_platform_filter_selects_bluesky(self):
+        with patch.dict("os.environ", {"POSTER_PLATFORMS": "bluesky"}):
+            posters = create_posters()
+
+        self.assertEqual(len(posters), 1)
+        self.assertEqual(posters[0].platform_name, "Bluesky")
+
+    def test_platform_filter_rejects_unknown_platform(self):
+        with patch.dict("os.environ", {"POSTER_PLATFORMS": "bluesky,tumblr"}):
+            with self.assertRaises(ValueError):
+                create_posters()
 
 if __name__ == "__main__":
     unittest.main()

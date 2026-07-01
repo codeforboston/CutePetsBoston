@@ -6,6 +6,12 @@ on:
       - '**'
       - '!master'
   workflow_dispatch:
+    inputs:
+      post_to_bluesky:
+        description: "Post to the Bluesky test account"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
       actions: read
@@ -58,9 +64,14 @@ jobs:
           BLUESKY_PASSWORD: ${{ secrets.BLUESKY_TEST_PASSWORD }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           APP_ENV: dev
+          POSTER_PLATFORMS: ${{ inputs.post_to_bluesky == true && 'bluesky' || '' }}
         run: |
-          #In order to create posts on the test accounts remove the --debugposters debug flag
-          python ./main.py --debugsources --debugposters
+          if [ "${{ inputs.post_to_bluesky }}" = "true" ]; then
+            echo "Posting to Bluesky test account with manual source data."
+            python ./main.py --debugsources
+          else
+            python ./main.py --debugsources --debugposters
+          fi
 
       - name: Upload database artifact
         uses: actions/upload-artifact@v7

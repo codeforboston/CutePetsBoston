@@ -57,6 +57,27 @@ class TestBuildTextAndFacets:
         assert len(link_facets) == 1
         assert link_facets[0]["features"][0]["uri"] == url
 
+    def test_url_that_crosses_body_limit_is_preserved_with_tags(self):
+        url = "https://www.smalldogrescuene.org/adoptable-dogs/#action_0=pet&animalID_0=22537020&petIndex_0=-1"
+        tags = ["AdoptDontShop", "Boston", "Cranston", "DogsOfBluesky"]
+        tags_section = " ".join(f"#{t}" for t in tags)
+        body = (
+            "Hi, I'm Glandis in TX! I'm a Chihuahua / Mixed (short coat) "
+            "looking for a forever home in Cranston, RI.\n\n"
+            "8 Months - Female - Small size\n\n"
+            f"Learn more and adopt me: {url}"
+        )
+        post = Post(text=body, tags=tags, link=url)
+        text, facets = self.poster._build_text_and_facets(post)
+
+        assert url in text
+        assert "petIndex_0=-1" in text
+        assert text.endswith(f"\n\n{tags_section}")
+        assert len(text) <= 300
+        link_facets = [f for f in facets if f["features"][0]["$type"] == "app.bsky.richtext.facet#link"]
+        assert len(link_facets) == 1
+        assert link_facets[0]["features"][0]["uri"] == url
+
     def test_tags_produce_facets_with_correct_byte_offsets(self):
         post = Post(text="Adopt me!", tags=["AdoptDontShop", "Boston", "DogsOfBluesky"])
         text, facets = self.poster._build_text_and_facets(post)
