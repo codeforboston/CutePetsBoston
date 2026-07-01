@@ -37,33 +37,13 @@ def create_posters(debug=False):
     from social_posters.bluesky import PosterBluesky
     from social_posters.mastodon import PosterMastodon
 
-    posters = [PosterMastodon(), PosterBluesky(), PosterInstagram()]
-    selected_platforms = _selected_poster_platforms()
-    if selected_platforms is None:
-        return posters
-
-    known_platforms = {poster.platform_name.lower(): poster for poster in posters}
-    unknown_platforms = selected_platforms - set(known_platforms)
-    if unknown_platforms:
-        raise ValueError(
-            "Unknown POSTER_PLATFORMS value(s): "
-            + ", ".join(sorted(unknown_platforms))
-        )
-
-    return [poster for poster in posters if poster.platform_name.lower() in selected_platforms]
+    posters = []
+    posters.append(PosterMastodon())
+    posters.append(PosterBluesky())
+    posters.append(PosterInstagram())
+    return posters
 
 
-def _selected_poster_platforms():
-    raw_platforms = os.environ.get("POSTER_PLATFORMS")
-    if not raw_platforms:
-        return None
-
-    platforms = {
-        platform.strip().lower()
-        for platform in raw_platforms.split(",")
-        if platform.strip()
-    }
-    return platforms or None
 
 
 def create_sources(debug=False):

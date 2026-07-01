@@ -6,12 +6,6 @@ on:
       - '**'
       - '!master'
   workflow_dispatch:
-    inputs:
-      post_to_bluesky:
-        description: "Post to the Bluesky account"
-        required: false
-        type: boolean
-        default: false
 
 permissions:
       actions: read
@@ -60,18 +54,13 @@ jobs:
           CUTEPETSBOSTON_RESCUEGROUPS_API_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
           INSTAGRAM_BUSINESS_ACCOUNT_ID: ${{ secrets.INSTAGRAM_BUSINESS_ACCOUNT_ID }}
           INSTAGRAM_PAGE_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_PAGE_ACCESS_TOKEN }}
-          BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
-          BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
+          BLUESKY_HANDLE: ${{ secrets.BLUESKY_TEST_HANDLE }}
+          BLUESKY_PASSWORD: ${{ secrets.BLUESKY_TEST_PASSWORD }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           APP_ENV: dev
-          POSTER_PLATFORMS: ${{ inputs.post_to_bluesky == true && 'bluesky' || '' }}
         run: |
-          if [ "${{ inputs.post_to_bluesky }}" = "true" ]; then
-            echo "Posting to Bluesky account with manual source data."
-            python ./manual_testing/bluesky_manual_test.py --repost-glandis
-          else
-            python ./main.py --debugsources --debugposters
-          fi
+          #In order to create posts on the test accounts remove the --debugposters debug flag
+          python ./main.py --debugsources --debugposters
 
       - name: Upload database artifact
         uses: actions/upload-artifact@v7
