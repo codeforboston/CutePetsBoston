@@ -162,16 +162,14 @@ class PosterBluesky(SocialPoster):
         tags_section = " ".join(tag_strings)
         # Truncate body so the full text (body + separators + tags) fits in limit chars.
         max_body = limit - (len(separator) + len(tags_section) if tags_section else 0)
-        # When the link URL is embedded in the body and would be truncated, preserve it
-        # by truncating only the prefix before it.
+        # When the link URL is embedded in the body and would be truncated,
+        # keep the full URL and trim text before it instead.
         if post.link and post.link in body:
-            link_pos = body.find(post.link)
-            if link_pos >= max_body:
-                suffix = body[link_pos:]
-                available = max_body - len(suffix)
-                truncated_body = (body[:available] + suffix) if available >= 0 else body[:max_body]
-            else:
-                truncated_body = body[:max_body]
+            truncated_body = self._truncate_body_preserving_link(
+                body,
+                post.link,
+                max_body,
+            )
         else:
             truncated_body = body[:max_body]
         full_text = f"{truncated_body}{separator}{tags_section}" if tags_section else truncated_body
@@ -205,4 +203,37 @@ class PosterBluesky(SocialPoster):
 
         facets.sort(key=lambda f: f["index"]["byteStart"])
         return full_text, facets
+
+    @staticmethod
+    def _truncate_body_preserving_link(body: str, link: str, limit: int) -> str:
+        if len(body) <= limit:
+            return body
+
+        link_pos = body.find(link)
+        if link_pos == -1:
+            return body[:limit]
+
+        link_end = link_pos + len(link)
+        if link_end <= limit:
+            return body[:limit]
+
+        if len(link) > limit:
+            return body[:limit]
+
+        prefix = body[:link_pos].rstrip()
+        separator = " " if prefix else ""
+        prefix_limit = limit - len(link) - len(separator)
+
+        if prefix_limit <= 0:
+            return link
+
+        trimmed_prefix = prefix[:prefix_limit].rstrip()
+        if len(prefix) > prefix_limit:
+            line_start = trimmed_prefix.rfind("\n")
+            clean_prefix = trimmed_prefix[:line_start].rstrip() if line_start != -1 else ""
+            if clean_prefix:
+                trimmed_prefix = clean_prefix
+
+        separator = " " if trimmed_prefix else ""
+        return f"{trimmed_prefix}{separator}{link}"
 
