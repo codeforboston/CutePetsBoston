@@ -6,6 +6,7 @@ API Documentation: https://api.rescuegroups.org/v5/public/docs
 
 import html
 import logging
+import pprint
 import os
 import re
 from typing import Iterator
@@ -123,6 +124,10 @@ class SourceRescueGroups(PetSource):
         body = response.json()
         data = body.get("data", [])
         logger.info(f"Received {len(data)} pets from RescueGroups")
+        
+        data_log = pprint.pformat(data)
+        logger.debug('API Response: \n%s', log_data)
+
 
         orgs_by_id = {
             item["id"]: item.get("attributes", {})
