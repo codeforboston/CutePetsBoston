@@ -10,8 +10,6 @@ on:
 permissions:
   actions: read
 
-env:
-  LOG_API_RESPONSE: 'true'
 
 jobs:
   run-cute-pets:
@@ -73,9 +71,9 @@ jobs:
           archive: false
         
       - name: Upload API Log artifact
-        if: env.LOG_API_RESPONSE == 'true'
+        if: '!cancelled()'
         uses: actions/upload-artifact@v7
         with:
-          path: api_response.json
-          retention-days: 1
+          path: cutepets.log
+          retention-days: 10
           archive: false
