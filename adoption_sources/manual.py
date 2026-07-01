@@ -16,7 +16,7 @@ _data_path = __file__.replace(".py", ".json")
 with open(_data_path) as _f:
     MANUAL_SOURCE_DATA: tuple[dict, ...] = tuple(json.loads(_f.read()))
     log_data = pprint.pformat(MANUAL_SOURCE_DATA)
-    logger.debug('API Response: %s', log_data)
+    logger.debug('API Response: \n%s', log_data)
 
 
 class SourceManual(PetSource):
