@@ -68,7 +68,7 @@ jobs:
         run: |
           if [ "${{ inputs.post_to_bluesky }}" = "true" ]; then
             echo "Posting to Bluesky account with manual source data."
-            python ./main.py --debugsources
+            python ./manual_testing/bluesky_manual_test.py --repost-glandis
           else
             python ./main.py --debugsources --debugposters
           fi

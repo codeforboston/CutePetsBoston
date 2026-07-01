@@ -227,5 +227,13 @@ class PosterBluesky(SocialPoster):
         if prefix_limit <= 0:
             return link
 
-        return f"{prefix[:prefix_limit].rstrip()}{separator}{link}"
+        trimmed_prefix = prefix[:prefix_limit].rstrip()
+        if len(prefix) > prefix_limit:
+            line_start = trimmed_prefix.rfind("\n")
+            clean_prefix = trimmed_prefix[:line_start].rstrip() if line_start != -1 else ""
+            if clean_prefix:
+                trimmed_prefix = clean_prefix
+
+        separator = " " if trimmed_prefix else ""
+        return f"{trimmed_prefix}{separator}{link}"
 

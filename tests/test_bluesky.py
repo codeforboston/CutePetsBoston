@@ -72,6 +72,7 @@ class TestBuildTextAndFacets:
 
         assert url in text
         assert "petIndex_0=-1" in text
+        assert "Learn more and ado " not in text
         assert text.endswith(f"\n\n{tags_section}")
         assert len(text) <= 300
         link_facets = [f for f in facets if f["features"][0]["$type"] == "app.bsky.richtext.facet#link"]
