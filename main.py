@@ -13,7 +13,7 @@ import requests
 logger = logging.getLogger(__name__)
 
 def main():
-    logging.basicConfig(filename='cutepets.log', level=logging.INFO)
+    logging.basicConfig(filename='cutepets.log', level=logging.DEBUG)
     logger.debug('Log started')
     parser = argparse.ArgumentParser()
     parser.add_argument("--debugsources", action="store_true") # this defaults to False
