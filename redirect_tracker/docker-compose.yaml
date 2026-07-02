@@ -1,0 +1,55 @@
+services:
+  app-local:
+    build:
+      context: .
+      target: app
+    depends_on:
+      - postgres
+    volumes:
+      - .:/app
+    ports:
+      - "8080:8080"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=redirect_tracker
+      - WATCHFILES_FORCE_POLLING=true
+
+  postgres:
+    image: postgres:18.4-bookworm
+    restart: unless-stopped
+    volumes:
+      - ./pgdata:/var/lib/postgresql/18/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=redirect_tracker
+    ports:
+      - "43780:5432"
+
+  devbox:
+    build:
+      context: .
+      target: devbox
+    depends_on:
+      - postgres
+    volumes:
+      - .:/app
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=redirect_tracker
+      - WATCHFILES_FORCE_POLLING=true
+
+  lock-requirements:
+    build:
+      context: .
+      target: base
+    volumes:
+      - .:/app
+    command: >
+      sh -c "pip freeze > requirements.lock"

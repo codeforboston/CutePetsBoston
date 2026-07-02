@@ -1,0 +1,6 @@
+alembic==1.18.*
+fastapi==0.139.*
+psycopg[binary,pool]==3.3.*
+pydantic==2.13.*
+sqlalchemy==2.1.*
+uvicorn==0.49.*
