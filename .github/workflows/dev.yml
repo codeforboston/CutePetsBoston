@@ -10,6 +10,12 @@ on:
 permissions:
       actions: read
 
+# Limits to executing one workflow in a concurrency group at any time
+# Will queue 1 PENDING workflow run. New incoming runs cancel & replace the pending run
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  queue: single
+
 jobs:
   run-cute-pets:
     runs-on: ubuntu-latest
@@ -31,7 +37,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Fetches the ID of the last completed run for the current workflow
+          # Fetches the ID of this branch's last completed run for the current workflow
           PREVIOUS_RUN_ID=$(gh run list \
           --branch "${{ github.ref_name }}" \
           --workflow "${{ github.workflow }}" \
