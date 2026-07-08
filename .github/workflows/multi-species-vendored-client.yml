@@ -2,6 +2,9 @@ name: Multi-Species Vendored Client
 
 on:
   workflow_dispatch:
+  schedule:
+    # Every 8 hours
+    - cron: "0 */8 * * *"
 
 permissions:
       actions: read
