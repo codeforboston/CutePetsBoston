@@ -5,17 +5,18 @@ import tempfile
 from urllib.parse import urlparse
 
 import requests
+import logging
 from mastodon import Mastodon
 
 from abstractions import AdoptablePet, Post, PostResult, SocialPoster
 from abstractions import CITY_NAME, CITY_STATE
-
 
 THREAD_SUFFIX = "\n\nMore details below ⬇️"
 MASTODON_CHARACTER_LIMIT = 500
 TRUNCATION_SUFFIX = "..."
 MAX_REPLIES = 5
 
+logger = logging.getLogger(__name__)
 
 class PosterMastodon(SocialPoster):
     def __init__(self) -> None:
@@ -25,12 +26,14 @@ class PosterMastodon(SocialPoster):
         self._session: Mastodon | None = None
         self._is_available = bool(self.token)
         self._auth_error: str | None = None
+        self.logger = logger
 
     @property
     def platform_name(self) -> str:
         return "Mastodon"
 
     def authenticate(self) -> bool:
+        self.logger.info("Start Authenticating to Mastodon")
         try:
             self._session = Mastodon(
                 access_token=self.token,
@@ -38,26 +41,37 @@ class PosterMastodon(SocialPoster):
             )
             self._session.account_verify_credentials()
             self._auth_error = None
-            return True
         except Exception as exc:
+            self.logger.exception(
+                "Mastodon authentication failed"
+            )
             self._session = None
             self._auth_error = f"{type(exc).__name__}: {exc}"
             return False
+        else:
+            self.logger.info(
+                "Mastodon authentication succeeded"
+            )
+        return True
 
     def publish(self, post: Post) -> PostResult:
+        self.logger.info("Start Publishing to Mastodon")
         if not self._is_available:
+            self.logger.debug("Mastodon credentials not available.")
             return PostResult(
                 success=False,
                 error_message="Mastodon credentials not available.",
             )
 
         if not post.image_url:
+            self.logger.debug("Mastodon posts require an image URL.")
             return PostResult(
                 success=False,
                 error_message="Mastodon posts require an image URL.",
             )
 
         if not self._session and not self.authenticate():
+            self.logger.debug("Mastodon authentication failed.")
             return PostResult(
                 success=False,
                 error_message=(
@@ -70,7 +84,9 @@ class PosterMastodon(SocialPoster):
         image_path = None
 
         try:
+            self.logger.info("Start downloading image")
             image_path = self._download_image(post.image_url)
+            self.logger.info("Finish downloading image")
 
             media = self._session.media_post(
                 image_path,
