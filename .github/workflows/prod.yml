@@ -68,9 +68,9 @@ jobs:
           archive: false
 
       - name: Upload API Log artifact
-        if: '!cancelled()'
+        if: '!cancelled()' #This ensures this step runs even if the previous steps failed only if manually cancelled it doesnt run
         uses: actions/upload-artifact@v7
         with:
           path: cutepets.log
-          retention-days: 10
+          retention-days: 90
           archive: false

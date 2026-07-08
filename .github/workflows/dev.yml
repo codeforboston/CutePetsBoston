@@ -61,7 +61,7 @@ jobs:
           APP_ENV: dev
         run: |
           #In order to create posts on the test accounts remove the --debugposters debug flag
-          python ./main.py --debugsources --debugposters ${{ env.LOG_API_RESPONSE == 'true' && '--logapi' || ''}}
+          python ./main.py --debugsources --debugposters
 
       - name: Upload database artifact
         uses: actions/upload-artifact@v7
@@ -70,10 +70,10 @@ jobs:
           retention-days: 1
           archive: false
         
-      - name: Upload API Log artifact
-        if: '!cancelled()'
+      - name: Upload Log artifact
+        if: '!cancelled()' #This ensures this step runs even if the previous steps failed only if manually cancelled it doesnt run
         uses: actions/upload-artifact@v7
         with:
           path: cutepets.log
-          retention-days: 10
+          retention-days: 14
           archive: false
