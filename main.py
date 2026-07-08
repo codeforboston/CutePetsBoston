@@ -5,6 +5,7 @@ import json
 import sys
 import traceback
 import logging
+import pprint
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
 
@@ -88,6 +89,9 @@ def run(sources, posters):
     if not pet:
         logger.error("No pets available to post.")
         return []
+    else:
+        pet_format = pprint.pformat(pet)
+        logger.info("Picked pet %s", pet_format)
 
     if not posters:
         logger.error("No social media credentials set; skipping post.")
