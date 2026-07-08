@@ -13,7 +13,12 @@ import requests
 logger = logging.getLogger(__name__)
 
 def main():
-    logging.basicConfig(filename='cutepets.log', level=logging.DEBUG)
+    logging.basicConfig(
+        filename='cutepets.log',
+        level=logging.DEBUG,
+        format='%(asctime)s [%(levelname)s] %(name)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(logging.DEBUG)
     logger.addHandler(console_handler)
