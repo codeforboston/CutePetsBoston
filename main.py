@@ -12,16 +12,18 @@ import requests
 
 logger = logging.getLogger(__name__)
 
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s [%(levelname)s] %(name)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+file_handler = logging.FileHandler("cutepets.log")
+logger.addHandler(file_handler)
+console_handler = logging.StreamHandler(sys.stdout)
+logger.addHandler(console_handler)
+
 def main():
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format='%(asctime)s [%(levelname)s] %(name)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
-    )
-    file_handler = logging.FileHandler("cutepets.log")
-    logger.addHandler(file_handler)
-    console_handler = logging.StreamHandler(sys.stdout)
-    logger.addHandler(console_handler)
+    
     logger.debug('Log started')
     parser = argparse.ArgumentParser()
     parser.add_argument("--debugsources", action="store_true") # this defaults to False
