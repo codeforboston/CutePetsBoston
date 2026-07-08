@@ -14,10 +14,7 @@ logger = logging.getLogger(__name__)
 
 def main():
     logging.basicConfig(
-        handlers=[
-            logging.StreamHandler(sys.stdout),
-            logging.FileHandler("cutepets.log", mode="w")
-        ]
+        handlers=[logging.StreamHandler(sys.stdout), logging.FileHandler("cutepets.log", mode="w")]
         level=logging.DEBUG,
         format='%(asctime)s [%(levelname)s] %(name)s - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
