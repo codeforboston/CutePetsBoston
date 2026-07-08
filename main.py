@@ -10,17 +10,18 @@ from datetime import datetime, timezone, timedelta
 
 import requests
 
-logger = logging.getLogger(__name__)
+file_handler = logging.FileHandler("cutepets.log")
+console_handler = logging.StreamHandler(sys.stdout)
+
 
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s [%(levelname)s] %(name)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
+    handlers=[file_handler, console_handler]
 )
-file_handler = logging.FileHandler("cutepets.log")
-logger.addHandler(file_handler)
-console_handler = logging.StreamHandler(sys.stdout)
-logger.addHandler(console_handler)
+
+logger = logging.getLogger(__name__)
 
 def main():
     
