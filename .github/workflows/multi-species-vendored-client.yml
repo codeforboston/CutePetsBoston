@@ -1,0 +1,74 @@
+name: Multi-Species Vendored Client
+
+on:
+  workflow_dispatch:
+
+permissions:
+      actions: read
+
+# Limits to executing one workflow in a concurrency group at any time
+# Will queue 1 PENDING workflow run. New incoming runs cancel & replace the pending run
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  queue: single
+
+jobs:
+  run-cute-pets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+        with:
+          ref: smoss/multi-species-vendored-client
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install --break-system-packages -r requirements.txt
+
+      - name: Get Previous Run ID
+        continue-on-error: true
+        id: get_id
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Fetches the ID of this branch's last completed run for the current workflow
+          PREVIOUS_RUN_ID=$(gh run list \
+          --branch "${{ github.ref_name }}" \
+          --workflow "${{ github.workflow }}" \
+          --status success \
+          --limit 1 \
+          --json databaseId \
+          --jq '.[0].databaseId')
+          echo "previous_run_id=$PREVIOUS_RUN_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Download previous database artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: database.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ steps.get_id.outputs.previous_run_id }}
+        continue-on-error: true
+
+      - name: Call RescueGroups API
+        env:
+          CUTEPETSBOSTON_RESCUEGROUPS_API_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
+          INSTAGRAM_BUSINESS_ACCOUNT_ID: ${{ secrets.INSTAGRAM_BUSINESS_ACCOUNT_ID }}
+          INSTAGRAM_PAGE_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_PAGE_ACCESS_TOKEN }}
+          BLUESKY_HANDLE: ${{ secrets.BLUESKY_TEST_HANDLE }}
+          BLUESKY_PASSWORD: ${{ secrets.BLUESKY_TEST_PASSWORD }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          APP_ENV: dev
+        run: |
+          #In order to create posts on the test accounts remove the --debugposters debug flag
+          python ./main.py --debugsources --debugposters
+
+      - name: Upload database artifact
+        uses: actions/upload-artifact@v7
+        with:
+          path: database.json
+          retention-days: 1
+          archive: false
