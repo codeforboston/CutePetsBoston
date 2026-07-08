@@ -14,6 +14,9 @@ logger = logging.getLogger(__name__)
 
 def main():
     logging.basicConfig(filename='cutepets.log', level=logging.DEBUG)
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setLevel(logging.DEBUG)
+    logger.addHandler(console_handler)
     logger.debug('Log started')
     parser = argparse.ArgumentParser()
     parser.add_argument("--debugsources", action="store_true") # this defaults to False
