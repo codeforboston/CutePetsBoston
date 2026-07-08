@@ -9,6 +9,7 @@ import logging
 import pprint
 import os
 import re
+from collections.abc import Sequence
 from typing import Iterator
 
 import requests
@@ -17,13 +18,15 @@ from urllib3.util.retry import Retry
 
 from abstractions import AdoptablePet, PetSource
 from adoption_sources.pet_links import reconstruct_adoption_url
-from config import CITY_NAME, CITY_STATE, POSTAL_CODE
+from config import CITY_NAME, CITY_STATE, PET_SPECIES, POSTAL_CODE, RESCUEGROUPS_LIMIT
 
 logger = logging.getLogger(__name__)
 
 # Some rescues publish entries like "More Dogs Soon!" to point users at their
 # website; those should never be posted. Add new names here as we encounter them.
-PLACEHOLDER_NAMES: tuple[str, ...] = ("more dogs soon!",)
+PLACEHOLDER_NAMES: tuple[str, ...] = ("more dogs soon!", "more cats soon!")
+
+SPECIES_SINGULAR = {"dogs": "dog", "cats": "cat"}
 
 # The RescueGroups API occasionally times out or returns a transient 5xx. A
 # single hiccup shouldn't fail the whole run, so retry a few times with
@@ -47,6 +50,29 @@ def _session_with_retries() -> requests.Session:
     return session
 
 
+def _build_species_filters(species: Sequence[str]) -> tuple[list[dict], str]:
+    """Build search filters and filterProcessing for an OR species search.
+
+    Filters use ``species.singular`` criteria ("dog", "cat"), the field the
+    documented search-body examples filter on. #124 filtered on
+    ``species.plural`` and was silently rejected by the live API (zero
+    results), so any change here must be re-verified against the real API
+    (tests/test_rescue_groups_live.py).
+    """
+    if not species:
+        raise ValueError("At least one species is required")
+    filters = [
+        {
+            "fieldName": "species.singular",
+            "operation": "equal",
+            "criteria": SPECIES_SINGULAR[plural],
+        }
+        for plural in species
+    ]
+    filter_processing = " OR ".join(str(index) for index in range(1, len(filters) + 1))
+    return filters, filter_processing
+
+
 class SourceRescueGroups(PetSource):
     """
     Fetches adoptable pets from RescueGroups.org API.
@@ -61,20 +87,20 @@ class SourceRescueGroups(PetSource):
         api_key: str | None = None,
         postal_code: str = POSTAL_CODE,
         radius_miles: int = 50,
-        species: str = "dogs",  # "dogs" or "cats"
-        limit: int = 25,
+        species: Sequence[str] | None = None,
+        limit: int = RESCUEGROUPS_LIMIT,
         location_label: str = f"{CITY_NAME}, {CITY_STATE}",
     ):
         self._api_key = api_key or os.environ.get("CUTEPETSBOSTON_RESCUEGROUPS_API_KEY")
         self.postal_code = postal_code
         self.radius_miles = radius_miles
-        self.species = species
+        self.species = tuple(species if species is not None else PET_SPECIES)
         self.limit = limit
         self.location_label = location_label
 
     @property
     def source_name(self) -> str:
-        return f"RescueGroups ({self.species})"
+        return f"RescueGroups ({', '.join(self.species)})"
 
     def fetch_pets(self) -> Iterator[AdoptablePet]:
         """
@@ -92,10 +118,10 @@ class SourceRescueGroups(PetSource):
                 "RescueGroups API key not configured. "
                 "Set CUTEPETSBOSTON_RESCUEGROUPS_API_KEY environment variable."
             )
-        
+
         url = (
-            f"{self.BASE_URL}/available/{self.species}/haspic"
-            f"?include=orgs,breeds,locations"
+            f"{self.BASE_URL}/available/haspic"
+            f"?include=orgs,breeds,locations,species"
             f"&sort=random"
             f"&limit={self.limit}"
         )
@@ -103,18 +129,24 @@ class SourceRescueGroups(PetSource):
             "Content-Type": "application/vnd.api+json",
             "Authorization": self._api_key,
         }
+        species_filters, filter_processing = _build_species_filters(self.species)
+        # "geodistance" (not "filterRadius") is the radius-search key in the
+        # documented search-body examples; see _build_species_filters for why
+        # body-shape changes need a live-API check.
         payload = {
             "data": {
-                "filterRadius": {
+                "filters": species_filters,
+                "filterProcessing": filter_processing,
+                "geodistance": {
                     "miles": self.radius_miles,
                     "postalcode": self.postal_code,
-                }
+                },
             }
         }
 
-
         logger.info(
-            f"Fetching {self.species} from RescueGroups within {self.radius_miles} miles of {self.postal_code}"
+            f"Fetching {', '.join(self.species)} from RescueGroups "
+            f"within {self.radius_miles} miles of {self.postal_code}"
         )
 
         session = _session_with_retries()
@@ -134,9 +166,14 @@ class SourceRescueGroups(PetSource):
             for item in body.get("included", [])
             if item.get("type") == "orgs"
         }
+        species_by_id = {
+            item["id"]: item.get("attributes", {})
+            for item in body.get("included", [])
+            if item.get("type") == "species"
+        }
 
         for animal in data:
-            pet = self._parse_animal(animal, orgs_by_id)
+            pet = self._parse_animal(animal, orgs_by_id, species_by_id)
             if not pet:
                 continue
             if self._is_placeholder_name(pet.name):
@@ -144,7 +181,12 @@ class SourceRescueGroups(PetSource):
                 continue
             yield pet
 
-    def _parse_animal(self, animal: dict, orgs_by_id: dict) -> AdoptablePet | None:
+    def _parse_animal(
+        self,
+        animal: dict,
+        orgs_by_id: dict,
+        species_by_id: dict,
+    ) -> AdoptablePet | None:
         """Parse a single animal record from the API response."""
         try:
             attrs = animal.get("attributes", {})
@@ -153,8 +195,21 @@ class SourceRescueGroups(PetSource):
             # Extract and clean the name
             name = self._clean_name(attrs.get("name", "Unknown"))
 
-            # Determine species from the endpoint we queried
-            species = "dog" if self.species == "dogs" else "cat"
+            # Determine species from the included species relationship
+            species_id = (
+                animal.get("relationships", {})
+                .get("species", {})
+                .get("data", [{}])[0]
+                .get("id")
+            )
+            if not species_id:
+                logger.warning(f"Skipping animal {animal_id} with no species relationship")
+                return None
+            plural = species_by_id.get(species_id, {}).get("plural")
+            if plural not in self.species:
+                logger.info(f"Skipping animal {animal_id} with unconfigured species: {plural!r}")
+                return None
+            species = SPECIES_SINGULAR[plural]
 
             # Get breed info
             breed = attrs.get("breedString", attrs.get("breedPrimary", "Mixed"))
@@ -249,6 +304,11 @@ class SourceRescueGroups(PetSource):
         text = re.sub(
             r"\*\*Home for the Holidays.*?\*\*", "", text, flags=re.IGNORECASE
         )
+
+        # Trim to reasonable length for social posts
+        text = text.strip()
+        if len(text) > 500:
+            text = text[:497] + "..."
 
         return text
 
