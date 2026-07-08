@@ -83,7 +83,7 @@ def run(sources, posters):
         except ValueError as exc:
             raise SystemExit(str(exc)) from exc
 
-    logger.info("Fetched", len(pets), "records")
+    logger.info("Fetched %d records", len(pets))
     pet = pick_pet(pets)
     if not pet:
         logger.error("No pets available to post.")
