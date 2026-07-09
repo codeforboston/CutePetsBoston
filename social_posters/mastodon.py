@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 
 import requests
 import logging
+import pprint
 from mastodon import Mastodon
 
 from abstractions import AdoptablePet, Post, PostResult, SocialPoster
@@ -62,6 +63,7 @@ class PosterMastodon(SocialPoster):
                 success=False,
                 error_message="Mastodon credentials not available.",
             )
+        self.logger.info("Mastodon credentials available.")
 
         if not post.image_url:
             self.logger.debug("Mastodon posts require an image URL.")
@@ -69,8 +71,10 @@ class PosterMastodon(SocialPoster):
                 success=False,
                 error_message="Mastodon posts require an image URL.",
             )
+        self.logger.info("Mastodon posts have image URL")
 
-        if not self._session and not self.authenticate():
+        session = self._session
+        if session is None and not self.authenticate():
             self.logger.debug("Mastodon authentication failed.")
             return PostResult(
                 success=False,
@@ -80,6 +84,14 @@ class PosterMastodon(SocialPoster):
                     else f"Mastodon authentication failed: {self._auth_error}"
                 ),
             )
+        session = self._session
+        if session is None:
+            self.logger.debug("Mastodon authentication did not create a session.")
+            return PostResult(
+                success=False,
+                error_message="Mastodon authentication did not create a session.",
+            )
+        self.logger.info("Mastodon authentication successful")
         
         image_path = None
 
@@ -88,13 +100,21 @@ class PosterMastodon(SocialPoster):
             image_path = self._download_image(post.image_url)
             self.logger.info("Finish downloading image")
 
-            media = self._session.media_post(
+            media = session.media_post(
                 image_path,
                 description=post.alt_text or "Photo of an adoptable pet",
             )
-
+            self.logger.info("Mastodon formatting caption thread")
             main_caption, replies = self._format_caption_thread(post)
-            status = self._post_thread(main_caption, replies, media["id"])
+            main_caption_formatted = pprint.pformat(main_caption)
+            replies_formatted = pprint.pformat(replies)
+            self.logger.info("Mastodon Main Caption: %s", main_caption_formatted)
+            self.logger.info("Mastodon Replies: %s", replies_formatted)
+            
+            self.logger.info("Mastodon start posting thread")
+            status = self._post_thread(session, main_caption, replies, media["id"])
+            status_formatted = pprint.pformat(status)
+            self.logger.info("Mastodon finish posting thread with: %s", status_formatted)
 
             return PostResult(
                 success=True,
@@ -103,6 +123,7 @@ class PosterMastodon(SocialPoster):
             )
 
         except Exception as exc:
+            self.logger.exception("Mastodon posting failed with Exception: %s", exc)
             return PostResult(success=False, error_message=str(exc))
 
         finally:
@@ -112,11 +133,12 @@ class PosterMastodon(SocialPoster):
 
     def _post_thread(
         self,
+        session: Mastodon,
         main_caption: str,
         replies: list[str],
         media_id: str,
     ) -> dict:
-        status = self._session.status_post(
+        status = session.status_post(
             main_caption,
             media_ids=[media_id],
         )
@@ -124,7 +146,7 @@ class PosterMastodon(SocialPoster):
         root_status_id = status["id"]
 
         for reply_text in replies:
-            self._session.status_post(
+            session.status_post(
                 reply_text,
                 in_reply_to_id=root_status_id,
             )
