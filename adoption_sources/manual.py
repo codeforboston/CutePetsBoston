@@ -7,10 +7,16 @@ from typing import Iterable, Sequence
 
 from abstractions import AdoptablePet, PetSource
 from config import CITY_NAME, CITY_STATE
+import logging
+import pprint
+
+logger = logging.getLogger(__name__)
 
 _data_path = __file__.replace(".py", ".json")
 with open(_data_path) as _f:
     MANUAL_SOURCE_DATA: tuple[dict, ...] = tuple(json.loads(_f.read()))
+    log_data = pprint.pformat(MANUAL_SOURCE_DATA)
+    logger.debug('API Response: \n%s', log_data)
 
 
 class SourceManual(PetSource):

@@ -8,7 +8,8 @@ on:
   workflow_dispatch:
 
 permissions:
-      actions: read
+  actions: read
+
 
 # Limits to executing one workflow in a concurrency group at any time
 # Will queue 1 PENDING workflow run. New incoming runs cancel & replace the pending run
@@ -73,4 +74,12 @@ jobs:
         with:
           path: database.json
           retention-days: 1
+          archive: false
+        
+      - name: Upload Log artifact
+        if: '!cancelled()' #This ensures this step runs even if the previous steps failed only if manually cancelled it doesnt run
+        uses: actions/upload-artifact@v7
+        with:
+          path: cutepets.log
+          retention-days: 14
           archive: false

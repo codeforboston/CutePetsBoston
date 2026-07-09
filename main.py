@@ -4,13 +4,30 @@ import argparse
 import json
 import sys
 import traceback
+import logging
+import pprint
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
 
 import requests
 
+file_handler = logging.FileHandler("cutepets.log")
+file_handler.setLevel(logging.DEBUG)
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s [%(levelname)s] %(name)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    handlers=[file_handler, console_handler],
+)
+
+logger = logging.getLogger(__name__)
 
 def main():
+    
+    logger.info('Log started')
     parser = argparse.ArgumentParser()
     parser.add_argument("--debugsources", action="store_true") # this defaults to False
     parser.add_argument("--debugposters", action="store_true") # this defaults to False
@@ -67,14 +84,17 @@ def run(sources, posters):
         except ValueError as exc:
             raise SystemExit(str(exc)) from exc
 
-    print("Fetched", len(pets), "records")
+    logger.info("Fetched %d records", len(pets))
     pet = pick_pet(pets)
     if not pet:
-        print("No pets available to post.")
+        logger.error("No pets available to post.")
         return []
+    else:
+        pet_format = pprint.pformat(pet)
+        logger.info("Picked pet %s", pet_format)
 
     if not posters:
-        print("No social media credentials set; skipping post.")
+        logger.error("No social media credentials set; skipping post.")
         return []
 
     results = []
@@ -83,9 +103,9 @@ def run(sources, posters):
         result = poster.publish(post)
         results.append(result)
         if not result.success:
-            print(f"{poster.platform_name} post failed: {result.error_message}")
+            logger.error(f"{poster.platform_name} post failed: {result.error_message}")
         else:
-            print(f"{poster.platform_name} post published.")
+            logger.info(f"{poster.platform_name} post published.")
 
     return results
 
@@ -98,7 +118,7 @@ def pick_pet(pets):
         try:
             data = json.load(f)
         except (json.JSONDecodeError, ValueError) as e:
-            print(f"{type(e).__name__}:{e}", file=sys.stderr)
+            logger.error(f"{type(e).__name__}:{e}")
             traceback.print_exc()
             data = {}
         
@@ -132,11 +152,11 @@ MAX_TRACEBACK_CHARS = 2500
 
 
 def notify_slack_of_exception(traceback_text):
-    print(traceback_text)
+    logger.info(traceback_text)
 
     webhook_url = os.environ.get("SLACK_WEBHOOK_URL")
     if not webhook_url:
-        print("SLACK_WEBHOOK_URL not set; skipping Slack alert.")
+        logger.warning("SLACK_WEBHOOK_URL not set; skipping Slack alert.")
         return
 
     app_env = os.environ.get("APP_ENV", "local")
@@ -161,7 +181,7 @@ def notify_slack_of_exception(traceback_text):
         response = requests.post(webhook_url, json={"text": text}, timeout=10)
         response.raise_for_status()
     except Exception as slack_exc:
-        print(f"Failed to post Slack alert: {slack_exc}")
+        logger.error(f"Failed to post Slack alert: {slack_exc}")
 
 
 if __name__ == "__main__":
