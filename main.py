@@ -4,30 +4,13 @@ import argparse
 import json
 import sys
 import traceback
-import logging
-import pprint
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
 
 import requests
 
-file_handler = logging.FileHandler("cutepets.log")
-file_handler.setLevel(logging.DEBUG)
-console_handler = logging.StreamHandler(sys.stdout)
-console_handler.setLevel(logging.INFO)
-
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s [%(levelname)s] %(name)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S',
-    handlers=[file_handler, console_handler],
-)
-
-logger = logging.getLogger(__name__)
 
 def main():
-    
-    logger.info('Log started')
     parser = argparse.ArgumentParser()
     parser.add_argument("--debugsources", action="store_true") # this defaults to False
     parser.add_argument("--debugposters", action="store_true") # this defaults to False
@@ -84,7 +67,7 @@ def run(sources, posters):
         except ValueError as exc:
             raise SystemExit(str(exc)) from exc
 
-    logger.info("Fetched %d records", len(pets))
+    print("Fetched", len(pets), "records")
     pet = pick_pet(pets)
     if not pet:
         logger.error("No pets available to post.")
@@ -105,7 +88,7 @@ def run(sources, posters):
         if not result.success:
             logger.error(f"{poster.platform_name} post failed: {result.error_message}")
         else:
-            logger.info(f"{poster.platform_name} post published.")
+            print(f"{poster.platform_name} post published.")
 
     return results
 

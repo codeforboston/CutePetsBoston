@@ -10,12 +10,15 @@ on:
 permissions:
   actions: read
 
+<<<<<<< HEAD
 
 # Limits to executing one workflow in a concurrency group at any time
 # Will queue 1 PENDING workflow run. New incoming runs cancel & replace the pending run
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   queue: single
+=======
+>>>>>>> 28e841071fcf31512b79f22b81ca9a299f2c312a
 
 jobs:
   run-cute-pets:
@@ -82,4 +85,8 @@ jobs:
         with:
           path: cutepets.log
           retention-days: 14
+<<<<<<< HEAD
           archive: false
+=======
+          archive: false
+>>>>>>> 28e841071fcf31512b79f22b81ca9a299f2c312a

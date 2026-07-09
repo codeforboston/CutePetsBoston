@@ -7,6 +7,7 @@ on:
     - cron: "0 */4 * * *"
 
 permissions:
+<<<<<<< HEAD
       actions: read
       
 # Limits to executing one workflow in a concurrency group at any time
@@ -14,6 +15,9 @@ permissions:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   queue: single
+=======
+  actions: read
+>>>>>>> 28e841071fcf31512b79f22b81ca9a299f2c312a
 
 jobs:
   run-cute-pets:
