@@ -19,11 +19,17 @@ MAX_REPLIES = 5
 
 logger = logging.getLogger(__name__)
 
+
 class PosterMastodon(SocialPoster):
     def __init__(self) -> None:
-        raw_token = os.environ.get("MASTODON_TOKEN")
+        raw_token = os.environ.get("MASTODON_TOKEN") or os.environ.get(
+            "MASTODON_TEST_TOKEN"
+        )
         self.token = raw_token.strip() if raw_token else None
-        self.api_base_url = "https://mastodon.social"
+        self.api_base_url = os.environ.get(
+            "MASTODON_API_BASE_URL",
+            "https://mastodon.social",
+        )
         self._session: Mastodon | None = None
         self._is_available = bool(self.token)
         self._auth_error: str | None = None

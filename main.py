@@ -46,21 +46,62 @@ def main():
 
 def create_posters(debug=False):
     from social_posters.debug import PosterDebug
-    
-    if debug:
 
+    if debug:
         return [PosterDebug()]
+
     from social_posters.instagram import PosterInstagram
     from social_posters.bluesky import PosterBluesky
     from social_posters.mastodon import PosterMastodon
 
-    posters = []
-    posters.append(PosterMastodon())
-    posters.append(PosterBluesky())
-    posters.append(PosterInstagram())
-    return posters
+    poster_classes = {
+        "mastodon": PosterMastodon,
+        "bluesky": PosterBluesky,
+        "instagram": PosterInstagram,
+    }
+    requested_platforms = parse_poster_platforms(os.environ.get("POSTER_PLATFORMS"))
+
+    if requested_platforms == ["debug"]:
+        return [PosterDebug()]
+
+    if requested_platforms is None:
+        requested_platforms = list(poster_classes)
+
+    unknown_platforms = [
+        platform
+        for platform in requested_platforms
+        if platform not in poster_classes
+    ]
+    if unknown_platforms:
+        valid_platforms = ", ".join(["all", "debug", *poster_classes])
+        requested = ", ".join(unknown_platforms)
+        raise ValueError(
+            f"Unknown POSTER_PLATFORMS value: {requested}. "
+            f"Expected one or more of: {valid_platforms}."
+        )
+
+    return [poster_classes[platform]() for platform in requested_platforms]
 
 
+def parse_poster_platforms(raw_value):
+    if not raw_value:
+        return None
+
+    platforms = [
+        platform.strip().lower()
+        for platform in raw_value.split(",")
+        if platform.strip()
+    ]
+
+    if not platforms or "all" in platforms:
+        return None
+
+    if "debug" in platforms and len(platforms) > 1:
+        raise ValueError(
+            "POSTER_PLATFORMS=debug cannot be combined with other platforms."
+        )
+
+    return platforms
 
 
 def create_sources(debug=False):

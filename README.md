@@ -46,6 +46,11 @@ To run only the Mastodon poster locally or in GitHub Actions:
 
     POSTER_PLATFORMS=mastodon python main.py
 
+For the `Debug Post` GitHub Actions workflow, push runs use the debug poster by
+default. Manual `workflow_dispatch` runs expose a `poster_platforms` input where
+you can choose `mastodon`, `bluesky`, `instagram`, or `all` without editing the
+workflow file.
+
 # History
 
 This project was originally started by [Becky Boone](https://github.com/boonrs) and [Drew](https://github.com/drewrwilson) during their fellowship at Code for America in 2014.
