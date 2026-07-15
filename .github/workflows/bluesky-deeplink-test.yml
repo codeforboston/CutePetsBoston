@@ -49,11 +49,20 @@ jobs:
         run: pip install --break-system-packages requests
 
       - name: Scan live RescueGroups feed
-        if: ${{ (inputs.mode || 'scan') == 'scan' }}
+        if: ${{ (inputs.mode || 'scan') == 'scan' && !contains(github.event.head_commit.message, '[post-live]') }}
         env:
           CUTEPETSBOSTON_RESCUEGROUPS_API_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
           RG_RADIUS_MILES: ${{ inputs.radius_miles || '50' }}
         run: python manual_testing/rescuegroups_org_scan.py
+
+      - name: Post real org pets to LIVE Bluesky (commit tagged [post-live])
+        if: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[post-live]') }}
+        env:
+          CUTEPETSBOSTON_RESCUEGROUPS_API_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
+          BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
+          BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
+          APP_ENV: prod
+        run: python manual_testing/post_real_org_pets.py --publish
 
       - name: Validate (and optionally post) crafted Bluesky deep-links
         if: ${{ inputs.mode == 'bluesky' }}
