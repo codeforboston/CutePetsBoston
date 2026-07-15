@@ -6,18 +6,6 @@ on:
       - '**'
       - '!master'
   workflow_dispatch:
-    inputs:
-      poster_platforms:
-        description: Poster platform(s) to run
-        required: false
-        default: debug
-        type: choice
-        options:
-          - debug
-          - mastodon
-          - bluesky
-          - instagram
-          - all
 
 permissions:
   actions: read
@@ -75,12 +63,11 @@ jobs:
           INSTAGRAM_PAGE_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_PAGE_ACCESS_TOKEN }}
           BLUESKY_HANDLE: ${{ secrets.BLUESKY_TEST_HANDLE }}
           BLUESKY_PASSWORD: ${{ secrets.BLUESKY_TEST_PASSWORD }}
-          MASTODON_TOKEN: ${{ secrets.MASTODON_TEST_TOKEN || secrets.MASTODON_TOKEN }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           APP_ENV: dev
-          POSTER_PLATFORMS: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.poster_platforms || 'debug' }}
         run: |
-          python ./main.py --debugsources
+          #In order to create posts on the test accounts remove the --debugposters debug flag
+          python ./main.py --debugsources --debugposters
 
       - name: Upload database artifact
         uses: actions/upload-artifact@v7

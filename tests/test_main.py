@@ -1,7 +1,4 @@
-import os
-import tempfile
 import unittest
-from unittest.mock import patch
 
 from abstractions import AdoptablePet, Post, PostResult
 from main import create_posters, run
@@ -44,19 +41,12 @@ class RunFlowTests(unittest.TestCase):
             location="Boston, MA",
             image_url="https://example.com/poppy.jpg",
             adoption_url="https://example.com/adopt/poppy",
-            pet_id="poppy-1",
         )
         source = FakeSource([pet])
         poster_one = FakePoster()
         poster_two = FakePoster()
 
-        original_cwd = os.getcwd()
-        with tempfile.TemporaryDirectory() as temp_dir:
-            try:
-                os.chdir(temp_dir)
-                results = run([source], [poster_one, poster_two])
-            finally:
-                os.chdir(original_cwd)
+        results = run([source], [poster_one, poster_two])
 
         self.assertTrue(source.fetch_called)
         self.assertTrue(poster_one.format_called)
@@ -73,42 +63,7 @@ class CreatePostersTests(unittest.TestCase):
         self.assertEqual(len(posters), 1)
         self.assertEqual(posters[0].platform_name, "Debug")
 
-    def test_env_can_select_mastodon_poster(self):
-        with patch.dict(os.environ, {"POSTER_PLATFORMS": "mastodon"}, clear=True):
-            posters = create_posters()
 
-        self.assertEqual(len(posters), 1)
-        self.assertEqual(posters[0].platform_name, "Mastodon")
-
-    def test_env_can_select_multiple_posters(self):
-        with patch.dict(
-            os.environ,
-            {"POSTER_PLATFORMS": " bluesky, Mastodon "},
-            clear=True,
-        ):
-            posters = create_posters()
-
-        self.assertEqual(
-            [poster.platform_name for poster in posters],
-            ["Bluesky", "Mastodon"],
-        )
-
-    def test_env_debug_returns_debug_poster(self):
-        with patch.dict(os.environ, {"POSTER_PLATFORMS": "debug"}, clear=True):
-            posters = create_posters()
-
-        self.assertEqual(len(posters), 1)
-        self.assertEqual(posters[0].platform_name, "Debug")
-
-    def test_env_invalid_platform_raises(self):
-        with patch.dict(os.environ, {"POSTER_PLATFORMS": "mastodon,tiktok"}, clear=True):
-            with self.assertRaisesRegex(ValueError, "Unknown POSTER_PLATFORMS value"):
-                create_posters()
-
-    def test_env_debug_cannot_be_combined_with_other_posters(self):
-        with patch.dict(os.environ, {"POSTER_PLATFORMS": "debug,mastodon"}, clear=True):
-            with self.assertRaisesRegex(ValueError, "cannot be combined"):
-                create_posters()
 
 if __name__ == "__main__":
     unittest.main()
