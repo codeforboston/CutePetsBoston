@@ -37,14 +37,14 @@ PAGE_LIMIT = 100
 MAX_PAGES = 25
 
 
-def _fetch_page(species, page, api_key):
+def _fetch_page(session, species, page, api_key):
     url = (
         f"{BASE_URL}/available/{species}/haspic"
         f"?include=orgs&sort=animals.name&limit={PAGE_LIMIT}&page={page}"
     )
     headers = {"Content-Type": "application/vnd.api+json", "Authorization": api_key}
     payload = {"data": {"filterRadius": {"miles": RADIUS_MILES, "postalcode": POSTAL_CODE}}}
-    resp = _session_with_retries().post(url, json=payload, headers=headers, timeout=30)
+    resp = session.post(url, json=payload, headers=headers, timeout=30)
     resp.raise_for_status()
     return resp.json()
 
@@ -52,11 +52,14 @@ def _fetch_page(species, page, api_key):
 def collect_one_per_org(api_key):
     """Return {label: AdoptablePet} with one postable pet per target org."""
     picked = {}
+    # One pooled, retrying session for all pages -- avoids the connection resets
+    # that a fresh session per page triggers under rapid paged POSTs.
+    session = _session_with_retries()
     for species in ("dogs", "cats"):
         src = SourceRescueGroups(api_key=api_key, species=species)
         page = 1
         while page <= MAX_PAGES and len(picked) < len(TARGET_OUTPUT_DOMAINS):
-            body = _fetch_page(species, page, api_key)
+            body = _fetch_page(session, species, page, api_key)
             data = body.get("data", [])
             if not data:
                 break
