@@ -1,0 +1,69 @@
+name: Bluesky Deep-Link Test
+
+# Tests for the reconstructed org deep links.
+#   * scan    -- page the live RescueGroups feed, report which target orgs appear
+#                and the real ids/urls they carry. READ-ONLY (posts nothing).
+#                Runs automatically on push to this branch.
+#   * bluesky -- validate crafted pets' deep links; posts to the Bluesky account
+#                (secrets.BLUESKY_HANDLE) ONLY when publish=true. Manual dispatch
+#                only. NOTE: that account may be the live feed -- keep publish
+#                off (dry-run) unless you mean to post there.
+on:
+  push:
+    branches:
+      - codex/bluesky-link-priority
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Which test to run"
+        type: choice
+        options: [scan, bluesky]
+        default: scan
+      radius_miles:
+        description: "scan only: search radius in miles"
+        type: string
+        default: "50"
+      publish:
+        description: "bluesky only: actually POST (else dry-run/validate)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install --break-system-packages requests
+
+      - name: Scan live RescueGroups feed
+        if: ${{ (inputs.mode || 'scan') == 'scan' }}
+        env:
+          CUTEPETSBOSTON_RESCUEGROUPS_API_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
+          RG_RADIUS_MILES: ${{ inputs.radius_miles || '50' }}
+        run: python manual_testing/rescuegroups_org_scan.py
+
+      - name: Validate (and optionally post) crafted Bluesky deep-links
+        if: ${{ inputs.mode == 'bluesky' }}
+        env:
+          BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
+          BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
+          APP_ENV: dev
+        run: |
+          if [ "${{ inputs.publish }}" = "true" ]; then
+            python manual_testing/bluesky_deeplink_test.py --publish
+          else
+            python manual_testing/bluesky_deeplink_test.py
+          fi

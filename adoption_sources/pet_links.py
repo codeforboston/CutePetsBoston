@@ -23,13 +23,19 @@ from urllib.parse import urlparse
 # Domain -> (template, id_key). Each org's pet page is reachable from one of the
 # ids we get from the API:
 #   * "pet_id"          -- the RescueGroups numeric animal id (toolkit shelters).
-#   * "rescue_id_lower" -- the shelter's own animal id (RescueGroups "rescueId"),
-#                          lowercased (MSPCA's /pets/a######/ urls).
+#   * "rescue_id"       -- the shelter's own animal id (RescueGroups "rescueId",
+#                          e.g. "A300071"), used as-is (ARL Boston's 24PetConnect urls).
+#   * "rescue_id_lower" -- the same shelter animal id, lowercased
+#                          (MSPCA's /pets/a######/ urls).
 # The template uses a single ``{id}`` placeholder filled with that id.
 #
-# Sterling & SmallDog embed the RescueGroups toolkit v3; the trailing
+# Sterling, SmallDog & Pug Rescue embed the RescueGroups toolkit v3; the trailing
 # ``petIndex_0=-1`` is the toolkit's "standalone pet, not part of a browsed list"
 # sentinel -- without it the widget can show the full list instead of the animal.
+#
+# ARL Boston's site (arlboston.org) hands pet detail pages off to 24PetConnect, so
+# the template's output domain differs from the matched org domain -- that's fine,
+# _template_for_domain matches on the org URL, the template just points elsewhere.
 PET_FINDER_TEMPLATES: dict[str, tuple[str, str]] = {
     "sterlingshelter.org": (
         "https://sterlingshelter.org/pet-finder/#action_0=pet&animalID_0={id}&petIndex_0=-1",
@@ -39,9 +45,21 @@ PET_FINDER_TEMPLATES: dict[str, tuple[str, str]] = {
         "https://www.smalldogrescuene.org/adoptable-dogs/#action_0=pet&animalID_0={id}&petIndex_0=-1",
         "pet_id",
     ),
+    "pugrescueofnewengland.org": (
+        "https://pugrescueofnewengland.org/available-pugs/#action_0=pet&animalID_0={id}&petIndex_0=-1",
+        "pet_id",
+    ),
+    "paw-affectionrescue.org": (
+        "https://www.paw-affectionrescue.org/animals/detail?AnimalID={id}",
+        "pet_id",
+    ),
     "mspca.org": (
         "https://www.mspca.org/pets/{id}/",
         "rescue_id_lower",
+    ),
+    "arlboston.org": (
+        "https://24petconnect.com/ARLBostonAdoptablePets/Details/BSTN/{id}",
+        "rescue_id",
     ),
 }
 
@@ -94,6 +112,7 @@ def reconstruct_adoption_url(
     """
     ids = {
         "pet_id": pet_id or None,
+        "rescue_id": rescue_id or None,
         "rescue_id_lower": rescue_id.lower() if rescue_id else None,
     }
     for url in candidate_urls:

@@ -48,6 +48,28 @@ class ReconstructAdoptionUrlTests(unittest.TestCase):
             "https://sterlingshelter.org/pet-finder/#action_0=pet&animalID_0=42&petIndex_0=-1",
         )
 
+    def test_pug_rescue_toolkit_deep_link(self):
+        self.assertEqual(
+            reconstruct_adoption_url(["https://pugrescueofnewengland.org/available-pugs/"], "22607616"),
+            "https://pugrescueofnewengland.org/available-pugs/#action_0=pet&animalID_0=22607616&petIndex_0=-1",
+        )
+
+    def test_paw_affection_query_param_deep_link(self):
+        self.assertEqual(
+            reconstruct_adoption_url(["https://www.paw-affectionrescue.org/"], "22606695"),
+            "https://www.paw-affectionrescue.org/animals/detail?AnimalID=22606695",
+        )
+
+    def test_arl_boston_uses_rescue_id_on_24petconnect(self):
+        self.assertEqual(
+            reconstruct_adoption_url(["https://www.arlboston.org/adopt/adopt-a-pet/"], "22999999", rescue_id="A300071"),
+            "https://24petconnect.com/ARLBostonAdoptablePets/Details/BSTN/A300071",
+        )
+
+    def test_arl_boston_without_rescue_id_returns_none(self):
+        # ARL's 24PetConnect link needs the shelter id, not the RescueGroups pet_id.
+        self.assertIsNone(reconstruct_adoption_url(["https://www.arlboston.org/adopt/adopt-a-pet/"], "22999999"))
+
     def test_mspca_uses_lowercased_rescue_id(self):
         self.assertEqual(
             reconstruct_adoption_url(["http://www.mspca.org/boston"], "22301016", rescue_id="A467410"),
