@@ -26,7 +26,12 @@ logger = logging.getLogger(__name__)
 # website; those should never be posted. Add new names here as we encounter them.
 PLACEHOLDER_NAMES: tuple[str, ...] = ("more dogs soon!", "more cats soon!")
 
+# Values used by the rest of the application.
 SPECIES_SINGULAR = {"dogs": "dog", "cats": "cat"}
+
+# RescueGroups filter criteria are case-sensitive and use title-cased values
+# in the API's documented multi-species search example.
+FILTER_SPECIES_SINGULAR = {"dogs": "Dog", "cats": "Cat"}
 
 # The RescueGroups API occasionally times out or returns a transient 5xx. A
 # single hiccup shouldn't fail the whole run, so retry a few times with
@@ -53,19 +58,18 @@ def _session_with_retries() -> requests.Session:
 def _build_species_filters(species: Sequence[str]) -> tuple[list[dict], str]:
     """Build search filters and filterProcessing for an OR species search.
 
-    Filters use ``species.singular`` criteria ("dog", "cat"), the field the
-    documented search-body examples filter on. #124 filtered on
-    ``species.plural`` and was silently rejected by the live API (zero
-    results), so any change here must be re-verified against the real API
-    (tests/test_rescue_groups_live.py).
+    Filters use the title-cased ``species.singular`` criteria from the
+    documented RescueGroups multi-species search example. #124 was silently
+    rejected by the live API (zero results), so any change here must be
+    re-verified against the real API (tests/test_rescue_groups_live.py).
     """
     if not species:
         raise ValueError("At least one species is required")
     filters = [
         {
             "fieldName": "species.singular",
-            "operation": "equal",
-            "criteria": SPECIES_SINGULAR[plural],
+            "operation": "equals",
+            "criteria": FILTER_SPECIES_SINGULAR[plural],
         }
         for plural in species
     ]
@@ -130,14 +134,14 @@ class SourceRescueGroups(PetSource):
             "Authorization": self._api_key,
         }
         species_filters, filter_processing = _build_species_filters(self.species)
-        # "geodistance" (not "filterRadius") is the radius-search key in the
-        # documented search-body examples; see _build_species_filters for why
-        # body-shape changes need a live-API check.
+        # filterRadius is the documented POST-body key for radius searches.
+        # See _build_species_filters for why body-shape changes need a live
+        # API check.
         payload = {
             "data": {
                 "filters": species_filters,
                 "filterProcessing": filter_processing,
-                "geodistance": {
+                "filterRadius": {
                     "miles": self.radius_miles,
                     "postalcode": self.postal_code,
                 },

@@ -49,8 +49,8 @@ class BuildSpeciesFiltersTests(unittest.TestCase):
         self.assertEqual(
             filters,
             [
-                {"fieldName": "species.singular", "operation": "equal", "criteria": "dog"},
-                {"fieldName": "species.singular", "operation": "equal", "criteria": "cat"},
+                {"fieldName": "species.singular", "operation": "equals", "criteria": "Dog"},
+                {"fieldName": "species.singular", "operation": "equals", "criteria": "Cat"},
             ],
         )
         self.assertEqual(filter_processing, "1 OR 2")
@@ -174,16 +174,16 @@ class FetchPetsRequestTests(unittest.TestCase):
         self.assertEqual(
             payload["data"]["filters"],
             [
-                {"fieldName": "species.singular", "operation": "equal", "criteria": "dog"},
-                {"fieldName": "species.singular", "operation": "equal", "criteria": "cat"},
+                {"fieldName": "species.singular", "operation": "equals", "criteria": "Dog"},
+                {"fieldName": "species.singular", "operation": "equals", "criteria": "Cat"},
             ],
         )
         self.assertEqual(payload["data"]["filterProcessing"], "1 OR 2")
         self.assertEqual(
-            payload["data"]["geodistance"],
+            payload["data"]["filterRadius"],
             {"miles": 50, "postalcode": "02108"},
         )
-        self.assertNotIn("filterRadius", payload["data"])
+        self.assertNotIn("geodistance", payload["data"])
 
     def test_missing_api_key_raises(self):
         source = SourceRescueGroups(api_key=None)
