@@ -47,6 +47,29 @@ def _session_with_retries() -> requests.Session:
     return session
 
 
+# 24PetConnect (ARL Boston's pet-detail host) returns a hard HTTP 500 for pets it
+# has already removed, even though RescueGroups may still list them as available.
+# So a reconstructed 24PetConnect deep link can point at a pet that's gone -> a
+# broken (500) link in the post. We verify liveness and fall back to the org page
+# when the deep link isn't live. Only this host needs it; the other supported
+# orgs degrade gracefully (a landing/list page) rather than erroring.
+LIVENESS_CHECKED_HOSTS: tuple[str, ...] = ("24petconnect.com",)
+
+
+def _needs_liveness_check(url: str) -> bool:
+    return any(host in url for host in LIVENESS_CHECKED_HOSTS)
+
+
+def _deep_link_is_live(url: str) -> bool:
+    """True only if ``url`` responds 200. Fail-closed: any non-200 or error -> False,
+    so we never keep a deep link we couldn't confirm is live."""
+    try:
+        resp = requests.get(url, timeout=10, allow_redirects=True)
+        return resp.status_code == 200
+    except requests.RequestException:
+        return False
+
+
 class SourceRescueGroups(PetSource):
     """
     Fetches adoptable pets from RescueGroups.org API.
@@ -187,10 +210,17 @@ class SourceRescueGroups(PetSource):
 
             # For shelters we have a template for, rebuild a deep link to this
             # specific pet; otherwise keep the org landing page from above.
-            adoption_url = (
-                reconstruct_adoption_url(url_candidates, animal_id, rescue_id)
-                or adoption_url
-            )
+            deep_link = reconstruct_adoption_url(url_candidates, animal_id, rescue_id)
+            # Some hosts (24PetConnect) 500 for pets they've already removed even
+            # though RescueGroups still lists them. Only keep the deep link if we
+            # can confirm it's live; otherwise fall back to the org page.
+            if deep_link and _needs_liveness_check(deep_link) and not _deep_link_is_live(deep_link):
+                logger.info(
+                    "Deep link not live (pet likely removed); falling back to org page: %s",
+                    deep_link,
+                )
+                deep_link = None
+            adoption_url = deep_link or adoption_url
 
             # Get best available image
             image_url = self._get_image_url(attrs)

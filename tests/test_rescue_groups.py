@@ -1,4 +1,5 @@
 import unittest
+from unittest import mock
 
 from adoption_sources.rescue_groups import SourceRescueGroups
 
@@ -56,6 +57,44 @@ class AdoptionUrlTests(unittest.TestCase):
         pet = self.source._parse_animal(animal, orgs)
 
         self.assertEqual(pet.adoption_url, "https://org.example.com")
+
+
+class ArlLivenessTests(unittest.TestCase):
+    """24PetConnect deep links are used only when confirmed live."""
+
+    def setUp(self):
+        self.source = SourceRescueGroups(api_key="dummy")
+
+    def _arl_animal(self):
+        animal = _make_animal(rescueId="A300563")
+        animal["id"] = "22628355"
+        return animal
+
+    @mock.patch("adoption_sources.rescue_groups._deep_link_is_live", return_value=True)
+    def test_live_deep_link_is_kept(self, _live):
+        orgs = {"org1": _make_org(url="https://www.arlboston.org/")}
+        pet = self.source._parse_animal(self._arl_animal(), orgs)
+        self.assertEqual(
+            pet.adoption_url,
+            "https://24petconnect.com/ARLBostonAdoptablePets/Details/BSTN/A300563",
+        )
+
+    @mock.patch("adoption_sources.rescue_groups._deep_link_is_live", return_value=False)
+    def test_dead_deep_link_falls_back_to_org_page(self, _live):
+        orgs = {"org1": _make_org(url="https://www.arlboston.org/")}
+        pet = self.source._parse_animal(self._arl_animal(), orgs)
+        self.assertEqual(pet.adoption_url, "https://www.arlboston.org/")
+
+    @mock.patch("adoption_sources.rescue_groups._deep_link_is_live", return_value=False)
+    def test_non_petconnect_deep_link_skips_liveness_check(self, live):
+        # Sterling's toolkit link is not liveness-checked, so it's kept even
+        # though the (patched) checker would report it dead.
+        animal = _make_animal()
+        animal["id"] = "22506352"
+        orgs = {"org1": _make_org(url="https://sterlingshelter.org/")}
+        pet = self.source._parse_animal(animal, orgs)
+        self.assertIn("sterlingshelter.org/pet-finder/", pet.adoption_url)
+        live.assert_not_called()
 
 
 class PlaceholderNameTests(unittest.TestCase):

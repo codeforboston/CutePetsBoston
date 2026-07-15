@@ -48,8 +48,14 @@ jobs:
       - name: Install dependencies
         run: pip install --break-system-packages requests
 
+      - name: Verify ARL 24PetConnect liveness fallback (light, read-only)
+        if: ${{ github.event_name == 'push' && !contains(github.event.head_commit.message, '[post-live]') }}
+        env:
+          CUTEPETSBOSTON_RESCUEGROUPS_API_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
+        run: python manual_testing/verify_arl_liveness.py
+
       - name: Scan live RescueGroups feed
-        if: ${{ (inputs.mode || 'scan') == 'scan' && !contains(github.event.head_commit.message, '[post-live]') }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.mode == 'scan' }}
         env:
           CUTEPETSBOSTON_RESCUEGROUPS_API_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
           RG_RADIUS_MILES: ${{ inputs.radius_miles || '50' }}
