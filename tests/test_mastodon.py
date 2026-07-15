@@ -1,3 +1,6 @@
+import logging
+from unittest.mock import Mock, call
+
 from abstractions import AdoptablePet, Post
 from hypothesis import given, strategies as st, assume
 import pytest
@@ -107,6 +110,14 @@ def reconstruct_text(main_caption: str, replies: list[str]) -> str:
     )
 
     return " ".join([main_without_suffix] + replies).strip()
+
+
+def build_publish_poster(session=None, available=True):
+    poster = PosterMastodon.__new__(PosterMastodon)
+    poster._session = session
+    poster._is_available = available
+    poster._auth_error = None
+    return poster
 
 
 class TestMastodonCaptionProperties:
@@ -326,3 +337,138 @@ class TestMastodonCaption:
 
         assert kept == "hello world"
         assert remaining == "again"
+
+
+class TestMastodonPublish:
+    @pytest.mark.parametrize(
+        (
+            "available",
+            "image_url",
+            "authenticate_result",
+            "auth_error",
+            "expected_error",
+        ),
+        [
+            (
+                False,
+                "https://example.com/pet.jpg",
+                False,
+                None,
+                "Mastodon credentials not available.",
+            ),
+            (
+                True,
+                None,
+                False,
+                None,
+                "Mastodon posts require an image URL.",
+            ),
+            (
+                True,
+                "https://example.com/pet.jpg",
+                False,
+                "RuntimeError: denied",
+                "Mastodon authentication failed: RuntimeError: denied",
+            ),
+            (
+                True,
+                "https://example.com/pet.jpg",
+                True,
+                None,
+                "Mastodon authentication did not create a session.",
+            ),
+        ],
+    )
+    def test_early_failure_logs_publish_result(
+        self,
+        caplog,
+        available,
+        image_url,
+        authenticate_result,
+        auth_error,
+        expected_error,
+    ):
+        poster = build_publish_poster(available=available)
+        poster._auth_error = auth_error
+        poster.authenticate = Mock(return_value=authenticate_result)
+        caplog.set_level(logging.INFO, logger="social_posters.mastodon")
+
+        result = poster.publish(Post(text="Meet Poppy!", image_url=image_url))
+
+        assert not result.success
+        assert result.error_message == expected_error
+        assert "Mastodon publish result:" in caplog.text
+        assert expected_error in caplog.text
+
+    def test_publish_logs_root_and_each_reply_output(self, caplog, tmp_path):
+        image_path = tmp_path / "pet.jpg"
+        image_path.write_bytes(b"image")
+        session = Mock()
+        session.media_post.return_value = {"id": "media-1"}
+        session.status_post.side_effect = [
+            {"id": "root-1", "url": "https://mastodon.example/root-1"},
+            {"id": "reply-1"},
+            {"id": "reply-2"},
+        ]
+        poster = build_publish_poster(session=session)
+        poster._download_image = Mock(return_value=str(image_path))
+        poster._format_caption_thread = Mock(
+            return_value=("Main caption", ["First reply", "Second reply"])
+        )
+        caplog.set_level(logging.INFO, logger="social_posters.mastodon")
+
+        result = poster.publish(
+            Post(text="Original text", image_url="https://example.com/pet.jpg")
+        )
+
+        assert result.success
+        assert result.post_id == "root-1"
+        assert "kind=root reply_number=None" in caplog.text
+        assert "kind=reply reply_number=1" in caplog.text
+        assert "kind=reply reply_number=2" in caplog.text
+        assert "'id': 'root-1'" in caplog.text
+        assert "'id': 'reply-1'" in caplog.text
+        assert "'id': 'reply-2'" in caplog.text
+        assert (
+            "Mastodon finished posting thread: root_id=root-1 reply_count=2"
+            in caplog.text
+        )
+        assert session.status_post.call_args_list == [
+            call("Main caption", media_ids=["media-1"]),
+            call("First reply", in_reply_to_id="root-1"),
+            call("Second reply", in_reply_to_id="root-1"),
+        ]
+        assert not image_path.exists()
+
+    def test_partial_reply_failure_logs_completed_posts(self, caplog, tmp_path):
+        image_path = tmp_path / "pet.jpg"
+        image_path.write_bytes(b"image")
+        session = Mock()
+        session.media_post.return_value = {"id": "media-1"}
+        session.status_post.side_effect = [
+            {"id": "root-1", "url": "https://mastodon.example/root-1"},
+            {"id": "reply-1"},
+            RuntimeError("second reply failed"),
+        ]
+        poster = build_publish_poster(session=session)
+        poster._download_image = Mock(return_value=str(image_path))
+        poster._format_caption_thread = Mock(
+            return_value=("Main caption", ["First reply", "Second reply"])
+        )
+        caplog.set_level(logging.INFO, logger="social_posters.mastodon")
+
+        result = poster.publish(
+            Post(text="Original text", image_url="https://example.com/pet.jpg")
+        )
+
+        assert not result.success
+        assert result.error_message == "second reply failed"
+        assert "'id': 'root-1'" in caplog.text
+        assert "'id': 'reply-1'" in caplog.text
+        assert "root_posted=True completed_reply_count=1" in caplog.text
+        assert session.status_post.call_args_list == [
+            call("Main caption", media_ids=["media-1"]),
+            call("First reply", in_reply_to_id="root-1"),
+            call("Second reply", in_reply_to_id="root-1"),
+        ]
+        assert not image_path.exists()
