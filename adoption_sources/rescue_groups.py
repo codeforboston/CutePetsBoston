@@ -210,10 +210,11 @@ class SourceRescueGroups(PetSource):
                 logger.warning(f"Skipping animal {animal_id} with no species relationship")
                 return None
             plural = species_by_id.get(species_id, {}).get("plural")
-            if plural not in self.species:
+            normalized_plural = plural.lower() if isinstance(plural, str) else ""
+            if normalized_plural not in self.species:
                 logger.info(f"Skipping animal {animal_id} with unconfigured species: {plural!r}")
                 return None
-            species = SPECIES_SINGULAR[plural]
+            species = SPECIES_SINGULAR[normalized_plural]
 
             # Get breed info
             breed = attrs.get("breedString", attrs.get("breedPrimary", "Mixed"))

@@ -103,7 +103,7 @@ class SpeciesParsingTests(unittest.TestCase):
 
     def test_dog_species_from_included(self):
         animal = _make_animal(species_id="8")
-        species_by_id = _make_species_by_id(plural="dogs", species_id="8")
+        species_by_id = _make_species_by_id(plural="Dogs", species_id="8")
 
         pet = self.source._parse_animal(animal, self.orgs, species_by_id)
 
@@ -111,7 +111,7 @@ class SpeciesParsingTests(unittest.TestCase):
 
     def test_cat_species_from_included(self):
         animal = _make_animal(species_id="3")
-        species_by_id = _make_species_by_id(plural="cats", species_id="3")
+        species_by_id = _make_species_by_id(plural="Cats", species_id="3")
 
         pet = self.source._parse_animal(animal, self.orgs, species_by_id)
 
