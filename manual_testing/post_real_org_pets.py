@@ -100,7 +100,7 @@ def main():
     if not picked:
         raise SystemExit("Found no pets from the target orgs in the current feed.")
 
-    missing = [lbl for lbl in TARGET_OUTPUT_DOMAINS.values() if lbl not in picked]
+    missing = [lbl for lbl in ORG_CANDIDATES if lbl not in picked]
     if missing:
         print(f"NOTE: no current pet found for: {', '.join(missing)}\n")
 
