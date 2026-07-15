@@ -23,64 +23,55 @@ from adoption_sources.rescue_groups import SourceRescueGroups, _session_with_ret
 from config import POSTAL_CODE
 from social_posters.bluesky import PosterBluesky
 
-BASE_URL = "https://api.rescuegroups.org/v5/public/animals/search"
+BASE_URL = "https://api.rescuegroups.org/v5/public/animals"
 
-# Reconstructed-URL domain -> label. ARL's deep link points at 24PetConnect.
-TARGET_OUTPUT_DOMAINS = {
-    "pugrescueofnewengland.org": "Pug Rescue NE",
-    "paw-affectionrescue.org": "PAW Affection",
-    "24petconnect.com": "ARL Boston",
+# Candidate pet_ids per org, from the read-only scan. We fetch these by ID
+# (a few light GETs) instead of paging the whole feed -- paging hammers the
+# API and trips its per-key rate limit. First candidate with an image wins.
+ORG_CANDIDATES = {
+    "Pug Rescue NE": ["22358386", "22553438", "22284739"],
+    "PAW Affection": ["22606695", "22606720"],
+    "ARL Boston": ["22628355", "22605662", "22605661"],
 }
 
-RADIUS_MILES = int(os.environ.get("RG_RADIUS_MILES", "50"))
-PAGE_LIMIT = 100
-MAX_PAGES = 25
 
-
-def _fetch_page(session, species, page, api_key):
-    url = (
-        f"{BASE_URL}/available/{species}/haspic"
-        f"?include=orgs&sort=animals.name&limit={PAGE_LIMIT}&page={page}"
-    )
+def _fetch_animal(session, pet_id, api_key, src):
+    """GET one animal by id; return an AdoptablePet or None (adopted/gone)."""
+    url = f"{BASE_URL}/{pet_id}?include=orgs"
     headers = {"Content-Type": "application/vnd.api+json", "Authorization": api_key}
-    payload = {"data": {"filterRadius": {"miles": RADIUS_MILES, "postalcode": POSTAL_CODE}}}
-    resp = session.post(url, json=payload, headers=headers, timeout=30)
+    resp = session.get(url, headers=headers, timeout=30)
+    if resp.status_code == 404:
+        return None
     resp.raise_for_status()
-    return resp.json()
+    body = resp.json()
+    data = body.get("data")
+    if not data:
+        return None
+    animal = data[0] if isinstance(data, list) else data
+    orgs_by_id = {
+        item["id"]: item.get("attributes", {})
+        for item in body.get("included", [])
+        if item.get("type") == "orgs"
+    }
+    return src._parse_animal(animal, orgs_by_id)
 
 
 def collect_one_per_org(api_key):
     """Return {label: AdoptablePet} with one postable pet per target org."""
     picked = {}
-    # One pooled, retrying session for all pages -- avoids the connection resets
-    # that a fresh session per page triggers under rapid paged POSTs.
     session = _session_with_retries()
-    for species in ("dogs", "cats"):
-        src = SourceRescueGroups(api_key=api_key, species=species)
-        page = 1
-        while page <= MAX_PAGES and len(picked) < len(TARGET_OUTPUT_DOMAINS):
-            body = _fetch_page(session, species, page, api_key)
-            data = body.get("data", [])
-            if not data:
+    src = SourceRescueGroups(api_key=api_key)  # only used for _parse_animal
+    cat_hints = ("shorthair", "longhair", "tabby", "domestic short", "domestic long",
+                 "siamese", "tuxedo", "calico", "maine coon")
+    for label, candidates in ORG_CANDIDATES.items():
+        for pet_id in candidates:
+            pet = _fetch_animal(session, pet_id, api_key, src)
+            if pet and pet.image_url and pet.adoption_url:
+                # by-id GET isn't species-scoped; correct the label from the breed.
+                if any(h in (pet.breed or "").lower() for h in cat_hints):
+                    pet.species = "cat"
+                picked[label] = pet
                 break
-            orgs_by_id = {
-                item["id"]: item.get("attributes", {})
-                for item in body.get("included", [])
-                if item.get("type") == "orgs"
-            }
-            for animal in data:
-                pet = src._parse_animal(animal, orgs_by_id)
-                if not pet or not pet.image_url or not pet.adoption_url:
-                    continue
-                label = TARGET_OUTPUT_DOMAINS.get(_domain_of(pet.adoption_url))
-                if label and label not in picked:
-                    picked[label] = pet
-            meta_pages = body.get("meta", {}).get("pages")
-            if meta_pages is not None and page >= meta_pages:
-                break
-            page += 1
-        if len(picked) == len(TARGET_OUTPUT_DOMAINS):
-            break
     return picked
 
 
