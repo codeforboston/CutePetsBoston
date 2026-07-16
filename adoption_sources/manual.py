@@ -15,9 +15,6 @@ logger = logging.getLogger(__name__)
 _data_path = __file__.replace(".py", ".json")
 with open(_data_path) as _f:
     MANUAL_SOURCE_DATA: tuple[dict, ...] = tuple(json.loads(_f.read()))
-    log_data = pprint.pformat(MANUAL_SOURCE_DATA)
-    logger.debug('API Response: \n%s', log_data)
-
 
 class SourceManual(PetSource):
     """Static PetSource useful for offline testing and demos."""
@@ -37,6 +34,8 @@ class SourceManual(PetSource):
         return "Manual"
 
     def fetch_pets(self) -> Iterable[AdoptablePet]:
+        log_data = pprint.pformat(MANUAL_SOURCE_DATA)
+        logger.debug('API Response: \n%s', log_data)
         for animal in self._animals:
             yield self._build_pet(animal)
 
