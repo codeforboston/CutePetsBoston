@@ -60,7 +60,7 @@ jobs:
           APP_ENV: dev
         run: |
           #In order to create posts on the test accounts remove the --debugposters debug flag
-          python ./main.py --debugsources --debugposters
+          python ./main.py
 
       - name: Upload database artifact
         uses: actions/upload-artifact@v7
