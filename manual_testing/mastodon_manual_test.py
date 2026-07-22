@@ -11,14 +11,6 @@ from social_posters.mastodon import PosterMastodon
 logger = logging.getLogger(__name__)
 
 
-def configure_logging() -> None:
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-        stream=sys.stdout,
-    )
-
 def post_exceed_500_chars_limit_with_adoption_link():
     pet = AdoptablePet("Brian", 
                         "Labrador Retriever", 
@@ -120,8 +112,6 @@ testing_cases = [
 ]
 
 def main():
-    configure_logging()
-
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--dry-run",

@@ -22,12 +22,8 @@ logger = logging.getLogger(__name__)
 
 
 class PosterMastodon(SocialPoster):
-    logger = logger
-
     def __init__(self) -> None:
-        raw_token = os.environ.get("MASTODON_TOKEN") or os.environ.get(
-            "MASTODON_TEST_TOKEN"
-        )
+        raw_token = os.environ.get("MASTODON_TOKEN")
         self.token = raw_token.strip() if raw_token else None
         self.api_base_url = os.environ.get(
             "MASTODON_API_BASE_URL",
@@ -36,14 +32,13 @@ class PosterMastodon(SocialPoster):
         self._session: Mastodon | None = None
         self._is_available = bool(self.token)
         self._auth_error: str | None = None
-        self.logger = logger
 
     @property
     def platform_name(self) -> str:
         return "Mastodon"
 
     def authenticate(self) -> bool:
-        self.logger.info("Start Authenticating to Mastodon")
+        logger.info("Start Authenticating to Mastodon")
         try:
             self._session = Mastodon(
                 access_token=self.token,
@@ -52,44 +47,43 @@ class PosterMastodon(SocialPoster):
             self._session.account_verify_credentials()
             self._auth_error = None
         except Exception as exc:
-            self.logger.exception(
+            logger.exception(
                 "Mastodon authentication failed"
             )
             self._session = None
             self._auth_error = f"{type(exc).__name__}: {exc}"
             return False
         else:
-            self.logger.info(
+            logger.info(
                 "Mastodon authentication succeeded"
             )
         return True
 
     def publish(self, post: Post) -> PostResult:
-        self.logger.info("Start Publishing to Mastodon")
-        self.logger.info("Mastodon post input: %s", pprint.pformat(post))
+        logger.info("Start Publishing to Mastodon")
+        logger.info("Mastodon post input: %s", pprint.pformat(post))
         if not self._is_available:
-            self.logger.warning("Mastodon credentials not available.")
+            logger.warning("Mastodon credentials not available.")
             result = PostResult(
                 success=False,
                 error_message="Mastodon credentials not available.",
             )
-            self.logger.info("Mastodon publish result: %s", pprint.pformat(result))
+            logger.info("Mastodon publish result: %s", pprint.pformat(result))
             return result
-        self.logger.info("Mastodon credentials available.")
+        logger.info("Mastodon credentials available.")
 
         if not post.image_url:
-            self.logger.warning("Mastodon posts require an image URL.")
+            logger.warning("Mastodon posts require an image URL.")
             result = PostResult(
                 success=False,
                 error_message="Mastodon posts require an image URL.",
             )
-            self.logger.info("Mastodon publish result: %s", pprint.pformat(result))
+            logger.info("Mastodon publish result: %s", pprint.pformat(result))
             return result
-        self.logger.info("Mastodon posts have image URL")
+        logger.info("Mastodon posts have image URL")
 
-        session = self._session
-        if session is None and not self.authenticate():
-            self.logger.warning("Mastodon authentication failed.")
+        if self._session is None and not self.authenticate():
+            logger.warning("Mastodon authentication failed.")
             result = PostResult(
                 success=False,
                 error_message=(
@@ -98,80 +92,61 @@ class PosterMastodon(SocialPoster):
                     else f"Mastodon authentication failed: {self._auth_error}"
                 ),
             )
-            self.logger.info("Mastodon publish result: %s", pprint.pformat(result))
+            logger.info("Mastodon publish result: %s", pprint.pformat(result))
             return result
+
         session = self._session
         if session is None:
-            self.logger.error("Mastodon authentication did not create a session.")
+            logger.error("Mastodon authentication did not create a session.")
             result = PostResult(
                 success=False,
                 error_message="Mastodon authentication did not create a session.",
             )
-            self.logger.info("Mastodon publish result: %s", pprint.pformat(result))
+            logger.info("Mastodon publish result: %s", pprint.pformat(result))
             return result
-        self.logger.info("Mastodon authentication successful")
+        logger.info("Mastodon authentication successful")
         
-        image_path = None
         root_status: dict | None = None
-        reply_statuses: list[dict] = []
+        completed_reply_count = 0
         stage = "preparing publish"
 
         try:
-            stage = "downloading image"
-            self.logger.info("Start downloading image")
-            self.logger.info(
-                "Mastodon download image input: image_url=%s",
-                post.image_url,
-            )
-            image_path = self._download_image(post.image_url)
-            self.logger.info("Finish downloading image: image_path=%s", image_path)
-
-            stage = "uploading media"
-            media_description = post.alt_text or "Photo of an adoptable pet"
-            self.logger.info(
-                "Mastodon media upload input: image_path=%s description=%s",
-                image_path,
-                media_description,
-            )
-            media = session.media_post(
-                image_path,
-                description=media_description,
-            )
-            self.logger.info("Mastodon uploaded media: %s", pprint.pformat(media))
+            stage = "preparing media"
+            media_id = self._upload_media(session, post)
 
             stage = "formatting caption thread"
-            self.logger.info("Mastodon formatting caption thread")
+            logger.info("Mastodon formatting caption thread")
             main_caption, replies = self._format_caption_thread(post)
             main_caption_formatted = pprint.pformat(main_caption)
             replies_formatted = pprint.pformat(replies)
-            self.logger.info(
+            logger.info(
                 "Mastodon caption thread output: main_caption_length=%d reply_count=%d",
                 len(main_caption),
                 len(replies),
             )
-            self.logger.info("Mastodon main caption: %s", main_caption_formatted)
-            self.logger.info("Mastodon replies: %s", replies_formatted)
+            logger.info("Mastodon main caption: %s", main_caption_formatted)
+            logger.info("Mastodon replies: %s", replies_formatted)
             
             stage = "posting thread"
-            self.logger.info("Mastodon start posting thread")
-            self.logger.info(
+            logger.info("Mastodon start posting thread")
+            logger.info(
                 "Mastodon posting thread input: main_caption_length=%d reply_count=%d media_id=%s",
                 len(main_caption),
                 len(replies),
-                media["id"],
+                media_id,
             )
             for post_kind, reply_number, status in self._post_thread(
                 session,
                 main_caption,
                 replies,
-                media["id"],
+                media_id,
             ):
                 if post_kind == "root":
                     root_status = status
                 else:
-                    reply_statuses.append(status)
+                    completed_reply_count += 1
 
-                self.logger.info(
+                logger.info(
                     "Mastodon thread post output: kind=%s reply_number=%s status=%s",
                     post_kind,
                     reply_number,
@@ -181,10 +156,10 @@ class PosterMastodon(SocialPoster):
             if root_status is None:
                 raise RuntimeError("Mastodon thread did not return a root status.")
 
-            self.logger.info(
+            logger.info(
                 "Mastodon finished posting thread: root_id=%s reply_count=%d",
                 root_status["id"],
-                len(reply_statuses),
+                completed_reply_count,
             )
 
             result = PostResult(
@@ -192,26 +167,24 @@ class PosterMastodon(SocialPoster):
                 post_id=str(root_status["id"]),
                 post_url=root_status.get("url"),
             )
-            self.logger.info("Mastodon publish result: %s", pprint.pformat(result))
+            logger.info("Mastodon publish result: %s", pprint.pformat(result))
             return result
 
         except Exception as exc:
-            self.logger.exception(
+            logger.exception(
                 "Mastodon posting failed during %s: %s "
                 "(root_posted=%s completed_reply_count=%d)",
                 stage,
                 exc,
                 root_status is not None,
-                len(reply_statuses),
+                completed_reply_count,
             )
             result = PostResult(success=False, error_message=str(exc))
-            self.logger.info("Mastodon publish result: %s", pprint.pformat(result))
+            logger.info("Mastodon publish result: %s", pprint.pformat(result))
             return result
 
         finally:
             self._session = None
-            if image_path and os.path.exists(image_path):
-                os.unlink(image_path)
 
     def _post_thread(
         self,
@@ -310,6 +283,36 @@ class PosterMastodon(SocialPoster):
 
             return tmp.name
 
+    def _upload_media(self, session: Mastodon, post: Post) -> str:
+        if not post.image_url:
+            raise ValueError("Mastodon posts require an image URL.")
+
+        image_path = None
+        try:
+            logger.info("Start downloading image")
+            logger.info(
+                "Mastodon download image input: image_url=%s",
+                post.image_url,
+            )
+            image_path = self._download_image(post.image_url)
+            logger.info("Finish downloading image: image_path=%s", image_path)
+
+            media_description = post.alt_text or "Photo of an adoptable pet"
+            logger.info(
+                "Mastodon media upload input: image_path=%s description=%s",
+                image_path,
+                media_description,
+            )
+            media = session.media_post(
+                image_path,
+                description=media_description,
+            )
+            logger.info("Mastodon uploaded media: %s", pprint.pformat(media))
+            return str(media["id"])
+        finally:
+            if image_path and os.path.exists(image_path):
+                os.unlink(image_path)
+
     @staticmethod
     def _safe_truncate(text: str, limit: int) -> tuple[str, str]:
         if len(text) <= limit:
@@ -323,7 +326,7 @@ class PosterMastodon(SocialPoster):
         return text[:cut].rstrip(), text[cut:].strip()
 
     def format_post(self, pet: AdoptablePet) -> Post:
-        self.logger.info(
+        logger.info(
             "Mastodon formatting pet into post: name=%s species=%s breed=%s location=%s pet_id=%s",
             pet.name,
             pet.species,
@@ -335,20 +338,20 @@ class PosterMastodon(SocialPoster):
             f"Meet {pet.name}! This adorable {pet.breed} {pet.species} "
             f"is looking for a forever home in {pet.location}."
         )
-        self.logger.info("Mastodon base post text: %s", text)
+        logger.info("Mastodon base post text: %s", text)
 
         if pet.adoption_url:
             text += f" Adopt {pet.name}: {pet.adoption_url}"
-            self.logger.info("Mastodon post text after adoption URL: %s", text)
+            logger.info("Mastodon post text after adoption URL: %s", text)
 
         if pet.description:
             text += f"\n\n{pet.description}"
-            self.logger.info("Mastodon post text after description: %s", text)
+            logger.info("Mastodon post text after description: %s", text)
 
         city = ""
         if pet.location != f"{CITY_NAME}, {CITY_STATE}":
             city = pet.location.split(",")[0].capitalize()
-        self.logger.info("Mastodon derived city tag: %s", city)
+        logger.info("Mastodon derived city tag: %s", city)
 
         post = Post(
             text=text,
@@ -366,5 +369,5 @@ class PosterMastodon(SocialPoster):
                 pet.breed.lower().replace(" ", ""),
             ],
         )
-        self.logger.info("Mastodon formatted Post output: %s", pprint.pformat(post))
+        logger.info("Mastodon formatted Post output: %s", pprint.pformat(post))
         return post

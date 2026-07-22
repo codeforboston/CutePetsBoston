@@ -120,6 +120,17 @@ def build_publish_poster(session=None, available=True):
     return poster
 
 
+class TestMastodonConfiguration:
+    def test_does_not_fall_back_to_test_token(self, monkeypatch):
+        monkeypatch.delenv("MASTODON_TOKEN", raising=False)
+        monkeypatch.setenv("MASTODON_TEST_TOKEN", "test-token")
+
+        poster = PosterMastodon()
+
+        assert poster.token is None
+        assert poster._is_available is False
+
+
 class TestMastodonCaptionProperties:
     def setup_method(self):
         self.poster = PosterMastodon.__new__(PosterMastodon)
@@ -340,6 +351,22 @@ class TestMastodonCaption:
 
 
 class TestMastodonPublish:
+    def test_upload_media_cleans_up_file_when_upload_fails(self, tmp_path):
+        image_path = tmp_path / "pet.jpg"
+        image_path.write_bytes(b"image")
+        session = Mock()
+        session.media_post.side_effect = RuntimeError("upload failed")
+        poster = PosterMastodon.__new__(PosterMastodon)
+        poster._download_image = Mock(return_value=str(image_path))
+
+        with pytest.raises(RuntimeError, match="upload failed"):
+            poster._upload_media(
+                session,
+                Post(text="Meet Poppy!", image_url="https://example.com/pet.jpg"),
+            )
+
+        assert not image_path.exists()
+
     @pytest.mark.parametrize(
         (
             "available",
