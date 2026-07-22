@@ -65,6 +65,9 @@ jobs:
           BLUESKY_PASSWORD: ${{ secrets.BLUESKY_TEST_PASSWORD }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           APP_ENV: dev
+          CITY_NAME: ${{ vars.CITY_NAME }}
+          CITY_STATE: ${{ vars.CITY_STATE }}
+          POSTAL_CODE: ${{ vars.POSTAL_CODE }}
         run: |
           #In order to create posts on the test accounts remove the --debugposters debug flag
           python ./main.py --debugsources --debugposters
