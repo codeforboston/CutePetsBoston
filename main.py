@@ -1,15 +1,21 @@
-import os
-import random
 import argparse
 import json
+import os
+import random
 import sys
 import traceback
 import logging
 import pprint
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from datetime import datetime, timezone, timedelta
 
 import requests
+
+from adoption_sources import SourceManual, SourceRescueGroups
+from social_posters.bluesky import PosterBluesky
+from social_posters.debug import PosterDebug
+from social_posters.instagram import PosterInstagram
+from social_posters.mastodon import PosterMastodon
 
 file_handler = logging.FileHandler("cutepets.log")
 file_handler.setLevel(logging.DEBUG)
@@ -45,14 +51,8 @@ def main():
 
 
 def create_posters(debug=False):
-    from social_posters.debug import PosterDebug
-    
     if debug:
-
         return [PosterDebug()]
-    from social_posters.instagram import PosterInstagram
-    from social_posters.bluesky import PosterBluesky
-    from social_posters.mastodon import PosterMastodon
 
     posters = []
     posters.append(PosterMastodon())
@@ -64,15 +64,17 @@ def create_posters(debug=False):
 
 
 def create_sources(debug=False):
-    from adoption_sources import SourceRescueGroups, SourceManual
-    
     if debug:
-        return [SourceManual()]
+        cat_fixture_path = Path(__file__).parent / "tests" / "fixtures" / "sample_cats.json"
+        with open(cat_fixture_path) as f:
+            cat_animals = json.load(f)
+        return [
+            SourceManual(species="dog"),
+            SourceManual(species="cat", animals=cat_animals),
+        ]
 
     sources = []
-
     sources.append(SourceRescueGroups())
-
     return sources
 
 
