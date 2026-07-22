@@ -2,16 +2,43 @@ import argparse
 from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
 import json
+import logging
 import os
 from pathlib import Path
+import pprint
 import random
 import sys
 import traceback
 
 import requests
 
+from adoption_sources import SourceManual, SourceRescueGroups
+from metric_collectors.bluesky import CollectorBluesky
+from metric_collectors.instagram import CollectorInstagram
+from metric_collectors.mastodon import CollectorMastodon
+from social_posters.bluesky import PosterBluesky
+from social_posters.debug import PosterDebug
+from social_posters.instagram import PosterInstagram
+from social_posters.mastodon import PosterMastodon
+
+
+file_handler = logging.FileHandler("cutepets.log")
+file_handler.setLevel(logging.DEBUG)
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    handlers=[file_handler, console_handler],
+)
+
+logger = logging.getLogger(__name__)
+
 
 def main():
+    logger.info("Log started")
     parser = argparse.ArgumentParser()
     parser.add_argument("--debugsources", action="store_true")
     parser.add_argument("--debugposters", action="store_true")
@@ -30,14 +57,8 @@ def main():
 
 
 def create_posters(debug=False):
-    from social_posters.debug import PosterDebug
-
     if debug:
         return [PosterDebug()]
-
-    from social_posters.bluesky import PosterBluesky
-    from social_posters.instagram import PosterInstagram
-    from social_posters.mastodon import PosterMastodon
 
     return [PosterMastodon(), PosterBluesky(), PosterInstagram()]
 
@@ -46,24 +67,20 @@ def create_collectors(debug=False):
     if debug:
         return []
 
-    from metric_collectors.bluesky import CollectorBluesky
-    from metric_collectors.instagram import CollectorInstagram
-    from metric_collectors.mastodon import CollectorMastodon
-
     return [CollectorBluesky(), CollectorMastodon(), CollectorInstagram()]
 
 
 def create_sources(debug=False):
-    from adoption_sources import SourceRescueGroups, SourceManual
-    
     if debug:
-        return [SourceManual()]
+        cat_fixture_path = Path(__file__).parent / "tests" / "fixtures" / "sample_cats.json"
+        with cat_fixture_path.open() as fixture_file:
+            cat_animals = json.load(fixture_file)
+        return [
+            SourceManual(species="dog"),
+            SourceManual(species="cat", animals=cat_animals),
+        ]
 
-    sources = []
-
-    sources.append(SourceRescueGroups())
-
-    return sources
+    return [SourceRescueGroups()]
 
 
 def run(sources, posters, collectors=None, database_path="database.json"):
@@ -74,26 +91,32 @@ def run(sources, posters, collectors=None, database_path="database.json"):
         except ValueError as exc:
             raise SystemExit(str(exc)) from exc
 
-    print("Fetched", len(pets), "records")
+    logger.info("Fetched %d records", len(pets))
     pet = pick_pet(pets, database_path=database_path)
     results = []
     publish_results = []
 
     if not pet:
-        print("No pets available to post.")
-    elif not posters:
-        print("No social media credentials set; skipping post.")
-        record_publish_results(pet, publish_results, database_path=database_path)
+        logger.error("No pets available to post.")
     else:
-        for poster in posters:
-            post = poster.format_post(pet)
-            result = poster.publish(post)
-            results.append(result)
-            publish_results.append((poster, result))
-            if not result.success:
-                print(f"{poster.platform_name} post failed: {result.error_message}")
-            else:
-                print(f"{poster.platform_name} post published.")
+        logger.info("Picked pet %s", pprint.pformat(pet))
+
+        if not posters:
+            logger.error("No social media credentials set; skipping post.")
+        else:
+            for poster in posters:
+                post = poster.format_post(pet)
+                result = poster.publish(post)
+                results.append(result)
+                publish_results.append((poster, result))
+                if not result.success:
+                    logger.error(
+                        "%s post failed: %s",
+                        poster.platform_name,
+                        result.error_message,
+                    )
+                else:
+                    logger.info("%s post published.", poster.platform_name)
 
         record_publish_results(pet, publish_results, database_path=database_path)
 
@@ -191,12 +214,17 @@ def collect_metrics(collectors, database_path="database.json", window_days=14):
             except Exception as exc:
                 platform = entry.get("platform", "unknown platform")
                 post_id = entry.get("post_id", "unknown post")
-                print(f"{platform} metric collection failed for {post_id}: {exc}")
+                logger.error(
+                    "%s metric collection failed for %s: %s",
+                    platform,
+                    post_id,
+                    exc,
+                )
 
         if updated:
             _write_database(database_path, data)
     except Exception as exc:
-        print(f"Metric collection failed: {exc}")
+        logger.error("Metric collection failed: %s", exc)
 
 
 def _read_database(database_path):
@@ -208,7 +236,7 @@ def _read_database(database_path):
         with path.open() as database_file:
             return json.load(database_file)
     except (json.JSONDecodeError, ValueError) as exc:
-        print(f"{type(exc).__name__}:{exc}", file=sys.stderr)
+        logger.error("%s:%s", type(exc).__name__, exc)
         traceback.print_exc()
         return {}
 
@@ -227,11 +255,11 @@ MAX_TRACEBACK_CHARS = 2500
 
 
 def notify_slack_of_exception(traceback_text):
-    print(traceback_text)
+    logger.info(traceback_text)
 
     webhook_url = os.environ.get("SLACK_WEBHOOK_URL")
     if not webhook_url:
-        print("SLACK_WEBHOOK_URL not set; skipping Slack alert.")
+        logger.warning("SLACK_WEBHOOK_URL not set; skipping Slack alert.")
         return
 
     app_env = os.environ.get("APP_ENV", "local")
@@ -256,7 +284,7 @@ def notify_slack_of_exception(traceback_text):
         response = requests.post(webhook_url, json={"text": text}, timeout=10)
         response.raise_for_status()
     except Exception as slack_exc:
-        print(f"Failed to post Slack alert: {slack_exc}")
+        logger.error("Failed to post Slack alert: %s", slack_exc)
 
 
 if __name__ == "__main__":

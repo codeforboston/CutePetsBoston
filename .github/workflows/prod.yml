@@ -8,17 +8,23 @@ on:
 
 permissions:
       actions: read
+      
+# Limits to executing one workflow in a concurrency group at any time
+# Will queue 1 PENDING workflow run. New incoming runs cancel & replace the pending run
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  queue: single
 
 jobs:
   run-cute-pets:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: "3.14"
           cache: 'pip'
 
       - name: Install dependencies
@@ -30,7 +36,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Fetches the ID of the last completed run for the current workflow
+          # Fetches the ID of this branch's last completed run for the current workflow
           PREVIOUS_RUN_ID=$(gh run list \
           --branch "${{ github.ref_name }}" \
           --workflow "${{ github.workflow }}" \
@@ -65,4 +71,12 @@ jobs:
         with:
           path: database.json
           retention-days: 14
+          archive: false
+
+      - name: Upload API Log artifact
+        if: '!cancelled()' #This ensures this step runs even if the previous steps failed only if manually cancelled it doesnt run
+        uses: actions/upload-artifact@v7
+        with:
+          path: cutepets.log
+          retention-days: 90
           archive: false

@@ -4,7 +4,9 @@ from tempfile import TemporaryDirectory
 import unittest
 
 from abstractions import AdoptablePet, Post, PostMetrics, PostResult
-from main import create_collectors, create_posters, run
+from adoption_sources import SourceManual
+from adoption_sources.rescue_groups import SourceRescueGroups
+from main import create_collectors, create_posters, create_sources, run
 
 
 class FakeSource:
@@ -56,7 +58,7 @@ class FakeCollector:
 
 
 class RunFlowTests(unittest.TestCase):
-    def test_run_calls_source_and_posters(self):
+    def test_run_calls_source_posters_and_collectors(self):
         pet = AdoptablePet(
             name="Poppy",
             species="dog",
@@ -91,6 +93,62 @@ class RunFlowTests(unittest.TestCase):
         self.assertEqual(len(data["posts"]), 2)
         self.assertEqual(len(collector.calls), 2)
         self.assertEqual(data["posts"][0]["metrics"][0]["likes"], 3)
+
+    def test_run_with_mixed_species_pool(self):
+        dog = AdoptablePet(
+            name="Rex",
+            species="dog",
+            breed="mutt",
+            location="Boston, MA",
+            image_url="https://example.com/rex.jpg",
+            adoption_url="https://example.com/adopt/rex",
+            pet_id="test-dog",
+        )
+        cat = AdoptablePet(
+            name="Luna",
+            species="cat",
+            breed="tabby",
+            location="Boston, MA",
+            image_url="https://example.com/luna.jpg",
+            adoption_url="https://example.com/adopt/luna",
+            pet_id="test-cat",
+        )
+        source = FakeSource([dog, cat])
+        poster = FakePoster()
+
+        with TemporaryDirectory() as temporary_directory:
+            database_path = Path(temporary_directory) / "database.json"
+            results = run(
+                [source],
+                [poster],
+                collectors=[],
+                database_path=database_path,
+            )
+            data = json.loads(database_path.read_text())
+
+        self.assertTrue(poster.format_called)
+        self.assertTrue(poster.publish_called)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(len(data["posted_pets"]), 1)
+        self.assertIn(data["posted_pets"][0]["pet_id"], {"test-dog", "test-cat"})
+
+
+class CreateSourcesTests(unittest.TestCase):
+    def test_prod_returns_single_multi_species_rescuegroups_source(self):
+        sources = create_sources(debug=False)
+
+        self.assertEqual(len(sources), 1)
+        self.assertIsInstance(sources[0], SourceRescueGroups)
+        self.assertEqual(sources[0].species, ("dogs", "cats"))
+
+    def test_debug_returns_manual_sources_for_dogs_and_cats(self):
+        sources = create_sources(debug=True)
+
+        self.assertEqual(len(sources), 2)
+        self.assertIsInstance(sources[0], SourceManual)
+        self.assertIsInstance(sources[1], SourceManual)
+        self.assertEqual(sources[0].species, "dog")
+        self.assertEqual(sources[1].species, "cat")
 
 
 class CreatePostersTests(unittest.TestCase):

@@ -28,3 +28,6 @@ image.png
 # Other - .env is unused but added here just in case
 .env
 .env.local
+
+# Ignore because this is used by github artifacts
+database.json
