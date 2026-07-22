@@ -138,3 +138,35 @@ class SocialPoster(ABC):
                 pet.breed.lower().replace(" ", ""),
             ],
         )
+
+
+# =============================================================================
+# Engagement Metric Collector Interface
+# =============================================================================
+
+
+@dataclass
+class PostMetrics:
+    """Point-in-time engagement counts for a published post."""
+
+    collected_at: str
+    likes: int | None = None
+    reposts: int | None = None
+    comments: int | None = None
+
+
+class MetricCollector(ABC):
+    """Interface for collecting engagement metrics from a social platform."""
+
+    @property
+    @abstractmethod
+    def platform_name(self) -> str:
+        """Return the platform name used in persisted post records."""
+        ...
+
+    @abstractmethod
+    def fetch_metrics(
+        self, post_id: str, post_url: str | None = None
+    ) -> PostMetrics | None:
+        """Return a metric snapshot, or None when the post cannot be read."""
+        ...
