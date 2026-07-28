@@ -63,6 +63,7 @@ jobs:
           INSTAGRAM_PAGE_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_PAGE_ACCESS_TOKEN }}
           BLUESKY_HANDLE: ${{ secrets.BLUESKY_TEST_HANDLE }}
           BLUESKY_PASSWORD: ${{ secrets.BLUESKY_TEST_PASSWORD }}
+          MASTODON_TOKEN: ${{ secrets.MASTODON_TEST_TOKEN }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           APP_ENV: dev
         run: |
