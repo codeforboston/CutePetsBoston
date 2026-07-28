@@ -12,6 +12,7 @@ from pathlib import Path
 import requests
 
 from adoption_sources import SourceManual, SourceRescueGroups
+from config import SITE_URL
 from social_posters.bluesky import PosterBluesky
 from social_posters.debug import PosterDebug
 from social_posters.instagram import PosterInstagram
@@ -30,6 +31,11 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
+
+# In CI this is pointed at a separate gh-pages checkout (see prod.yml); locally
+# it defaults to the plain repo-relative path.
+REDIRECTS_PATH = Path(os.environ.get("REDIRECTS_JSON_PATH", "docs/redirects.json"))
+
 
 def main():
     
@@ -99,6 +105,10 @@ def run(sources, posters):
         logger.error("No social media credentials set; skipping post.")
         return []
 
+    posters_are_real = not any(isinstance(poster, PosterDebug) for poster in posters)
+    if posters_are_real:
+        pet.adoption_url = mint_redirect_url(pet)
+
     results = []
     for poster in posters:
         post = poster.format_post(pet)
@@ -146,6 +156,32 @@ def pick_pet(pets):
         json.dump(data, f, indent=4)
         f.truncate()
         return selected_pet
+
+
+def mint_redirect_url(pet):
+    """Record pet.pet_id -> pet.adoption_url in REDIRECTS_PATH (append-only:
+    an existing entry is never overwritten, so links already posted to social
+    media keep resolving to whatever they always resolved to) and return the
+    cutepetsboston.com redirect URL that should be posted instead.
+    """
+    slug = str(pet.pet_id)
+    REDIRECTS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    REDIRECTS_PATH.touch(exist_ok=True)
+    with open(REDIRECTS_PATH, "r+") as f:
+        try:
+            redirects = json.load(f)
+        except (json.JSONDecodeError, ValueError) as e:
+            logger.error(f"{type(e).__name__}:{e}")
+            traceback.print_exc()
+            redirects = {}
+
+        if slug not in redirects:
+            redirects[slug] = pet.adoption_url
+            f.seek(0)
+            json.dump(redirects, f, indent=4)
+            f.truncate()
+
+    return f"{SITE_URL}/r/?id={slug}"
 
 
 # Slack incoming-webhook messages have a ~40k-char limit; cap the traceback

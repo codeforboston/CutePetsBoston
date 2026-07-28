@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>Redirecting&hellip; | CutePetsBoston</title>
+  <link rel="icon" href="../favicon.ico" sizes="any" />
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+  <link rel="stylesheet" href="../styles.css" />
+  <noscript>
+    <meta http-equiv="refresh" content="0;url=https://www.cutepetsboston.com/" />
+  </noscript>
+</head>
+<body>
+  <main class="container" style="padding-top: 3.5rem; text-align: center;">
+    <p class="dashboard-note" id="message">Taking you to the listing&hellip;</p>
+    <p><a class="btn btn-primary" href="https://www.cutepetsboston.com/">Go to CutePetsBoston</a></p>
+    <noscript>
+      <p>JavaScript is required for this redirect. <a href="https://www.cutepetsboston.com/">Click here to continue.</a></p>
+    </noscript>
+  </main>
+
+  <script>
+    const HOME_URL = "https://www.cutepetsboston.com/";
+    const messageEl = document.getElementById("message");
+
+    const goHome = (reason) => {
+      messageEl.textContent = reason;
+      location.replace(HOME_URL);
+    };
+
+    const params = new URLSearchParams(location.search);
+    const id = params.get("id");
+
+    if (!id || !/^[a-zA-Z0-9_-]+$/.test(id)) {
+      goHome("This link is no longer valid — taking you home…");
+    } else {
+      fetch("../redirects.json")
+        .then((r) => r.json())
+        .then((redirects) => {
+          const url = redirects[id];
+          if (url) {
+            location.replace(url);
+          } else {
+            goHome("This pet's listing is no longer available — taking you home…");
+          }
+        })
+        .catch(() => {
+          goHome("Couldn't load the listing right now — taking you home…");
+        });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+name: Sync docs to gh-pages
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'docs/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gh-pages-deploy
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout master (source)
+        uses: actions/checkout@v6
+        with:
+          path: master
+
+      - name: Checkout gh-pages (target)
+        uses: actions/checkout@v6
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Sync docs/ content, preserving redirects.json
+        run: |
+          rsync -a --delete --exclude 'redirects.json' master/docs/ gh-pages/docs/
+
+      - name: Commit and push if changed
+        working-directory: gh-pages
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No content changes to sync."
+          else
+            git pull --rebase origin gh-pages
+            git commit -m "Sync site content from master"
+            git push origin HEAD:gh-pages
+          fi

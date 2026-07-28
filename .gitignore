@@ -31,3 +31,8 @@ image.png
 
 # Ignore because this is used by github artifacts
 database.json
+
+# The redirect slug->URL mapping only lives on the gh-pages branch (see
+# .github/workflows/prod.yml and pages-sync.yml); it should never be
+# committed to master, even if a local run creates it here.
+docs/redirects.json

@@ -2,6 +2,7 @@ CITY_NAME = "Boston"
 CITY_STATE = "MA"
 CITY_HASHTAGS = ["Boston"]
 POSTAL_CODE = "02108"
+SITE_URL = "https://www.cutepetsboston.com"
 
 # RescueGroups API plural species names for the species we post about.
 PET_SPECIES = ("dogs", "cats")
