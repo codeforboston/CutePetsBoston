@@ -1,4 +1,4 @@
-from abstractions import Post
+from abstractions import AdoptablePet, Post
 from social_posters.bluesky import PosterBluesky
 
 
@@ -94,3 +94,23 @@ class TestBuildTextAndFacets:
             assert encoded[start:end] == f"#{tag_name}".encode("utf-8")
             assert facet["features"][0]["$type"] == "app.bsky.richtext.facet#tag"
             assert facet["features"][0]["tag"] == tag_name
+
+
+def test_format_post_adds_specific_dog_breed_tags():
+    poster = PosterBluesky.__new__(PosterBluesky)
+    pet = AdoptablePet(
+        name="Snow",
+        species="dog",
+        breed="Labrador Retriever / Akita / Mixed",
+        location="Boston, MA",
+    )
+
+    post = poster.format_post(pet)
+
+    assert post.tags == [
+        "AdoptDontShop",
+        "Boston",
+        "DogsOfBluesky",
+        "LabradorRetriever",
+        "Akita",
+    ]
