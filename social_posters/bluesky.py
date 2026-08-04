@@ -162,6 +162,7 @@ class PosterBluesky(SocialPoster):
             if pet.species == "dog"
             else []
         )
+        print(breed_tags)
         tags = ["AdoptDontShop", *CITY_HASHTAGS, city, species_tag, *breed_tags]
         tags = [tag for tag in tags if tag]
 

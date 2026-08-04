@@ -186,6 +186,22 @@ class TestMastodonCaptionProperties:
         assert len(main_caption) <= MASTODON_CHARACTER_LIMIT
         assert all(len(reply) <= MASTODON_CHARACTER_LIMIT for reply in replies)
         assert len(replies) <= MAX_REPLIES
+
+    def test_format_post_extracts_specific_dog_breed_tags(self):
+        pet = AdoptablePet(
+            pet_id="123",
+            name="Buddy",
+            species="dog",
+            breed="Labrador Retriever mix",
+            location="Boston, MA",
+            image_url="https://example.com/buddy.jpg",
+            adoption_url="https://example.com/adopt/buddy",
+        )
+
+        post = self.poster.format_post(pet)
+
+        assert "LabradorRetriever" in post.tags
+        assert "labradorretrievermix" not in post.tags
     
     @given(
             text=caption_text,
