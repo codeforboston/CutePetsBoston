@@ -21,7 +21,7 @@ def extract_dog_breed_tags(text: str | None, dog_breeds: Iterable[str]) -> list[
     for breed in dog_breeds:
         if not isinstance(breed, str) or not breed:
             continue
-        match = _find_phrase(text, breed)
+        match = _find_phrase(text.lower(), breed)
         if match:
             matches[breed] = (match.group(), len(match.group()), match.start())
 

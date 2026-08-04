@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import json
 import logging
 import os
 import pprint
 import tempfile
 from collections.abc import Iterator
+from pathlib import Path
 from urllib.parse import urlparse
 
 import requests
@@ -12,11 +14,22 @@ from mastodon import Mastodon
 
 from abstractions import AdoptablePet, Post, PostResult, SocialPoster
 from abstractions import CITY_NAME, CITY_STATE
+from dog_breed_tags import extract_dog_breed_tags
 
 THREAD_SUFFIX = "\n\nMore details below ⬇️"
 MASTODON_CHARACTER_LIMIT = 500
 TRUNCATION_SUFFIX = "..."
 MAX_REPLIES = 5
+_DOG_BREEDS_PATH = Path(__file__).resolve().parent.parent / "dog_breeds.json"
+
+
+def _load_dog_breeds() -> list[str]:
+    """Load the editable breed catalog used for dog hashtags."""
+    with _DOG_BREEDS_PATH.open(encoding="utf-8") as breed_file:
+        return json.load(breed_file)["dogs"]
+
+
+DOG_BREEDS = _load_dog_breeds()
 
 logger = logging.getLogger(__name__)
 
@@ -353,6 +366,12 @@ class PosterMastodon(SocialPoster):
             city = pet.location.split(",")[0].capitalize()
         logger.info("Mastodon derived city tag: %s", city)
 
+        breed_tags = (
+            extract_dog_breed_tags(pet.breed, DOG_BREEDS)
+            if pet.species.casefold() == "dog"
+            else [pet.breed.lower().replace(" ", "")]
+        )
+
         post = Post(
             text=text,
             image_url=pet.image_url,
@@ -366,7 +385,7 @@ class PosterMastodon(SocialPoster):
                 "rescue",
                 city,
                 pet.species,
-                pet.breed.lower().replace(" ", ""),
+                *breed_tags,
             ],
         )
         logger.info("Mastodon formatted Post output: %s", pprint.pformat(post))
