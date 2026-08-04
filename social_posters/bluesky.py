@@ -1,10 +1,25 @@
 from datetime import datetime
+import json
 import os
+from pathlib import Path
 
 import requests
 
 from abstractions import Post, PostResult, SocialPoster
 from config import CITY_HASHTAGS, CITY_NAME, CITY_STATE
+from dog_breed_tags import extract_dog_breed_tags
+
+
+_DOG_BREEDS_PATH = Path(__file__).resolve().parent.parent / "dog_breeds.json"
+
+
+def _load_dog_breeds() -> list[str]:
+    """Load the editable breed catalog used by the pure tag extractor."""
+    with _DOG_BREEDS_PATH.open(encoding="utf-8") as breed_file:
+        return json.load(breed_file)
+
+
+DOG_BREEDS = _load_dog_breeds()["dogs"]
 
 
 class PosterBluesky(SocialPoster):
@@ -142,7 +157,13 @@ class PosterBluesky(SocialPoster):
             text += f"\n\nLearn more and adopt me: {pet.adoption_url}"
 
         species_tag = "DogsOfBluesky" if pet.species == "dog" else "CatsOfBluesky"
-        tags = ["AdoptDontShop", *CITY_HASHTAGS, city, species_tag]
+        breed_tags = (
+            extract_dog_breed_tags(pet.breed, DOG_BREEDS)
+            if pet.species == "dog"
+            else []
+        )
+        tags = ["AdoptDontShop", *CITY_HASHTAGS, city, species_tag, *breed_tags]
+        tags = [tag for tag in tags if tag]
 
         return Post(
             text=text,
