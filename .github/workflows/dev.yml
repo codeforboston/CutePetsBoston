@@ -80,7 +80,7 @@ jobs:
           DEBUG_SOURCES: ${{ inputs.debugsources != false }}
           DEBUG_POSTERS: ${{ inputs.debugposters != false }}
         run: |
-          #In order to create posts on the test accounts remove the --debugposters debug
+          #In order to create posts on the test accounts remove the --debugposters debug flag
           FLAGS=""
           if [ "$DEBUG_SOURCES" = "true" ]; then FLAGS="$FLAGS --debugsources"; fi
           if [ "$DEBUG_POSTERS" = "true" ]; then FLAGS="$FLAGS --debugposters"; fi
