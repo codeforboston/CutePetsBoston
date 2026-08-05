@@ -200,6 +200,7 @@ def collect_metrics(collectors, database_path="database.json", metrics_db_path="
             collector.platform_name: collector for collector in collectors
         }
         cutoff = datetime.now(timezone.utc) - timedelta(days=window_days)
+        updated = False
 
         with sqlite3.connect(metrics_db_path) as conn:
             for entry in posts:
@@ -219,6 +220,9 @@ def collect_metrics(collectors, database_path="database.json", metrics_db_path="
 
                     snapshot = asdict(metrics)
                     collected_at = datetime.now(timezone.utc).isoformat()
+                    snapshot["collected_at"] = collected_at
+                    entry.setdefault("metrics", []).append(snapshot)
+                    updated = True
                     conn.execute(
                         """
                         INSERT INTO post_metrics (post_id, collected_at, likes, reposts, comments)
@@ -241,6 +245,9 @@ def collect_metrics(collectors, database_path="database.json", metrics_db_path="
                         post_id,
                         exc,
                     )
+
+        if updated:
+            _write_database(database_path, data)
     except Exception as exc:
         logger.error("Metric collection failed: %s", exc)
 

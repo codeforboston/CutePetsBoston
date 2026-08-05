@@ -97,6 +97,7 @@ class RunFlowTests(unittest.TestCase):
         self.assertEqual(len(data["posted_pets"]), 1)
         self.assertEqual(len(data["posts"]), 2)
         self.assertEqual(len(collector.calls), 2)
+        self.assertEqual(data["posts"][0]["metrics"][0]["likes"], 3)
         self.assertEqual(rows[0][0], 3)
 
     def test_run_with_mixed_species_pool(self):
