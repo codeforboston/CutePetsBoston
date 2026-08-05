@@ -6,6 +6,17 @@ on:
       - '**'
       - '!master'
   workflow_dispatch:
+    inputs:
+      debugsources:
+        description: 'Use mock data sources instead of live RescueGroups API'
+        required: false
+        type: boolean
+        default: true
+      debugposters:
+        description: 'Skip posting to real social accounts (use test/mock posters)'
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   actions: read
@@ -63,11 +74,17 @@ jobs:
           INSTAGRAM_PAGE_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_PAGE_ACCESS_TOKEN }}
           BLUESKY_HANDLE: ${{ secrets.BLUESKY_TEST_HANDLE }}
           BLUESKY_PASSWORD: ${{ secrets.BLUESKY_TEST_PASSWORD }}
+          MASTODON_TOKEN: ${{ secrets.MASTODON_TEST_TOKEN }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           APP_ENV: dev
+          DEBUG_SOURCES: ${{ inputs.debugsources != false }}
+          DEBUG_POSTERS: ${{ inputs.debugposters != false }}
         run: |
-          #In order to create posts on the test accounts remove the --debugposters debug flag
-          python ./main.py
+          #In order to create posts on the test accounts remove the --debugposters debug
+          FLAGS=""
+          if [ "$DEBUG_SOURCES" = "true" ]; then FLAGS="$FLAGS --debugsources"; fi
+          if [ "$DEBUG_POSTERS" = "true" ]; then FLAGS="$FLAGS --debugposters"; fi
+          python ./main.py $FLAGS
 
       - name: Upload database artifact
         uses: actions/upload-artifact@v7

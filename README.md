@@ -24,7 +24,7 @@ Optional for Bluesky posting:
 - `BLUESKY_PASSWORD` (or `BLUESKY_TEST_PASSWORD`)
 
 Optional for Mastodon posting:
-- `MASTODON_TOKEN` or `MASTODON_TEST_TOKEN`
+- `MASTODON_TOKEN` (map this to the appropriate production or test-account secret in the runtime environment)
 - `MASTODON_API_BASE_URL` (defaults to `https://mastodon.social`)
 
 Optional platform selection:
