@@ -5,6 +5,7 @@ API Documentation: https://api.rescuegroups.org/v5/public/docs
 """
 
 import html
+import json
 import logging
 import pprint
 import os
@@ -157,7 +158,27 @@ class SourceRescueGroups(PetSource):
         response = session.post(url, json=payload, headers=headers, timeout=30)
         response.raise_for_status()
 
-        body = response.json()
+        # JSON is UTF-8 by default. Decode the response bytes explicitly rather
+        # than relying on an HTTP charset declaration that could be incorrect.
+        body = json.loads(response.content.decode("utf-8"))
+        logger.debug(
+            "RescueGroups response decoding: Content-Type=%r requests_encoding=%r",
+            response.headers.get("Content-Type"),
+            response.encoding,
+        )
+        if logger.isEnabledFor(logging.DEBUG):
+            try:
+                requests_body = response.json()
+            except ValueError as exc:
+                logger.warning(
+                    "RescueGroups response.json() failed while UTF-8 parsing succeeded: %s",
+                    exc,
+                )
+            else:
+                logger.debug(
+                    "RescueGroups response.json() matches explicit UTF-8 parse: %s",
+                    requests_body == body,
+                )
         data = body.get("data", [])
         logger.info(f"Received {len(data)} pets from RescueGroups")
 

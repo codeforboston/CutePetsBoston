@@ -3,6 +3,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+from requests import Response
+
 from adoption_sources.rescue_groups import (
     SourceRescueGroups,
     _build_species_filters,
@@ -157,7 +159,7 @@ class FetchPetsRequestTests(unittest.TestCase):
         mock_session = MagicMock()
         mock_session_factory.return_value = mock_session
         mock_response = MagicMock()
-        mock_response.json.return_value = {"data": [], "included": []}
+        mock_response.content = b'{"data": [], "included": []}'
         mock_session.post.return_value = mock_response
 
         source = SourceRescueGroups(api_key="dummy")
@@ -191,6 +193,91 @@ class FetchPetsRequestTests(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             list(source.fetch_pets())
+
+
+class ResponseJsonDecodingTests(unittest.TestCase):
+    def test_utf8_json_without_a_charset_is_decoded_correctly(self):
+        """Requests detects UTF-8 for ``application/vnd.api+json`` responses."""
+        description = "Adoption center hours: 1:00PM – 6:00PM"
+        response = Response()
+        response._content = json.dumps(
+            {"data": [{"attributes": {"descriptionText": description}}]},
+            ensure_ascii=False,
+        ).encode("utf-8")
+
+        parsed_description = response.json()["data"][0]["attributes"][
+            "descriptionText"
+        ]
+
+        self.assertEqual(parsed_description, description)
+
+    def test_utf8_json_is_mojibaked_when_response_declares_latin_1(self):
+        """Reproduce the ``–`` -> ``â`` corruption seen in production.
+
+        ``SourceRescueGroups.fetch_pets`` currently calls ``response.json()``.
+        Requests uses ``response.encoding`` when the server declares one, so an
+        incorrect Latin-1 declaration decodes otherwise valid UTF-8 JSON into
+        the same mojibake recorded in the GOOBER post.
+        """
+        description = "Adoption center hours: 1:00PM – 6:00PM"
+        response = Response()
+        response.encoding = "iso-8859-1"
+        response._content = json.dumps(
+            {"data": [{"attributes": {"descriptionText": description}}]},
+            ensure_ascii=False,
+        ).encode("utf-8")
+
+        parsed_description = response.json()["data"][0]["attributes"][
+            "descriptionText"
+        ]
+
+        self.assertEqual(
+            parsed_description,
+            "Adoption center hours: 1:00PM â 6:00PM",
+        )
+        self.assertEqual(
+            response.content.decode("utf-8"),
+            json.dumps(
+                {"data": [{"attributes": {"descriptionText": description}}]},
+                ensure_ascii=False,
+            ),
+        )
+
+
+class FetchPetsUtf8DecodingTests(unittest.TestCase):
+    @patch("adoption_sources.rescue_groups._session_with_retries")
+    def test_decodes_utf8_response_bytes_despite_wrong_charset(self, mock_session_factory):
+        """Keep RescueGroups descriptions readable when its charset is wrong."""
+        description = "Adoption center hours: 1:00PM – 6:00PM"
+        body = {
+            "data": [_make_animal(descriptionText=description)],
+            "included": [
+                {
+                    "type": "orgs",
+                    "id": "org1",
+                    "attributes": _make_org(url="https://example.com/adopt"),
+                },
+                {
+                    "type": "species",
+                    "id": "8",
+                    "attributes": {"plural": "dogs"},
+                },
+            ],
+        }
+        response = Response()
+        response.status_code = 200
+        response.encoding = "iso-8859-1"
+        response._content = json.dumps(body, ensure_ascii=False).encode("utf-8")
+
+        mock_session = MagicMock()
+        mock_session.post.return_value = response
+        mock_session_factory.return_value = mock_session
+
+        pets = list(SourceRescueGroups(api_key="dummy").fetch_pets())
+
+        self.assertEqual(len(pets), 1)
+        self.assertEqual(pets[0].description, description)
+        self.assertNotIn("â", pets[0].description)
 
 
 class RealCaptureParsingTests(unittest.TestCase):
