@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import pprint
 import random
+import sqlite3
 import sys
 import traceback
 
@@ -83,7 +84,9 @@ def create_sources(debug=False):
     return [SourceRescueGroups()]
 
 
-def run(sources, posters, collectors=None, database_path="database.json"):
+def run(sources, posters, collectors=None, database_path="database.json", metrics_db_path="metrics.sqlite"):
+    _init_metrics_db(metrics_db_path)
+
     pets = []
     for source in sources:
         try:
@@ -118,9 +121,9 @@ def run(sources, posters, collectors=None, database_path="database.json"):
                 else:
                     logger.info("%s post published.", poster.platform_name)
 
-        record_publish_results(pet, publish_results, database_path=database_path)
+        record_publish_results(pet, publish_results, database_path=database_path, metrics_db_path=metrics_db_path)
 
-    collect_metrics(collectors or [], database_path=database_path)
+    collect_metrics(collectors or [], database_path=database_path, metrics_db_path=metrics_db_path)
     return results
 
 
@@ -142,7 +145,7 @@ def pick_pet(pets, database_path="database.json"):
     return random.choice(eligible)
 
 
-def record_publish_results(pet, results, database_path="database.json"):
+def record_publish_results(pet, results, database_path="database.json", metrics_db_path="metrics.sqlite"):
     data = _read_database(database_path)
     posted_pets = data.setdefault("posted_pets", [])
     posts = data.setdefault("posts", [])
@@ -151,19 +154,20 @@ def record_publish_results(pet, results, database_path="database.json"):
     posted_pets.append(
         {"name": pet.name, "pet_id": pet.pet_id, "posted_at": posted_at}
     )
+    new_posts = []
     for poster, result in results:
         if not result.success:
             continue
-        posts.append(
-            {
-                "pet_id": pet.pet_id,
-                "platform": poster.platform_name,
-                "post_id": result.post_id,
-                "post_url": result.post_url,
-                "posted_at": posted_at,
-                "metrics": [],
-            }
-        )
+        post_entry = {
+            "pet_id": pet.pet_id,
+            "platform": poster.platform_name,
+            "post_id": result.post_id,
+            "post_url": result.post_url,
+            "posted_at": posted_at,
+            "metrics": [],
+        }
+        posts.append(post_entry)
+        new_posts.append(post_entry)
 
     cutoff = datetime.now(timezone.utc) - timedelta(weeks=12)
     data["posted_pets"] = [
@@ -178,53 +182,117 @@ def record_publish_results(pet, results, database_path="database.json"):
     ]
     _write_database(database_path, data)
 
+    if new_posts:
+        _upsert_posts_to_db(new_posts, metrics_db_path)
 
-def collect_metrics(collectors, database_path="database.json", window_days=14):
+
+def collect_metrics(collectors, database_path="database.json", metrics_db_path="metrics.sqlite", window_days=14):
     try:
         data = _read_database(database_path)
         posts = data.get("posts", [])
         if not posts:
             return
 
+        _init_metrics_db(metrics_db_path)
+        _upsert_posts_to_db(posts, metrics_db_path)
+
         collectors_by_platform = {
             collector.platform_name: collector for collector in collectors
         }
         cutoff = datetime.now(timezone.utc) - timedelta(days=window_days)
-        updated = False
 
-        for entry in posts:
-            try:
-                if datetime.fromisoformat(entry["posted_at"]) < cutoff:
-                    continue
+        with sqlite3.connect(metrics_db_path) as conn:
+            for entry in posts:
+                try:
+                    if datetime.fromisoformat(entry["posted_at"]) < cutoff:
+                        continue
 
-                collector = collectors_by_platform.get(entry.get("platform"))
-                if collector is None:
-                    continue
+                    collector = collectors_by_platform.get(entry.get("platform"))
+                    if collector is None:
+                        continue
 
-                metrics = collector.fetch_metrics(
-                    entry["post_id"], entry.get("post_url")
-                )
-                if metrics is None:
-                    continue
+                    metrics = collector.fetch_metrics(
+                        entry["post_id"], entry.get("post_url")
+                    )
+                    if metrics is None:
+                        continue
 
-                snapshot = asdict(metrics)
-                snapshot["collected_at"] = datetime.now(timezone.utc).isoformat()
-                entry.setdefault("metrics", []).append(snapshot)
-                updated = True
-            except Exception as exc:
-                platform = entry.get("platform", "unknown platform")
-                post_id = entry.get("post_id", "unknown post")
-                logger.error(
-                    "%s metric collection failed for %s: %s",
-                    platform,
-                    post_id,
-                    exc,
-                )
-
-        if updated:
-            _write_database(database_path, data)
+                    snapshot = asdict(metrics)
+                    collected_at = datetime.now(timezone.utc).isoformat()
+                    conn.execute(
+                        """
+                        INSERT INTO post_metrics (post_id, collected_at, likes, reposts, comments)
+                        VALUES (?, ?, ?, ?, ?)
+                        """,
+                        (
+                            entry["post_id"],
+                            collected_at,
+                            snapshot.get("likes"),
+                            snapshot.get("reposts"),
+                            snapshot.get("comments"),
+                        ),
+                    )
+                except Exception as exc:
+                    platform = entry.get("platform", "unknown platform")
+                    post_id = entry.get("post_id", "unknown post")
+                    logger.error(
+                        "%s metric collection failed for %s: %s",
+                        platform,
+                        post_id,
+                        exc,
+                    )
     except Exception as exc:
         logger.error("Metric collection failed: %s", exc)
+
+
+def _init_metrics_db(metrics_db_path):
+    with sqlite3.connect(metrics_db_path) as conn:
+        conn.executescript("""
+            CREATE TABLE IF NOT EXISTS posts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                pet_id TEXT NOT NULL,
+                platform TEXT NOT NULL,
+                post_id TEXT NOT NULL UNIQUE,
+                post_url TEXT NOT NULL,
+                posted_at TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+
+            CREATE TABLE IF NOT EXISTS post_metrics (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                post_id TEXT NOT NULL,
+                collected_at TEXT NOT NULL,
+                likes INTEGER,
+                reposts INTEGER,
+                comments INTEGER,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+                FOREIGN KEY (post_id) REFERENCES posts (post_id)
+            );
+        """)
+
+
+def _upsert_posts_to_db(posts, metrics_db_path):
+    with sqlite3.connect(metrics_db_path) as conn:
+        conn.executemany(
+            """
+            INSERT INTO posts (pet_id, platform, post_id, post_url, posted_at)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(post_id) DO UPDATE SET
+                updated_at = datetime('now')
+            """,
+            [
+                (
+                    post["pet_id"],
+                    post["platform"],
+                    post["post_id"],
+                    post["post_url"],
+                    post["posted_at"],
+                )
+                for post in posts
+            ],
+        )
 
 
 def _read_database(database_path):

@@ -52,7 +52,15 @@ jobs:
           name: database.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ steps.get_id.outputs.previous_run_id }}
-        continue-on-error: true 
+        continue-on-error: true
+
+      - name: Download previous metrics artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: metrics.sqlite
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ steps.get_id.outputs.previous_run_id }}
+        continue-on-error: true
 
       - name: Call RescueGroups API
         env:
@@ -70,6 +78,13 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           path: database.json
+          retention-days: 14
+          archive: false
+
+      - name: Upload metrics artifact
+        uses: actions/upload-artifact@v7
+        with:
+          path: metrics.sqlite
           retention-days: 14
           archive: false
 

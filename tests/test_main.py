@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import sqlite3
 from tempfile import TemporaryDirectory
 import unittest
 
@@ -75,13 +76,17 @@ class RunFlowTests(unittest.TestCase):
 
         with TemporaryDirectory() as temporary_directory:
             database_path = Path(temporary_directory) / "database.json"
+            metrics_db_path = Path(temporary_directory) / "metrics.sqlite"
             results = run(
                 [source],
                 [poster_one, poster_two],
                 collectors=[collector],
                 database_path=database_path,
+                metrics_db_path=metrics_db_path,
             )
             data = json.loads(database_path.read_text())
+            with sqlite3.connect(metrics_db_path) as conn:
+                rows = conn.execute("SELECT likes FROM post_metrics").fetchall()
 
         self.assertTrue(source.fetch_called)
         self.assertTrue(poster_one.format_called)
@@ -92,7 +97,7 @@ class RunFlowTests(unittest.TestCase):
         self.assertEqual(len(data["posted_pets"]), 1)
         self.assertEqual(len(data["posts"]), 2)
         self.assertEqual(len(collector.calls), 2)
-        self.assertEqual(data["posts"][0]["metrics"][0]["likes"], 3)
+        self.assertEqual(rows[0][0], 3)
 
     def test_run_with_mixed_species_pool(self):
         dog = AdoptablePet(
