@@ -24,6 +24,12 @@ def test_extracts_catalog_breed_within_unlisted_breed_name():
     ]
 
 def test_does_not_match_a_breed_inside_another_word():
+    assert extract_dog_breed_tags("labradorretriever/bordercollie/mixed(shortcoat)", DOG_BREEDS) == [
+        "LabradorRetriever",
+        "BorderCollie",
+    ]
+
+def test_does_not_match_a_breed_inside_another_word():
     assert extract_dog_breed_tags("The houndstooth blanket is lovely", DOG_BREEDS) == []
 
 def test_empty_or_unknown_text_has_no_breed_tags():
