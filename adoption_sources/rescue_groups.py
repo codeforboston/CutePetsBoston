@@ -5,7 +5,6 @@ API Documentation: https://api.rescuegroups.org/v5/public/docs
 """
 
 import html
-import json
 import logging
 import pprint
 import os
@@ -39,6 +38,59 @@ FILTER_SPECIES_SINGULAR = {"dogs": "Dog", "cats": "Cat"}
 # exponential backoff (0s, 2s, 4s, 8s between attempts).
 RETRY_TOTAL = 4
 RETRY_BACKOFF_FACTOR = 1
+
+# Common leading characters produced when UTF-8 bytes are decoded as a
+# single-byte encoding. C1 control characters are another strong signal.
+MOJIBAKE_MARKERS = frozenset(("Â", "Ã", "â", "ï", "ð"))
+MOJIBAKE_ENCODINGS = ("cp1252", "latin-1")
+
+
+def _mojibake_score(text: str) -> int:
+    """Count characters that strongly suggest UTF-8 mojibake."""
+    return sum(
+        2 if "\x80" <= character <= "\x9f" else 1
+        for character in text
+        if character in MOJIBAKE_MARKERS or "\x80" <= character <= "\x9f"
+    )
+
+
+def _repair_mojibake(text: str) -> tuple[str, tuple[str, ...]]:
+    """Reverse likely UTF-8 mojibake without touching valid Unicode text.
+
+    RescueGroups sometimes returns values that were corrupted before they
+    reached its API. Repair only whitespace-delimited fragments with strong
+    mojibake signals, and only accept a reversible decoding that reduces those
+    signals. Processing fragments separately preserves unrelated characters
+    such as emoji or non-Latin scripts in the same description.
+    """
+    repaired_encodings: list[str] = []
+    fragments = re.split(r"([ \t\r\n\f\v]+)", text)
+
+    for index, fragment in enumerate(fragments):
+        original_score = _mojibake_score(fragment)
+        if not original_score:
+            continue
+
+        best_fragment = fragment
+        best_score = original_score
+        best_encoding = None
+        for encoding in MOJIBAKE_ENCODINGS:
+            try:
+                candidate = fragment.encode(encoding).decode("utf-8")
+            except (UnicodeEncodeError, UnicodeDecodeError):
+                continue
+
+            candidate_score = _mojibake_score(candidate)
+            if candidate_score < best_score:
+                best_fragment = candidate
+                best_score = candidate_score
+                best_encoding = encoding
+
+        if best_encoding is not None:
+            fragments[index] = best_fragment
+            repaired_encodings.append(best_encoding)
+
+    return "".join(fragments), tuple(dict.fromkeys(repaired_encodings))
 
 
 def _session_with_retries() -> requests.Session:
@@ -158,27 +210,7 @@ class SourceRescueGroups(PetSource):
         response = session.post(url, json=payload, headers=headers, timeout=30)
         response.raise_for_status()
 
-        # JSON is UTF-8 by default. Decode the response bytes explicitly rather
-        # than relying on an HTTP charset declaration that could be incorrect.
-        body = json.loads(response.content.decode("utf-8"))
-        logger.debug(
-            "RescueGroups response decoding: Content-Type=%r requests_encoding=%r",
-            response.headers.get("Content-Type"),
-            response.encoding,
-        )
-        if logger.isEnabledFor(logging.DEBUG):
-            try:
-                requests_body = response.json()
-            except ValueError as exc:
-                logger.warning(
-                    "RescueGroups response.json() failed while UTF-8 parsing succeeded: %s",
-                    exc,
-                )
-            else:
-                logger.debug(
-                    "RescueGroups response.json() matches explicit UTF-8 parse: %s",
-                    requests_body == body,
-                )
+        body = response.json()
         data = body.get("data", [])
         logger.info(f"Received {len(data)} pets from RescueGroups")
 
@@ -241,7 +273,9 @@ class SourceRescueGroups(PetSource):
             breed = attrs.get("breedString", attrs.get("breedPrimary", "Mixed"))
 
             # Clean up description (use text version, not HTML)
-            description = self._clean_description(attrs.get("descriptionText", ""))
+            description = self._clean_description(
+                attrs.get("descriptionText", ""), animal_id=animal_id
+            )
 
             # Get adoption_url
             org_id = (
@@ -314,13 +348,26 @@ class SourceRescueGroups(PetSource):
         cleaned = re.split(r"\s*[\*\-\|]+\s*", name)[0]
         return cleaned.strip()
 
-    def _clean_description(self, description: str) -> str:
+    def _clean_description(
+        self, description: str, animal_id: str = "unknown"
+    ) -> str:
         """Clean up description text."""
         if not description:
             return ""
 
         # Decode HTML entities
         text = html.unescape(description)
+
+        # Repair text that was mojibaked before RescueGroups serialized its
+        # JSON response. The HTTP response itself is already valid UTF-8.
+        text, repaired_encodings = _repair_mojibake(text)
+        if repaired_encodings:
+            logger.info(
+                "Repaired mojibake in RescueGroups description for animal %s "
+                "using %s",
+                animal_id,
+                ", ".join(repaired_encodings),
+            )
 
         # Remove &nbsp; and normalize whitespace
         text = text.replace("&nbsp;", " ")
