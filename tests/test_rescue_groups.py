@@ -173,7 +173,7 @@ class DescriptionCleaningTests(unittest.TestCase):
             captured.output,
             [
                 "INFO:adoption_sources.rescue_groups:Repaired mojibake in "
-                "RescueGroups description for animal 12345 using latin-1"
+                "RescueGroups description for animal 12345"
             ],
         )
 

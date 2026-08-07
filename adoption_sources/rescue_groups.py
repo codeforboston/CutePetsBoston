@@ -13,6 +13,7 @@ from collections.abc import Sequence
 from typing import Iterator
 
 import requests
+from ftfy import fix_encoding
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
@@ -38,60 +39,6 @@ FILTER_SPECIES_SINGULAR = {"dogs": "Dog", "cats": "Cat"}
 # exponential backoff (0s, 2s, 4s, 8s between attempts).
 RETRY_TOTAL = 4
 RETRY_BACKOFF_FACTOR = 1
-
-# Common leading characters produced when UTF-8 bytes are decoded as a
-# single-byte encoding. C1 control characters are another strong signal.
-MOJIBAKE_MARKERS = frozenset(("Â", "Ã", "â", "ï", "ð"))
-MOJIBAKE_ENCODINGS = ("cp1252", "latin-1")
-
-
-def _mojibake_score(text: str) -> int:
-    """Count characters that strongly suggest UTF-8 mojibake."""
-    return sum(
-        2 if "\x80" <= character <= "\x9f" else 1
-        for character in text
-        if character in MOJIBAKE_MARKERS or "\x80" <= character <= "\x9f"
-    )
-
-
-def _repair_mojibake(text: str) -> tuple[str, tuple[str, ...]]:
-    """Reverse likely UTF-8 mojibake without touching valid Unicode text.
-
-    RescueGroups sometimes returns values that were corrupted before they
-    reached its API. Repair only whitespace-delimited fragments with strong
-    mojibake signals, and only accept a reversible decoding that reduces those
-    signals. Processing fragments separately preserves unrelated characters
-    such as emoji or non-Latin scripts in the same description.
-    """
-    repaired_encodings: list[str] = []
-    fragments = re.split(r"([ \t\r\n\f\v]+)", text)
-
-    for index, fragment in enumerate(fragments):
-        original_score = _mojibake_score(fragment)
-        if not original_score:
-            continue
-
-        best_fragment = fragment
-        best_score = original_score
-        best_encoding = None
-        for encoding in MOJIBAKE_ENCODINGS:
-            try:
-                candidate = fragment.encode(encoding).decode("utf-8")
-            except (UnicodeEncodeError, UnicodeDecodeError):
-                continue
-
-            candidate_score = _mojibake_score(candidate)
-            if candidate_score < best_score:
-                best_fragment = candidate
-                best_score = candidate_score
-                best_encoding = encoding
-
-        if best_encoding is not None:
-            fragments[index] = best_fragment
-            repaired_encodings.append(best_encoding)
-
-    return "".join(fragments), tuple(dict.fromkeys(repaired_encodings))
-
 
 def _session_with_retries() -> requests.Session:
     """Build a requests Session that retries transient errors with backoff."""
@@ -360,14 +307,13 @@ class SourceRescueGroups(PetSource):
 
         # Repair text that was mojibaked before RescueGroups serialized its
         # JSON response. The HTTP response itself is already valid UTF-8.
-        text, repaired_encodings = _repair_mojibake(text)
-        if repaired_encodings:
+        repaired_text = fix_encoding(text)
+        if repaired_text != text:
             logger.info(
-                "Repaired mojibake in RescueGroups description for animal %s "
-                "using %s",
+                "Repaired mojibake in RescueGroups description for animal %s",
                 animal_id,
-                ", ".join(repaired_encodings),
             )
+        text = repaired_text
 
         # Remove &nbsp; and normalize whitespace
         text = text.replace("&nbsp;", " ")
