@@ -3,6 +3,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+from requests import Response
+
 from adoption_sources.rescue_groups import (
     SourceRescueGroups,
     _build_species_filters,
@@ -151,9 +153,181 @@ class PlaceholderNameTests(unittest.TestCase):
         self.assertFalse(self.source._is_placeholder_name("Buddy"))
 
 
-class DescriptionCleaningTests(unittest.TestCase):
+def _mojibake(text: str, encoding: str = "cp1252") -> str:
+    """Corrupt ``text`` the way a mis-decoding upstream system does.
+
+    UTF-8 bytes read back one at a time as a single-byte codepage. ``cp1252``
+    leaves five bytes undefined (0x81, 0x8D, 0x8F, 0x90, 0x9D) and real systems
+    fall through to Latin-1 for those, which is why live descriptions mix tidy
+    ``â€™`` runs with raw C1 control characters. Pass ``encoding="latin-1"``
+    for the pure Latin-1 flavour we captured in the GOOBER post.
+    """
+    decoded = []
+    for byte in text.encode("utf-8"):
+        chunk = bytes([byte])
+        try:
+            decoded.append(chunk.decode(encoding))
+        except UnicodeDecodeError:
+            decoded.append(chunk.decode("latin-1"))
+    return "".join(decoded)
+
+
+# A description in the shape shelters actually write, holding one example of
+# every mojibake class we have seen or can expect: smart punctuation, Latin-1
+# accents, symbols, and astral-plane emoji. Written as lines because
+# ``_clean_description`` collapses whitespace, so the newlines become spaces.
+LEGIT_DESCRIPTION_LINES = (
+    "Meet Goober! 🐶 He’s a 2-year-old Lab mix and he weighs 52 lbs.",
+    "Adoption hours are 1:00PM – 6:00PM, Tuesday–Sunday; the fee is $150.",
+    "His foster, José, calls him “the best boy” — crate-trained, "
+    "house-trained… and 100% food-motivated.",
+    "• Neutered: yes • Good with kids: yes • Cats: a slow introduction, "
+    "and keep the house at 70°F or cooler, please 😊",
+    "Questions? Email adopt@example.org, or apply at "
+    "https://example.com/adopt/jos%C3%A9 — se habla español "
+    "(Doña Müller answers on weekends).",
+    "Sponsored by PetSmart™ & the Ångström Family Fund.",
+)
+LEGIT_DESCRIPTION = "\n".join(LEGIT_DESCRIPTION_LINES)
+EXPECTED_DESCRIPTION = " ".join(LEGIT_DESCRIPTION_LINES)
+
+# Each entry is a span of EXPECTED_DESCRIPTION that only survives if that
+# mojibake class was repaired. Named so a failure says which class broke.
+MOJIBAKE_CLASSES = {
+    "right single quote U+2019": "He’s a 2-year-old",
+    "curly double quotes U+201C/U+201D": "“the best boy”",
+    "en dash U+2013": "1:00PM – 6:00PM",
+    "em dash U+2014": "— crate-trained",
+    "ellipsis U+2026": "house-trained… and",
+    "bullet U+2022": "• Neutered",
+    "e-acute U+00E9": "José",
+    "n-tilde U+00F1": "español",
+    "u-umlaut U+00FC": "Müller",
+    "A-ring U+00C5": "Ångström",
+    "degree sign U+00B0": "70°F",
+    "trademark U+2122": "PetSmart™",
+    "astral emoji U+1F436": "Goober! 🐶",
+    "astral emoji U+1F60A": "please 😊",
+}
+
+# Spans the repair has no business touching. Prices, times, emails, and
+# percent-encoded URLs are the ones that would quietly break a live post.
+UNTOUCHED_SPANS = (
+    "2-year-old Lab mix",
+    "52 lbs",
+    "1:00PM",
+    "the fee is $150",
+    "adopt@example.org",
+    "https://example.com/adopt/jos%C3%A9",
+    "PetSmart™ & the",
+    "100% food-motivated",
+)
+
+# Nothing repaired should still carry a mojibake signature. U+009D is the C1
+# control that Latin-1 leaves behind where cp1252 would have a closing quote.
+RESIDUAL_MOJIBAKE_MARKERS = ("â€", "Ã", "Â", "ð", "")
+
+
+class DescriptionMojibakeRepairTests(unittest.TestCase):
+    """The repair fixes the corruption, across every class we expect."""
+
     def setUp(self):
         self.source = SourceRescueGroups(api_key="dummy")
+
+    def _assert_fully_repaired(self, corrupted: str) -> None:
+        cleaned = self.source._clean_description(corrupted)
+
+        for label, span in MOJIBAKE_CLASSES.items():
+            with self.subTest(repaired=label):
+                self.assertIn(span, cleaned)
+        for span in UNTOUCHED_SPANS:
+            with self.subTest(untouched=span):
+                self.assertIn(span, cleaned)
+        for marker in RESIDUAL_MOJIBAKE_MARKERS:
+            with self.subTest(residual=marker):
+                self.assertNotIn(marker, cleaned)
+        self.assertEqual(cleaned, EXPECTED_DESCRIPTION)
+
+    def test_marker_tables_describe_the_expected_output(self):
+        """Guard the tables above from drifting out of the description."""
+        for label, span in MOJIBAKE_CLASSES.items():
+            with self.subTest(repaired=label):
+                self.assertIn(span, EXPECTED_DESCRIPTION)
+        for span in UNTOUCHED_SPANS:
+            with self.subTest(untouched=span):
+                self.assertIn(span, EXPECTED_DESCRIPTION)
+
+    def test_repairs_a_realistic_description_mangled_as_windows_1252(self):
+        self._assert_fully_repaired(_mojibake(LEGIT_DESCRIPTION, "cp1252"))
+
+    def test_repairs_a_realistic_description_mangled_as_latin_1(self):
+        self._assert_fully_repaired(_mojibake(LEGIT_DESCRIPTION, "latin-1"))
+
+    def test_repairs_the_description_on_the_way_out_of_fetch_pets(self):
+        """End to end: the corruption is already baked into valid UTF-8 JSON.
+
+        This is the upstream shape we diagnosed — RescueGroups serializes text
+        that was mojibaked before it reached them, so the HTTP response decodes
+        cleanly and only the characters are wrong.
+        """
+        body = {
+            "data": [_make_animal(descriptionText=_mojibake(LEGIT_DESCRIPTION))],
+            "included": [
+                {
+                    "type": "orgs",
+                    "id": "org1",
+                    "attributes": _make_org(url="https://example.com/adopt"),
+                },
+                {"type": "species", "id": "8", "attributes": {"plural": "dogs"}},
+            ],
+        }
+        response = Response()
+        response.status_code = 200
+        response._content = json.dumps(body, ensure_ascii=False).encode("utf-8")
+        mock_session = MagicMock()
+        mock_session.post.return_value = response
+
+        with patch(
+            "adoption_sources.rescue_groups._session_with_retries",
+            return_value=mock_session,
+        ):
+            pets = list(self.source.fetch_pets())
+
+        self.assertEqual(len(pets), 1)
+        self.assertEqual(pets[0].description, EXPECTED_DESCRIPTION)
+
+    def test_repairs_only_the_corrupted_span(self):
+        """Shelters paste one mangled paragraph into otherwise clean text."""
+        clean = "Meet Goober! 🐶 His foster José says he’s “the best boy”."
+        corrupted = _mojibake(
+            "Adoption hours: 1:00PM – 6:00PM. Doña Müller answers. 😊"
+        )
+
+        cleaned = self.source._clean_description(f"{clean} {corrupted}")
+
+        self.assertEqual(
+            cleaned,
+            f"{clean} Adoption hours: 1:00PM – 6:00PM. Doña Müller answers. 😊",
+        )
+
+    def test_repairs_doubly_encoded_text(self):
+        self.assertEqual(
+            self.source._clean_description(_mojibake(_mojibake("José – 😊"))),
+            "José – 😊",
+        )
+
+    def test_repairs_non_breaking_space_before_whitespace_is_collapsed(self):
+        """``Â\\xa0`` must be repaired before whitespace normalization runs."""
+        self.assertEqual(
+            self.source._clean_description(_mojibake("Goober weighs 52 lbs.")),
+            "Goober weighs 52 lbs.",
+        )
+
+    def test_repairs_mojibake_that_arrives_as_html_entities(self):
+        self.assertEqual(
+            self.source._clean_description("I&#226;&euro;&trade;m ready for a home."),
+            "I’m ready for a home.",
+        )
 
     def test_repairs_latin_1_mojibake_observed_in_api_response(self):
         description = "Adoption hours: 1:00PM â\x80\x93 6:00PM"
@@ -177,32 +351,208 @@ class DescriptionCleaningTests(unittest.TestCase):
             ],
         )
 
-    def test_repairs_windows_1252_mojibake_after_html_unescape(self):
-        description = "I&#226;&euro;&trade;m ready for a home."
 
-        cleaned = self.source._clean_description(description)
+class DescriptionPreservationTests(unittest.TestCase):
+    """The repair leaves text alone when there is nothing to repair.
 
-        self.assertEqual(cleaned, "I’m ready for a home.")
+    These are the tests that fail if ``fix_encoding`` ever starts over-reaching:
+    they all pass against the pre-repair code, so only a regression breaks them.
+    """
 
-    def test_preserves_valid_unicode(self):
-        descriptions = (
-            "José loves café visits – and naps.",
-            "A happy dog 😊",
-            "猫はとても元気です。",
-        )
+    # Text that is already correct, including the shapes most likely to be
+    # mistaken for mojibake: stray Latin-1 letters, percent-encoded URLs, and
+    # the cp1252 symbols (™ ® °) that mojibake decodes *into*.
+    CLEAN_DESCRIPTIONS = {
+        "accented names": "Foster José and Doña Müller say she is très câlin.",
+        "correct smart punctuation": "He’s “the best boy” — really… 100% good.",
+        "emoji": "Adopt me! 🐶🐱😊🎉 #AdoptDontShop",
+        "non-latin scripts": "猫はとても元気です。 강아지 귀여워요! Кот очень милый.",
+        "currency and symbols": "Fee: $150 / €130 / £110 / ¥1,500 / 50¢ / 70°F / ½ cup",
+        "percent-encoded url": "Apply at https://example.com/adopt/jos%C3%A9?ref=a%E2%80%93b",
+        "scandinavian names": "Foster coordinator: Åsa Ångström, Malmö.",
+        "trademarks": "PetSmart™ · Petco® · ©2026 Example Rescue",
+        "bare ampersands": "Loves A&W root beer & long walks <3",
+        "plain ascii": "Buddy is a 2-year-old Lab mix. Hours: 1:00PM - 6:00PM.",
+        "real a-circumflex": "Château, Ângela, and Râ are real words.",
+    }
 
-        for description in descriptions:
-            with self.subTest(description=description):
+    def setUp(self):
+        self.source = SourceRescueGroups(api_key="dummy")
+
+    def test_leaves_clean_descriptions_byte_for_byte_identical(self):
+        for label, description in self.CLEAN_DESCRIPTIONS.items():
+            with self.subTest(label):
                 self.assertEqual(
                     self.source._clean_description(description), description
                 )
 
-    def test_repairs_mojibake_beside_unrelated_unicode(self):
-        description = "José says hello 😊 Iâ€™m friendly."
+    def test_leaves_the_full_realistic_description_untouched_and_unlogged(self):
+        with self.assertNoLogs("adoption_sources.rescue_groups", level="INFO"):
+            cleaned = self.source._clean_description(LEGIT_DESCRIPTION)
 
-        cleaned = self.source._clean_description(description)
+        self.assertEqual(cleaned, EXPECTED_DESCRIPTION)
 
-        self.assertEqual(cleaned, "José says hello 😊 I’m friendly.")
+    def test_repair_is_idempotent(self):
+        """Re-cleaning already-repaired text must not mangle it further."""
+        repaired = self.source._clean_description(_mojibake(LEGIT_DESCRIPTION))
+
+        self.assertEqual(self.source._clean_description(repaired), repaired)
+
+    def test_known_false_positive_lone_capital_a_tilde(self):
+        """Documented limitation, not desired behavior.
+
+        An isolated ``Ã`` followed by a space is byte-identical to mojibaked
+        ``à``, so ftfy repairs it. Nothing in a real pet description has hit
+        this; the test exists so we notice if ftfy's heuristics shift.
+        """
+        self.assertEqual(
+            self.source._clean_description("Letters like Ã and Ê are rare."),
+            "Letters like à and Ê are rare.",
+        )
+
+
+class PetFieldMojibakeRepairTests(unittest.TestCase):
+    """Every field we publish gets repaired, not just the description.
+
+    A mojibaked name is the most visible failure of the lot — it lands in the
+    post title — so these cover name, breed, and location alongside it.
+    """
+
+    # Shelters really do use accented names, breeds, and cities.
+    LEGIT_NAME = "Renée ***Home for the Holidays 1/2 price!"
+    EXPECTED_NAME = "Renée"
+    LEGIT_BREED = "Bichon Frisé / Coton de Tuléar Mix"
+    LEGIT_CITY = "Montréal"
+    EXPECTED_LOCATION = "Montréal, QC"
+    LEGIT_TEXT = "She’s a sweetheart – really."
+
+    def setUp(self):
+        self.source = SourceRescueGroups(api_key="dummy")
+
+    def _animal(self, corrupt: bool):
+        transform = _mojibake if corrupt else (lambda text: text)
+        return _make_animal(
+            name=transform(self.LEGIT_NAME),
+            breedString=transform(self.LEGIT_BREED),
+            descriptionText=transform(self.LEGIT_TEXT),
+        )
+
+    def _orgs(self, corrupt: bool):
+        transform = _mojibake if corrupt else (lambda text: text)
+        return {
+            "org1": {
+                "city": transform(self.LEGIT_CITY),
+                "state": "QC",
+                "url": "https://example.com/adopt",
+            }
+        }
+
+    def _assert_all_fields_repaired(self, pet) -> None:
+        self.assertEqual(pet.name, self.EXPECTED_NAME)
+        self.assertEqual(pet.breed, self.LEGIT_BREED)
+        self.assertEqual(pet.location, self.EXPECTED_LOCATION)
+        self.assertEqual(pet.description, self.LEGIT_TEXT)
+
+    def test_repairs_name_breed_and_location_through_fetch_pets(self):
+        body = {
+            "data": [self._animal(corrupt=True)],
+            "included": [
+                {
+                    "type": "orgs",
+                    "id": "org1",
+                    "attributes": self._orgs(corrupt=True)["org1"],
+                },
+                {"type": "species", "id": "8", "attributes": {"plural": "dogs"}},
+            ],
+        }
+        response = Response()
+        response.status_code = 200
+        response._content = json.dumps(body, ensure_ascii=False).encode("utf-8")
+        mock_session = MagicMock()
+        mock_session.post.return_value = response
+
+        with patch(
+            "adoption_sources.rescue_groups._session_with_retries",
+            return_value=mock_session,
+        ):
+            pets = list(self.source.fetch_pets())
+
+        self.assertEqual(len(pets), 1)
+        self._assert_all_fields_repaired(pets[0])
+
+    def test_logs_each_repaired_field_by_name(self):
+        with self.assertLogs(
+            "adoption_sources.rescue_groups", level="INFO"
+        ) as captured:
+            pet = self.source._parse_animal(
+                self._animal(corrupt=True),
+                self._orgs(corrupt=True),
+                _make_species_by_id(),
+            )
+
+        self._assert_all_fields_repaired(pet)
+        self.assertEqual(
+            sorted(captured.output),
+            sorted(
+                f"INFO:adoption_sources.rescue_groups:Repaired mojibake in "
+                f"RescueGroups {field} for animal 12345"
+                for field in ("name", "breed", "description", "location")
+            ),
+        )
+
+    def test_leaves_clean_fields_untouched_and_unlogged(self):
+        with self.assertNoLogs("adoption_sources.rescue_groups", level="INFO"):
+            pet = self.source._parse_animal(
+                self._animal(corrupt=False),
+                self._orgs(corrupt=False),
+                _make_species_by_id(),
+            )
+
+        self._assert_all_fields_repaired(pet)
+
+    def test_repairs_name_before_stripping_the_promotional_suffix(self):
+        """The suffix is extra context for ftfy, so repair has to come first."""
+        self.assertEqual(
+            self.source._clean_name(_mojibake("Zoë ***Adoption fee waived!")),
+            "Zoë",
+        )
+
+    def test_repairs_name_and_breed_that_only_differ_in_smart_punctuation(self):
+        self.assertEqual(
+            self.source._clean_name(_mojibake("Lucky — the “office dog”")),
+            "Lucky — the “office dog”",
+        )
+        self.assertEqual(
+            self.source._repair_mojibake(
+                _mojibake("Chihuahua – Short Coat"), "breed", "12345"
+            ),
+            "Chihuahua – Short Coat",
+        )
+
+    def test_empty_and_missing_values_pass_through(self):
+        for value in ("", None):
+            with self.subTest(value=value):
+                self.assertEqual(
+                    self.source._repair_mojibake(value, "breed", "12345"), value
+                )
+
+    def test_known_limitation_a_ring_needs_corroborating_mojibake(self):
+        """Documented limitation, not desired behavior.
+
+        ``Ã…`` is the cp1252 form of ``Å``, but it is also plausible real text,
+        so ftfy leaves it alone unless the string carries other mojibake to
+        corroborate it. Scandinavian names are where this bites.
+        """
+        self.assertEqual(
+            self.source._clean_name(_mojibake("Åsa", "cp1252")), "Ã…sa"
+        )
+        # Latin-1 corruption of the same name has no such ambiguity.
+        self.assertEqual(self.source._clean_name(_mojibake("Åsa", "latin-1")), "Åsa")
+        # Neither does cp1252 corruption with a second mojibake sequence.
+        self.assertEqual(
+            self.source._clean_name(_mojibake("Åsa the Ångström hound")),
+            "Åsa the Ångström hound",
+        )
 
 
 class FetchPetsRequestTests(unittest.TestCase):

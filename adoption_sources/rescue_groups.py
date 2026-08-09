@@ -197,7 +197,7 @@ class SourceRescueGroups(PetSource):
             animal_id = animal.get("id", "")
 
             # Extract and clean the name
-            name = self._clean_name(attrs.get("name", "Unknown"))
+            name = self._clean_name(attrs.get("name", "Unknown"), animal_id=animal_id)
 
             # Determine species from the included species relationship
             species_id = (
@@ -217,7 +217,11 @@ class SourceRescueGroups(PetSource):
             species = SPECIES_SINGULAR[normalized_plural]
 
             # Get breed info
-            breed = attrs.get("breedString", attrs.get("breedPrimary", "Mixed"))
+            breed = self._repair_mojibake(
+                attrs.get("breedString", attrs.get("breedPrimary", "Mixed")),
+                "breed",
+                animal_id,
+            )
 
             # Clean up description (use text version, not HTML)
             description = self._clean_description(
@@ -258,7 +262,11 @@ class SourceRescueGroups(PetSource):
             image_url = self._get_image_url(attrs)
 
             # Location of the adoption org
-            location = f"{org_attrs.get('city')}, {org_attrs.get('state')}"
+            location = self._repair_mojibake(
+                f"{org_attrs.get('city')}, {org_attrs.get('state')}",
+                "location",
+                animal_id,
+            )
 
 
             return AdoptablePet(
@@ -282,7 +290,27 @@ class SourceRescueGroups(PetSource):
     def _is_placeholder_name(self, name: str) -> bool:
         return name.lower() in PLACEHOLDER_NAMES
 
-    def _clean_name(self, name: str) -> str:
+    def _repair_mojibake(self, text: str, field: str, animal_id: str) -> str:
+        """Repair text that was mojibaked before RescueGroups serialized it.
+
+        The HTTP response itself is already valid UTF-8 — the corruption
+        happens upstream of the API, so repairing on our side is the only fix
+        available to us. ``ftfy`` is conservative: text that isn't recognisable
+        mojibake is returned untouched.
+        """
+        if not text:
+            return text
+
+        repaired = fix_encoding(text)
+        if repaired != text:
+            logger.info(
+                "Repaired mojibake in RescueGroups %s for animal %s",
+                field,
+                animal_id,
+            )
+        return repaired
+
+    def _clean_name(self, name: str, animal_id: str = "unknown") -> str:
         """
         Clean up pet name by removing promotional text.
 
@@ -290,6 +318,10 @@ class SourceRescueGroups(PetSource):
             "Doli ***Home for the Holidays 1/2 price!" -> "Doli"
             "Kathy" -> "Kathy"
         """
+        # Repair before splitting: ftfy reads the whole string to decide, so a
+        # mojibaked promotional suffix is extra evidence for fixing the name.
+        name = self._repair_mojibake(name, "name", animal_id)
+
         # Remove common promotional suffixes
         # Split on common delimiters and take the first part
         cleaned = re.split(r"\s*[\*\-\|]+\s*", name)[0]
@@ -302,18 +334,10 @@ class SourceRescueGroups(PetSource):
         if not description:
             return ""
 
-        # Decode HTML entities
+        # Decode HTML entities first, so mojibake that arrived entity-encoded
+        # (&#226;&euro;&trade;) is repairable too.
         text = html.unescape(description)
-
-        # Repair text that was mojibaked before RescueGroups serialized its
-        # JSON response. The HTTP response itself is already valid UTF-8.
-        repaired_text = fix_encoding(text)
-        if repaired_text != text:
-            logger.info(
-                "Repaired mojibake in RescueGroups description for animal %s",
-                animal_id,
-            )
-        text = repaired_text
+        text = self._repair_mojibake(text, "description", animal_id)
 
         # Remove &nbsp; and normalize whitespace
         text = text.replace("&nbsp;", " ")
