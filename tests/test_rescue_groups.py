@@ -9,6 +9,7 @@ from adoption_sources.rescue_groups import (
     SourceRescueGroups,
     _build_species_filters,
 )
+from social_posters.mastodon import PosterMastodon
 
 
 def _make_animal(adoption_url=None, species_id="8", **extra_attrs):
@@ -254,6 +255,166 @@ class DescriptionMojibakeRepairTests(unittest.TestCase):
             captured.records[0].args,
             ("description", "animal", "12345"),
         )
+
+
+class DennisMojibakeMastodonRegressionTests(unittest.TestCase):
+    """Regression coverage for RescueGroups animal 22658169 (DENNIS).
+
+    The record was captured from the live RescueGroups API on 2026-08-10.
+    It verifies that mojibaked punctuation is repaired before text reaches
+    Mastodon's ``status_post`` boundary.
+    """
+
+    def test_real_dennis_mojibake_is_repaired_before_mastodon_post(self):
+        raw_animal = {
+            "type": "animals",
+            "id": "22658169",
+            "attributes": {
+                "ageGroup": "Senior",
+                "ageString": "7 Years 3 Months",
+                "birthDate": "2019-04-06T00:00:00Z",
+                "breedPrimary": "Domestic Short Hair",
+                "breedPrimaryId": 35,
+                "breedString": "Domestic Short Hair (medium coat)",
+                "coatLength": "Medium",
+                "name": "DENNIS",
+                "rescueId": "A299137",
+                "sex": "Male",
+                "sizeGroup": "Medium",
+                "pictureThumbnailUrl": (
+                    "https://cdn.rescuegroups.org/1975/pictures/"
+                    "animals/22658/22658169/103556832.jpg?width=100"
+                ),
+                "descriptionText": (
+                    "MEET DENNIS!- I am in a foster home, please call the "
+                    "Boston shelter to learn more or come meet me in the "
+                    "shelter on Sundays during adoption hours!"
+                    "Dennis is the sweetest guy looking for his new home! "
+                    "Heâ\x80\x99s diabetic, so he needs a little extra daily "
+                    "care, but he will give you more than enough love to make "
+                    "it worth it! Whether itâ\x80\x99s zooming around with "
+                    "his favorite toys, watching his favorite cat tv, lovingly "
+                    "showing you his belly, or snuggling with you, Dennis is "
+                    "sure to make you smile. He is a silly and quirky guy in "
+                    "the best way, and he will keep you laughing with his "
+                    "antics. Heâ\x80\x99ll let you know heâ\x80\x99s coming "
+                    "to sit on your lap with an activation trill, and "
+                    "heâ\x80\x99d be glad to lifeguard you while "
+                    "youâ\x80\x99re showering to protect you from the scary "
+                    "water. Heâ\x80\x99s also good at setting boundaries and "
+                    "will let you know if needs a break from pets. If "
+                    "youâ\x80\x99re looking for a sweet and funny guy to "
+                    "brighten your home, Dennis may be the cat for you! "
+                    "Dennis is diabetic and his diabetes is being managed "
+                    "with twice daily insulin. To offset the cost of medical "
+                    "care, his adoption fee has waived. Dennis is currently "
+                    "up to date on all vaccinations, has been spayed/neutered, "
+                    "microchipped and seen by our vet team."
+                    "We welcome adopters from NH, RI, CT, and NY however, we "
+                    "are unable to facilitate same day adoptions due to state "
+                    "regulated paperwork requirements."
+                    "For more information on this or any other animal currently "
+                    "residing at the Animal Rescue League of Boston please "
+                    "visit us during our adoption center hours: "
+                    "Wednesdays-Sundays from 1:00PM â\x80\x93 6:00PM, "
+                    "Tuesdays by appointment only from "
+                    "1:00PM â\x80\x93 6:00PM, closed Mondays & Holidays."
+                    "For information about our adoption process click here"
+                ),
+            },
+            "relationships": {
+                "breeds": {"data": [{"id": "35", "type": "breeds"}]},
+                "locations": {
+                    "data": [{"id": "1000001975", "type": "locations"}]
+                },
+                "orgs": {"data": [{"id": "1975", "type": "orgs"}]},
+                "species": {"data": [{"id": "3", "type": "species"}]},
+            },
+        }
+        orgs_by_id = {
+            "1975": {
+                "city": "Boston",
+                "state": "MA",
+                "url": "http://www.arlboston.org",
+            }
+        }
+        species_by_id = {"3": {"plural": "Cats"}}
+
+        raw_description = raw_animal["attributes"]["descriptionText"]
+        self.assertIn("Heâ\x80\x99s diabetic", raw_description)
+        self.assertIn("1:00PM â\x80\x93 6:00PM", raw_description)
+
+        source = SourceRescueGroups(api_key="dummy")
+        with self.assertLogs(
+            "adoption_sources.rescue_groups", level="INFO"
+        ) as captured_logs:
+            pet = source._parse_animal(raw_animal, orgs_by_id, species_by_id)
+
+        self.assertIsNotNone(pet)
+        assert pet is not None
+        self.assertIn("He’s diabetic", pet.description)
+        self.assertIn("Whether it’s zooming", pet.description)
+        self.assertIn("He’ll let you know", pet.description)
+        self.assertIn("you’re showering", pet.description)
+        self.assertIn("1:00PM – 6:00PM", pet.description)
+        self.assertNotIn("â\x80\x99", pet.description)
+        self.assertNotIn("â\x80\x93", pet.description)
+        self.assertIn(
+            "Repaired mojibake in RescueGroups description for animal 22658169",
+            "\n".join(captured_logs.output),
+        )
+        self.assertEqual(pet.pet_id, "22658169")
+        self.assertEqual(pet.name, "DENNIS")
+        self.assertEqual(pet.species, "cat")
+        self.assertEqual(pet.breed, "Domestic Short Hair (medium coat)")
+        self.assertEqual(pet.location, "Boston, MA")
+
+        poster = PosterMastodon.__new__(PosterMastodon)
+        post = poster.format_post(pet)
+        self.assertIn("He’s diabetic", post.text)
+        self.assertIn("Whether it’s zooming", post.text)
+        self.assertIn("1:00PM – 6:00PM", post.text)
+        self.assertNotIn("â\x80\x99", post.text)
+        self.assertNotIn("â\x80\x93", post.text)
+
+        session = MagicMock()
+
+        def fake_status_post(text, **kwargs):
+            call_number = session.status_post.call_count
+            return {
+                "id": f"status-{call_number}",
+                "url": f"https://mastodon.example/@test/status-{call_number}",
+            }
+
+        session.status_post.side_effect = fake_status_post
+        poster._session = session
+        poster._is_available = True
+        poster._auth_error = None
+        poster._upload_media = MagicMock(return_value="media-1")
+
+        result = poster.publish(post)
+
+        self.assertTrue(result.success)
+        self.assertEqual(result.post_id, "status-1")
+        poster._upload_media.assert_called_once_with(session, post)
+        self.assertGreaterEqual(session.status_post.call_count, 1)
+
+        mastodon_payloads = [
+            call.args[0] for call in session.status_post.call_args_list
+        ]
+        all_text_sent_to_mastodon = "\n".join(mastodon_payloads)
+        self.assertIn("’", all_text_sent_to_mastodon)
+        self.assertIn("–", all_text_sent_to_mastodon)
+        self.assertNotIn("â\x80\x99", all_text_sent_to_mastodon)
+        self.assertNotIn("â\x80\x93", all_text_sent_to_mastodon)
+        self.assertNotIn("\x80", all_text_sent_to_mastodon)
+        self.assertNotIn("\x99", all_text_sent_to_mastodon)
+        self.assertNotIn("\x93", all_text_sent_to_mastodon)
+
+        root_call = session.status_post.call_args_list[0]
+        self.assertEqual(root_call.kwargs["media_ids"], ["media-1"])
+        for reply_call in session.status_post.call_args_list[1:]:
+            self.assertEqual(reply_call.kwargs["in_reply_to_id"], "status-1")
 
 
 class DescriptionPreservationTests(unittest.TestCase):
