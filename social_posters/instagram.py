@@ -21,6 +21,10 @@ class PosterInstagram(SocialPoster):
     def platform_name(self) -> str:
         return "Instagram"
 
+    @property
+    def _authorization_headers(self) -> dict[str, str]:
+        return {"Authorization": f"Bearer {self.access_token}"}
+
     def authenticate(self) -> bool:
         if not self._is_available:
             print("Instagram: credentials not set (INSTAGRAM_BUSINESS_ACCOUNT_ID or INSTAGRAM_PAGE_ACCESS_TOKEN missing)")
@@ -28,7 +32,8 @@ class PosterInstagram(SocialPoster):
         try:
             response = requests.get(
                 f"{GRAPH_API_BASE}/{self.account_id}",
-                params={"fields": "id,username", "access_token": self.access_token},
+                params={"fields": "id,username"},
+                headers=self._authorization_headers,
                 timeout=10,
             )
             response.raise_for_status()
@@ -84,10 +89,10 @@ class PosterInstagram(SocialPoster):
         caption = self._format_caption(post)
         response = requests.post(
             f"{GRAPH_API_BASE}/{self.account_id}/media",
+            headers=self._authorization_headers,
             data={
                 "image_url": post.image_url,
                 "caption": caption,
-                "access_token": self.access_token,
             },
             timeout=30,
         )
@@ -98,9 +103,9 @@ class PosterInstagram(SocialPoster):
     def _publish_media(self, container_id: str) -> str:
         response = requests.post(
             f"{GRAPH_API_BASE}/{self.account_id}/media_publish",
+            headers=self._authorization_headers,
             data={
                 "creation_id": container_id,
-                "access_token": self.access_token,
             },
             timeout=30,
         )
