@@ -265,7 +265,8 @@ class SourceRescueGroups(PetSource):
             location = self._repair_mojibake(
                 f"{org_attrs.get('city')}, {org_attrs.get('state')}",
                 "location",
-                animal_id,
+                org_id or "unknown",
+                "organization",
             )
 
 
@@ -290,7 +291,13 @@ class SourceRescueGroups(PetSource):
     def _is_placeholder_name(self, name: str) -> bool:
         return name.lower() in PLACEHOLDER_NAMES
 
-    def _repair_mojibake(self, text: str, field: str, animal_id: str) -> str:
+    def _repair_mojibake(
+        self,
+        text: str,
+        field: str,
+        entity_id: str,
+        entity_type: str = "animal",
+    ) -> str:
         """Repair text that was mojibaked before RescueGroups serialized it.
 
         The HTTP response itself is already valid UTF-8 — the corruption
@@ -304,9 +311,10 @@ class SourceRescueGroups(PetSource):
         repaired = fix_encoding(text)
         if repaired != text:
             logger.info(
-                "Repaired mojibake in RescueGroups %s for animal %s",
+                "Repaired mojibake in RescueGroups %s for %s %s",
                 field,
-                animal_id,
+                entity_type,
+                entity_id,
             )
         return repaired
 

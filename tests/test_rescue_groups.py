@@ -250,7 +250,10 @@ class DescriptionMojibakeRepairTests(unittest.TestCase):
 
         self.assertEqual(pet.description, "Adoption hours: 1:00PM – 6:00PM")
         self.assertEqual(len(captured.records), 1)
-        self.assertEqual(captured.records[0].args, ("description", "12345"))
+        self.assertEqual(
+            captured.records[0].args,
+            ("description", "animal", "12345"),
+        )
 
 
 class DescriptionPreservationTests(unittest.TestCase):
@@ -381,8 +384,11 @@ class PetFieldMojibakeRepairTests(unittest.TestCase):
         self.assertEqual(
             sorted(record.args for record in captured.records),
             sorted(
-                (field, "12345")
-                for field in ("name", "breed", "description", "location")
+                [
+                    (field, "animal", "12345")
+                    for field in ("name", "breed", "description")
+                ]
+                + [("location", "organization", "org1")]
             ),
         )
 
