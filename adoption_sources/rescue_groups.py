@@ -318,8 +318,10 @@ class SourceRescueGroups(PetSource):
             "Doli ***Home for the Holidays 1/2 price!" -> "Doli"
             "Kathy" -> "Kathy"
         """
-        # Repair before splitting: ftfy reads the whole string to decide, so a
-        # mojibaked promotional suffix is extra evidence for fixing the name.
+        # Repair before splitting. ftfy weighs the whole string when a sequence
+        # is ambiguous (``Ã…`` is both mojibaked ``Å`` and plausible real text),
+        # so discarding the promotional suffix first can lose the only evidence
+        # that tips an accented name toward being repaired.
         name = self._repair_mojibake(name, "name", animal_id)
 
         # Remove common promotional suffixes
