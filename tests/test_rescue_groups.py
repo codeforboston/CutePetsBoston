@@ -253,8 +253,37 @@ class DescriptionMojibakeRepairTests(unittest.TestCase):
         self.assertEqual(len(captured.records), 1)
         self.assertEqual(
             captured.records[0].args,
-            ("description", "animal", "12345"),
+            (
+                "description",
+                "animal",
+                "12345",
+                "encode(latin-1) -> decode(utf-8)",
+            ),
         )
+
+    def test_logs_every_step_in_a_multi_step_repair_plan(self):
+        description = "voilÃ le travail"
+
+        with self.assertLogs(
+            "adoption_sources.rescue_groups", level="INFO"
+        ) as captured:
+            repaired = self.source._clean_description(
+                description, animal_id="multi-step"
+            )
+
+        self.assertEqual(repaired, "voilà le travail")
+        self.assertEqual(
+            captured.records[0].args,
+            (
+                "description",
+                "animal",
+                "multi-step",
+                "encode(latin-1) -> transcode(restore_byte_a0) -> "
+                "decode(utf-8)",
+            ),
+        )
+        self.assertNotIn(description, captured.records[0].getMessage())
+        self.assertNotIn(repaired, captured.records[0].getMessage())
 
 
 class DennisMojibakeMastodonRegressionTests(unittest.TestCase):
@@ -543,7 +572,7 @@ class PetFieldMojibakeRepairTests(unittest.TestCase):
 
         self._assert_all_fields_repaired(pet)
         self.assertEqual(
-            sorted(record.args for record in captured.records),
+            sorted(record.args[:3] for record in captured.records),
             sorted(
                 [
                     (field, "animal", "12345")
@@ -552,6 +581,8 @@ class PetFieldMojibakeRepairTests(unittest.TestCase):
                 + [("location", "organization", "org1")]
             ),
         )
+        for record in captured.records:
+            self.assertTrue(record.args[3])
 
     def test_leaves_clean_fields_untouched_and_unlogged(self):
         with self.assertNoLogs("adoption_sources.rescue_groups", level="INFO"):

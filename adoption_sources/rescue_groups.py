@@ -13,7 +13,7 @@ from collections.abc import Sequence
 from typing import Iterator
 
 import requests
-from ftfy import fix_encoding
+from ftfy import fix_encoding_and_explain
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
@@ -308,13 +308,19 @@ class SourceRescueGroups(PetSource):
         if not text:
             return text
 
-        repaired = fix_encoding(text)
+        result = fix_encoding_and_explain(text)
+        repaired = result.text
         if repaired != text:
+            repair_plan = " -> ".join(
+                f"{step.action}({step.parameter})"
+                for step in result.explanation or ()
+            )
             logger.info(
-                "Repaired mojibake in RescueGroups %s for %s %s",
+                "Repaired mojibake in RescueGroups %s for %s %s: ftfy_plan=%s",
                 field,
                 entity_type,
                 entity_id,
+                repair_plan or "unspecified",
             )
         return repaired
 
