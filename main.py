@@ -40,8 +40,8 @@ logger = logging.getLogger(__name__)
 def main():
     logger.info("Log started")
     parser = argparse.ArgumentParser()
-    parser.add_argument("--debugsources", action="store_true")
-    parser.add_argument("--debugposters", action="store_true")
+    parser.add_argument("--debugsources", action="store_true") # this defaults to False
+    parser.add_argument("--debugposters", action="store_true") # this defaults to False
 
     args = parser.parse_args()
 

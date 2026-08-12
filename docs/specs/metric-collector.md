@@ -2,7 +2,9 @@
 
 ## Summary
 
-Add an `AbstractMetricCollector` parallel to the existing `SocialPoster` ABC, with concrete implementations for Bluesky, Mastodon, and Instagram. Each run, after publishing, re-poll engagement counts (likes, reposts, comments) for posts up to 14 days old and append snapshots to the existing `database.json` artifact. `database.json` grows a new top-level `posts[]` table (one row per published post, joined to `posted_pets[]` by `pet_id`) with metric snapshots nested inside each post as a time-series list. No new persistence layer — same artifact, same workflow.
+Add a `MetricCollector` parallel to the existing `SocialPoster` ABC, with concrete implementations for Bluesky, Mastodon, and Instagram. Each run, after publishing, re-poll normalized engagement counts (`likes`, `reposts`, `comments`) for posts up to 14 days old and append snapshots to the existing `database.json` artifact. `database.json` grows a new top-level `posts[]` table (one row per published post, joined to `posted_pets[]` by `pet_id`) with metric snapshots nested inside each post as a time-series list. No new persistence layer — same artifact, same workflow.
+
+The collector abstraction uses one stable vocabulary across platforms: native likes/favourites map to `likes`, native reposts/reblogs map to `reposts`, and native replies/comments map to `comments`. A separate `shares` field is not persisted; unavailable metrics are stored as `null`.
 
 ## Problem Statement
 
@@ -10,10 +12,10 @@ We post pets to three platforms but capture zero feedback on how those posts per
 
 ## Goals
 
-- Persist per-platform engagement (likes, reposts/shares, comments) for every post we publish.
+- Persist per-platform engagement (`likes`, `reposts`, `comments`) for every post we publish. A separate `shares` field is intentionally out of scope.
 - Snapshot metrics on a recurring schedule (each scheduled run) so we have a time series, not just latest counts.
 - Reuse the existing `database.json` artifact and GH Actions upload/download pattern — no new storage.
-- Mirror the existing `SocialPoster` abstraction so adding a new platform is symmetric: one poster + one collector.
+- Mirror the existing `SocialPoster` platform layout so adding a new platform is symmetric: one poster + one collector. Collectors share the platform naming and package pattern, but only expose the metric-fetching lifecycle they need.
 
 ## Non-Goals
 
@@ -108,10 +110,10 @@ Both prunes run on every `record_publish_results` write. The collector never pru
 ```python
 @dataclass
 class PostMetrics:
-    collected_at: str            # ISO8601 UTC
-    likes: int | None = None
-    reposts: int | None = None   # "reposts" on Bluesky, "reblogs" on Mastodon, "shares" doesn't apply on Insta -> None
-    comments: int | None = None  # "replies" on Bluesky/Mastodon, "comments" on Insta
+    collected_at: str            # ISO8601 UTC, assigned by orchestration
+    likes: int | None = None     # likes/favourites
+    reposts: int | None = None   # reposts/reblogs; None when unavailable
+    comments: int | None = None  # replies/comments
 
 
 class MetricCollector(ABC):
@@ -132,7 +134,8 @@ class MetricCollector(ABC):
 Notes:
 
 - `platform_name` must match the corresponding poster's `platform_name` exactly — that's the join key in `database.json`.
-- `post_url` is optional in the signature but required for Bluesky (it needs the `at://` URI). Mastodon and Insta can ignore it.
+- `post_id` is the platform identifier returned by the poster. `post_url` is an optional API lookup locator; it is required by the Bluesky collector because the public thread endpoint needs the `at://` URI, while Mastodon and Instagram use `post_id`.
+- The orchestration layer owns the persisted `collected_at` timestamp so snapshots from one run share a consistent UTC collection time.
 - Returning `None` (not raising) is the contract — a flaky network shouldn't crash a whole run.
 
 #### Concrete collectors
@@ -143,7 +146,7 @@ One file each under `metric_collectors/`, matching the `social_posters/` layout:
 |---|---|---|---|
 | `metric_collectors/bluesky.py` | `CollectorBluesky` | `GET /xrpc/app.bsky.feed.getPostThread?uri={post_url}` (public, no auth) | `thread.post.{likeCount, repostCount, replyCount}` |
 | `metric_collectors/mastodon.py` | `CollectorMastodon` | `mastodon.status(id)` via the `Mastodon` SDK | `status.{favourites_count, reblogs_count, replies_count}` |
-| `metric_collectors/instagram.py` | `CollectorInstagram` | `GET {GRAPH_API_BASE}/{media-id}?fields=like_count,comments_count&access_token=...` | `like_count`, `comments_count`. `reposts` → `None` (no native repost concept) |
+| `metric_collectors/instagram.py` | `CollectorInstagram` | `GET {GRAPH_API_BASE}/{media-id}?fields=like_count,comments_count&access_token=...` | `like_count`, `comments_count`. `reposts` → `None` (unavailable from this endpoint) |
 
 Each collector:
 
@@ -265,7 +268,8 @@ Manual / workflow verification:
 - Run `dev.yml` twice and inspect successive `database.json` artifacts for a growing `metrics` list.
 - Eyeball one post's metric history vs the same post in the platform UI to spot-check accuracy.
 
-## Open Questions
+## Resolved Decisions
 
-- **`reposts` for Instagram**: stored as `None` (no native concept). Confirm we want `None` rather than `0` — `None` correctly signals "not applicable" vs `0` which means "zero reposts". Going with `None`.
-- **Dev workflow collector behavior**: should `create_collectors(debug=True)` return `[]` or a logging-only stub? Defaulting to `[]` for now; revisit if we want orchestration exercised in dev.
+- **Metric vocabulary**: persist `likes`, `reposts`, and `comments`. Do not add a separate `shares` field. Platform-native likes/favourites, reposts/reblogs, and replies/comments are normalized into those fields.
+- **Unavailable metrics**: persist `null`, not `0`. `null` distinguishes “not exposed by this platform” from a real zero count. Instagram therefore stores `reposts: null`.
+- **Dev workflow collector behavior**: `create_collectors(debug=True)` returns `[]`; debug runs exercise posting without making live metric API calls.
