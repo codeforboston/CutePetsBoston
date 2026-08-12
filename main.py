@@ -94,34 +94,40 @@ def run(sources, posters, collectors=None, database_path="database.json"):
     logger.info("Fetched %d records", len(pets))
     pet = pick_pet(pets, database_path=database_path)
     results = []
-    publish_results = []
 
     if not pet:
         logger.error("No pets available to post.")
     else:
         logger.info("Picked pet %s", pprint.pformat(pet))
-
-        if not posters:
-            logger.error("No social media credentials set; skipping post.")
-        else:
-            for poster in posters:
-                post = poster.format_post(pet)
-                result = poster.publish(post)
-                results.append(result)
-                publish_results.append((poster, result))
-                if not result.success:
-                    logger.error(
-                        "%s post failed: %s",
-                        poster.platform_name,
-                        result.error_message,
-                    )
-                else:
-                    logger.info("%s post published.", poster.platform_name)
-
-        record_publish_results(pet, publish_results, database_path=database_path)
+        results, published_results = publish_posts(pet, posters)
+        record_publish_results(pet, published_results, database_path=database_path)
 
     collect_metrics(collectors or [], database_path=database_path)
     return results
+
+
+def publish_posts(pet, posters):
+    results = []
+    published_results = []
+
+    if not posters:
+        logger.error("No social media credentials set; skipping post.")
+    else:
+        for poster in posters:
+            post = poster.format_post(pet)
+            result = poster.publish(post)
+            results.append(result)
+            published_results.append((poster, result))
+            if not result.success:
+                logger.error(
+                    "%s post failed: %s",
+                    poster.platform_name,
+                    result.error_message,
+                )
+            else:
+                logger.info("%s post published.", poster.platform_name)
+
+    return results, published_results
 
 
 def pick_pet(pets, database_path="database.json"):
