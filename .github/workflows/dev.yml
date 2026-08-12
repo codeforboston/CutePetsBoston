@@ -77,8 +77,8 @@ jobs:
           MASTODON_TOKEN: ${{ secrets.MASTODON_TEST_TOKEN }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           APP_ENV: dev
-          DEBUG_SOURCES: ${{ inputs.debugsources != false }}
-          DEBUG_POSTERS: ${{ inputs.debugposters != false }}
+          DEBUG_SOURCES: ${{ github.event_name != 'workflow_dispatch' || inputs.debugsources }}
+          DEBUG_POSTERS: ${{ github.event_name != 'workflow_dispatch' || inputs.debugposters }}
         run: |
           #In order to create posts on the test accounts remove the --debugposters debug flag
           FLAGS=""
