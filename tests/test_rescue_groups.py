@@ -1,6 +1,7 @@
 import json
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from requests import Response
@@ -209,14 +210,14 @@ class DescriptionMojibakeRepairTests(unittest.TestCase):
             EXPECTED_DESCRIPTION,
         )
 
-    def test_repairs_only_the_corrupted_span(self):
-        """Shelters paste one mangled paragraph into otherwise clean text."""
+    def test_repairs_a_corrupted_paragraph_beside_clean_text(self):
+        """Shelters paste a mangled paragraph into otherwise clean text."""
         clean = "Meet Goober! 🐶 His foster José says he’s “the best boy”."
         corrupted = _mojibake(
             "Adoption hours: 1:00PM – 6:00PM. Doña Müller answers. 😊"
         )
 
-        cleaned = self.source._clean_description(f"{clean} {corrupted}")
+        cleaned = self.source._clean_description(f"{clean}\n{corrupted}")
 
         self.assertEqual(
             cleaned,
@@ -261,29 +262,44 @@ class DescriptionMojibakeRepairTests(unittest.TestCase):
             ),
         )
 
-    def test_logs_every_step_in_a_multi_step_repair_plan(self):
+    def test_declines_repair_that_requires_reconstructing_a_missing_byte(self):
         description = "voilÃ le travail"
 
-        with self.assertLogs(
-            "adoption_sources.rescue_groups", level="INFO"
-        ) as captured:
+        with self.assertNoLogs("adoption_sources.rescue_groups", level="INFO"):
             repaired = self.source._clean_description(
                 description, animal_id="multi-step"
             )
 
-        self.assertEqual(repaired, "voilà le travail")
-        self.assertEqual(
-            captured.records[0].args,
-            (
-                "description",
-                "animal",
-                "multi-step",
-                "encode(latin-1) -> transcode(restore_byte_a0) -> "
-                "decode(utf-8)",
-            ),
+        self.assertEqual(repaired, description)
+
+    def test_declines_mixed_encoding_within_one_paragraph(self):
+        description = (
+            "Clean José 🐶. "
+            + _mojibake("Adoption hours: 1:00PM – 6:00PM. Doña answers.")
         )
-        self.assertNotIn(description, captured.records[0].getMessage())
-        self.assertNotIn(repaired, captured.records[0].getMessage())
+
+        with self.assertNoLogs("adoption_sources.rescue_groups", level="INFO"):
+            cleaned = self.source._clean_description(description)
+
+        self.assertEqual(cleaned, description)
+
+    @patch("adoption_sources.rescue_groups.fix_encoding_and_explain")
+    def test_rejects_any_repair_plan_with_a_non_round_trip_step(self, mock_fix):
+        original = "ambiguous input"
+        mock_fix.return_value = SimpleNamespace(
+            text="guessed output",
+            explanation=[
+                SimpleNamespace(action="encode", parameter="latin-1"),
+                SimpleNamespace(action="transcode", parameter="restore_byte_a0"),
+                SimpleNamespace(action="decode", parameter="utf-8"),
+            ],
+        )
+
+        repaired = self.source._repair_mojibake(
+            original, "description", "test-animal"
+        )
+
+        self.assertEqual(repaired, original)
 
 
 class DennisMojibakeMastodonRegressionTests(unittest.TestCase):
@@ -480,17 +496,21 @@ class DescriptionPreservationTests(unittest.TestCase):
 
         self.assertEqual(cleaned, EXPECTED_DESCRIPTION)
 
-    def test_known_false_positive_lone_capital_a_tilde(self):
-        """Documented limitation, not desired behavior.
+    def test_leaves_ambiguous_capital_a_tilde_untouched(self):
+        description = "Letters like Ã and Ê are rare."
 
-        An isolated ``Ã`` followed by a space is byte-identical to mojibaked
-        ``à``, so ftfy repairs it. Nothing in a real pet description has hit
-        this; the test exists so we notice if ftfy's heuristics shift.
-        """
-        self.assertEqual(
-            self.source._clean_description("Letters like Ã and Ê are rare."),
-            "Letters like à and Ê are rare.",
-        )
+        with self.assertNoLogs("adoption_sources.rescue_groups", level="INFO"):
+            cleaned = self.source._clean_description(description)
+
+        self.assertEqual(cleaned, description)
+
+    def test_leaves_ambiguous_capital_a_circumflex_and_space_untouched(self):
+        description = "Â is a letter in Romanian and Vietnamese."
+
+        with self.assertNoLogs("adoption_sources.rescue_groups", level="INFO"):
+            cleaned = self.source._clean_description(description)
+
+        self.assertEqual(cleaned, description)
 
 
 class PetFieldMojibakeRepairTests(unittest.TestCase):
