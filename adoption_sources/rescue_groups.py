@@ -13,7 +13,7 @@ from collections.abc import Sequence
 from typing import Iterator
 
 import requests
-from ftfy import TextFixerConfig, fix_encoding_and_explain
+from ftfy import fix_and_explain
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
@@ -22,19 +22,6 @@ from adoption_sources.pet_links import reconstruct_adoption_url
 from config import CITY_NAME, CITY_STATE, PET_SPECIES, POSTAL_CODE, RESCUEGROUPS_LIMIT
 
 logger = logging.getLogger(__name__)
-
-# Only accept repairs that can be explained as a complete, consistent
-# encode/decode round trip. The disabled subordinate fixers reconstruct missing
-# bytes or repair isolated spans heuristically, which is useful for recovery but
-# can alter legitimate text such as "Ã" or "Â ". For pet data, preserving valid
-# text takes precedence over repairing every damaged string.
-MOJIBAKE_CONFIG = TextFixerConfig(
-    decode_inconsistent_utf8=False,
-    restore_byte_a0=False,
-    replace_lossy_sequences=False,
-    fix_c1_controls=False,
-)
-SAFE_MOJIBAKE_ACTIONS = frozenset({"encode", "decode"})
 
 # Some rescues publish entries like "More Dogs Soon!" to point users at their
 # website; those should never be posted. Add new names here as we encounter them.
@@ -311,34 +298,24 @@ class SourceRescueGroups(PetSource):
         entity_id: str,
         entity_type: str = "animal",
     ) -> str:
-        """Repair text that was mojibaked before RescueGroups serialized it.
+        """Apply ftfy's complete set of repairs to RescueGroups display text.
 
-        The HTTP response itself is already valid UTF-8 — the corruption
-        happens upstream of the API, so repairing on our side is the only fix
-        available to us. Repairs are accepted only when ``ftfy`` can explain
-        them as a complete encode/decode round trip. More speculative repairs
-        are left untouched.
+        This deliberately uses ftfy's default configuration, including its
+        mixed/lossy encoding recovery and general Unicode cleanup. The complete
+        ``ExplainedText`` result is logged whenever ftfy changes a value.
         """
         if not text:
             return text
 
-        result = fix_encoding_and_explain(text, config=MOJIBAKE_CONFIG)
+        result = fix_and_explain(text)
         repaired = result.text
-        explanation = result.explanation or ()
-        safe_plan = bool(explanation) and all(
-            step.action in SAFE_MOJIBAKE_ACTIONS for step in explanation
-        )
-        if repaired != text and safe_plan:
-            repair_plan = " -> ".join(
-                f"{step.action}({step.parameter})"
-                for step in explanation
-            )
+        if repaired != text:
             logger.info(
-                "Repaired mojibake in RescueGroups %s for %s %s: ftfy_plan=%s",
+                "Fixed RescueGroups %s for %s %s: ftfy_result=%r",
                 field,
                 entity_type,
                 entity_id,
-                repair_plan or "unspecified",
+                result,
             )
             return repaired
         return text
@@ -351,7 +328,7 @@ class SourceRescueGroups(PetSource):
             "Doli ***Home for the Holidays 1/2 price!" -> "Doli"
             "Kathy" -> "Kathy"
         """
-        # Repair before splitting. ftfy weighs the whole string when a sequence
+        # Fix before splitting. ftfy weighs the whole string when a sequence
         # is ambiguous (``Ã…`` is both mojibaked ``Å`` and plausible real text),
         # so discarding the promotional suffix first can lose the only evidence
         # that tips an accented name toward being repaired.
@@ -374,8 +351,7 @@ class SourceRescueGroups(PetSource):
         text = html.unescape(description)
         # A description may combine paragraphs copied from systems with
         # different encodings. Treat natural line boundaries independently so
-        # one consistently mojibaked paragraph can be repaired without enabling
-        # ftfy's riskier arbitrary-substring repair.
+        # ftfy can assess each paragraph on its own.
         text = "".join(
             self._repair_mojibake(line, "description", animal_id)
             for line in text.splitlines(keepends=True)
