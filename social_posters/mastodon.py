@@ -1,3 +1,16 @@
+"""Mastodon posting has two quirks worth keeping in mind.
+
+Mastodon treats every reply in a caption thread as an individual status, so
+the root post and each "comment" have distinct IDs and pages. Fetching a whole
+pet post therefore requires associating the separate reply statuses with their
+root, but their different IDs make that relationship possible to reconstruct.
+
+Text also gets one final, non-blocking mojibake sanity check immediately before
+each status is published. All repairs should already have happened upstream;
+if suspicious encoding remains, we log it for investigation and still post the
+status.
+"""
+
 from __future__ import annotations
 
 import logging
@@ -8,6 +21,7 @@ from collections.abc import Iterator
 from urllib.parse import urlparse
 
 import requests
+from ftfy.badness import is_bad
 from mastodon import Mastodon
 
 from abstractions import AdoptablePet, Post, PostResult, SocialPoster
@@ -193,6 +207,7 @@ class PosterMastodon(SocialPoster):
         replies: list[str],
         media_id: str,
     ) -> Iterator[tuple[str, int | None, dict]]:
+        self._log_suspicious_text(main_caption, "root", None)
         status = session.status_post(
             main_caption,
             media_ids=[media_id],
@@ -202,11 +217,28 @@ class PosterMastodon(SocialPoster):
         root_status_id = status["id"]
 
         for reply_number, reply_text in enumerate(replies, start=1):
+            self._log_suspicious_text(reply_text, "reply", reply_number)
             reply_status = session.status_post(
                 reply_text,
                 in_reply_to_id=root_status_id,
             )
             yield "reply", reply_number, reply_status
+
+    @staticmethod
+    def _log_suspicious_text(
+        text: str,
+        post_kind: str,
+        reply_number: int | None,
+    ) -> None:
+        """Warn about likely encoding damage without preventing publication."""
+        if is_bad(text):
+            logger.warning(
+                "Suspicious text at Mastodon status_post boundary: "
+                "kind=%s reply_number=%s text=%s",
+                post_kind,
+                reply_number,
+                pprint.pformat(text),
+            )
 
     def _format_caption_thread(self, post: Post) -> tuple[str, list[str]]:
         caption_text = post.text.strip()
