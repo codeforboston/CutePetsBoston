@@ -2,10 +2,12 @@ import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
+from unittest import mock
 
 from abstractions import AdoptablePet, Post, PostMetrics, PostResult
 from adoption_sources import SourceManual
 from adoption_sources.rescue_groups import SourceRescueGroups
+from config import SITE_URL
 from main import create_collectors, create_posters, create_sources, run
 
 
@@ -131,6 +133,112 @@ class RunFlowTests(unittest.TestCase):
         self.assertEqual(len(results), 1)
         self.assertEqual(len(data["posted_pets"]), 1)
         self.assertIn(data["posted_pets"][0]["pet_id"], {"test-dog", "test-cat"})
+
+
+class RedirectRunTests(unittest.TestCase):
+    """The main.py seam that swaps the adoption URL for our redirect (RFC 0001)."""
+
+    class CapturingPoster(FakePoster):
+        def format_post(self, pet):
+            self.format_called = True
+            self.last_adoption_url = pet.adoption_url
+            return Post(text=f"Meet {pet.name}", image_url=pet.image_url)
+
+    def _pet(self, pet_id="pet-redirect"):
+        return AdoptablePet(
+            name="Poppy",
+            species="dog",
+            breed="mutt",
+            location="Boston, MA",
+            image_url="https://example.com/poppy.jpg",
+            adoption_url="https://example.com/adopt/poppy",
+            pet_id=pet_id,
+        )
+
+    def test_run_swaps_adoption_url_for_redirect_when_enabled(self):
+        pet = self._pet()
+        poster = self.CapturingPoster()
+
+        with TemporaryDirectory() as temporary_directory:
+            database_path = Path(temporary_directory) / "database.json"
+            redirects_path = Path(temporary_directory) / "redirects.json"
+            with mock.patch.dict("os.environ", {"REDIRECTS_ENABLED": "true"}):
+                run(
+                    [FakeSource([pet])],
+                    [poster],
+                    collectors=[],
+                    database_path=database_path,
+                    redirects_path=redirects_path,
+                )
+            mapping = json.loads(redirects_path.read_text())
+            recorded_pet_id = json.loads(database_path.read_text())["posted_pets"][0]["pet_id"]
+
+        self.assertEqual(poster.last_adoption_url, f"{SITE_URL}/r/?id=pet-redirect")
+        self.assertEqual(mapping, {"pet-redirect": "https://example.com/adopt/poppy"})
+        # The post record still tracks the real pet id, not the slug plumbing.
+        self.assertEqual(recorded_pet_id, "pet-redirect")
+
+    def test_run_keeps_raw_adoption_url_when_redirects_disabled(self):
+        pet = self._pet()
+        poster = self.CapturingPoster()
+
+        with TemporaryDirectory() as temporary_directory:
+            database_path = Path(temporary_directory) / "database.json"
+            redirects_path = Path(temporary_directory) / "redirects.json"
+            with mock.patch.dict("os.environ", {}, clear=True):
+                run(
+                    [FakeSource([pet])],
+                    [poster],
+                    collectors=[],
+                    database_path=database_path,
+                    redirects_path=redirects_path,
+                )
+            # If the enabled() guard ever regresses this must fail loudly here,
+            # not quietly mint into the repo's working directory.
+            self.assertFalse(redirects_path.exists())
+
+        self.assertEqual(poster.last_adoption_url, "https://example.com/adopt/poppy")
+
+    def test_run_defaults_to_redirects_json_in_working_directory(self):
+        pet = self._pet()
+        poster = self.CapturingPoster()
+
+        with TemporaryDirectory() as temporary_directory:
+            default_path = Path(temporary_directory) / "redirects.json"
+            database_path = Path(temporary_directory) / "database.json"
+            with mock.patch.dict("os.environ", {"REDIRECTS_ENABLED": "true"}), \
+                 mock.patch("redirects.DEFAULT_REDIRECTS_PATH", str(default_path)):
+                run(
+                    [FakeSource([pet])],
+                    [poster],
+                    collectors=[],
+                    database_path=database_path,
+                    redirects_path=None,
+                )
+            mapping = json.loads(default_path.read_text())
+
+        self.assertEqual(poster.last_adoption_url, f"{SITE_URL}/r/?id=pet-redirect")
+        self.assertEqual(mapping, {"pet-redirect": "https://example.com/adopt/poppy"})
+
+    def test_run_still_posts_when_pet_has_no_pet_id(self):
+        pet = self._pet(pet_id=None)
+        poster = self.CapturingPoster()
+
+        with TemporaryDirectory() as temporary_directory:
+            database_path = Path(temporary_directory) / "database.json"
+            redirects_path = Path(temporary_directory) / "redirects.json"
+            with mock.patch.dict("os.environ", {"REDIRECTS_ENABLED": "true"}):
+                results = run(
+                    [FakeSource([pet])],
+                    [poster],
+                    collectors=[],
+                    database_path=database_path,
+                    redirects_path=redirects_path,
+                )
+
+        self.assertEqual(poster.last_adoption_url, "https://example.com/adopt/poppy")
+        self.assertEqual(len(results), 1)
+        self.assertFalse(redirects_path.exists())
 
 
 class CreateSourcesTests(unittest.TestCase):
