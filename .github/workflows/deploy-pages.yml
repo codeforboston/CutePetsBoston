@@ -1,0 +1,22 @@
+name: Deploy Pages
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'docs/**'
+      - '.github/workflows/deploy-pages.yml'
+      - '.github/workflows/publish-pages.yml'
+  workflow_dispatch:
+
+jobs:
+  # Redeploys the site with whatever mapping gh-pages already holds. No
+  # mapping_artifact, so publish-pages skips its gh-pages commit entirely --
+  # which is why this needs only contents: read.
+  publish:
+    permissions:
+      contents: read
+      pages: write # deploy Pages
+      id-token: write # OIDC for actions/deploy-pages
+    uses: ./.github/workflows/publish-pages.yml

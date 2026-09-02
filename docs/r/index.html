@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>Redirecting&hellip; | CutePetsBoston</title>
+  <link rel="icon" href="../favicon.ico" sizes="any" />
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+  <link rel="stylesheet" href="../styles.css" />
+  <noscript>
+    <!-- Without JS we cannot look up the slug, so fall back to the homepage. -->
+    <meta http-equiv="refresh" content="0;url=https://www.cutepetsboston.com/" />
+  </noscript>
+</head>
+<body>
+  <main class="container" style="padding-top: 3.5rem; text-align: center;">
+    <p class="dashboard-note" id="message">Taking you to the listing&hellip;</p>
+    <p><a class="btn btn-primary" href="https://www.cutepetsboston.com/">Go to CutePetsBoston</a></p>
+    <noscript>
+      <p>JavaScript is required to follow this link. <a href="https://www.cutepetsboston.com/">Click here to continue.</a></p>
+    </noscript>
+  </main>
+
+  <script>
+    const HOME_URL = "https://www.cutepetsboston.com/";
+    const REDIRECTS_URL = "/redirects.json";
+    const messageEl = document.getElementById("message");
+
+    const goHome = (reason) => {
+      messageEl.textContent = reason;
+      location.replace(HOME_URL);
+    };
+
+    // location.replace() would execute a "javascript:" target in our own origin,
+    // and adoption URLs come from the RescueGroups API verbatim, so only ever
+    // navigate to plain http(s). The protocol check is the guard, not the parse:
+    // new URL("javascript:alert(1)") parses fine and yields protocol
+    // "javascript:". Passing no base also rejects relative values.
+    const isSafeUrl = (value) => {
+      try {
+        const parsed = new URL(value);
+        return parsed.protocol === "https:" || parsed.protocol === "http:";
+      } catch (e) {
+        return false;
+      }
+    };
+
+    const params = new URLSearchParams(location.search);
+    const id = params.get("id");
+
+    if (!id || !/^[A-Za-z0-9_-]+$/.test(id)) {
+      goHome("This link is no longer valid — taking you home…");
+    } else {
+      fetch(REDIRECTS_URL)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`redirects.json returned ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((redirects) => {
+          const url = redirects[id];
+          if (url && isSafeUrl(url)) {
+            location.replace(url);
+          } else if (url) {
+            console.warn("Refusing to follow an unsafe redirect target for id:", id);
+            goHome("This link is no longer valid — taking you home…");
+          } else {
+            goHome("This pet's listing is no longer available — taking you home…");
+          }
+        })
+        .catch(() => {
+          goHome("Couldn't load the listing right now — taking you home…");
+        });
+    }
+  </script>
+</body>
+</html>
