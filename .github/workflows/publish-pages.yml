@@ -1,0 +1,134 @@
+name: Publish Pages
+
+# Reusable workflow (RFC 0001). Assembles docs/ plus the redirect mapping and
+# deploys GitHub Pages; when handed a mapping artifact it also records the newly
+# minted redirects on the gh-pages branch.
+#
+# Lives in its own workflow rather than a composite action for two reasons:
+#   * a composite action runs inside the CALLING job and inherits its token, so
+#     it could not hold narrower permissions than the job that posts pets;
+#   * both callers share this workflow's concurrency group, which is what stops
+#     two Pages deployments from overlapping.
+#
+# The CALLING job must grant:
+#   contents: write  -- only when passing mapping_artifact (push to gh-pages)
+#   pages: write     -- deploy Pages
+#   id-token: write  -- OIDC for actions/deploy-pages
+
+on:
+  workflow_call:
+    inputs:
+      mapping_artifact:
+        description: 'Artifact holding a newly minted redirects.json. Empty = redeploy only.'
+        type: string
+        required: false
+        default: ''
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    # Repo-scoped group shared by every caller, so the scheduled posting run and
+    # a docs push can never deploy Pages at the same time.
+    concurrency:
+      group: pages-publish
+      cancel-in-progress: false
+
+    # actions/deploy-pages requires the job to declare this environment.
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Download newly minted redirects
+        if: ${{ inputs.mapping_artifact != '' }}
+        continue-on-error: true # no artifact (nothing minted, or the run failed early) is fine
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ inputs.mapping_artifact }}
+          path: minted
+
+      - name: Checkout gh-pages (redirect mapping)
+        continue-on-error: true # the branch does not exist on the very first run
+        uses: actions/checkout@v6
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Merge redirect mapping
+        run: |
+          # RFC 0001 constraint 4: the mapping is append-only and permanent --
+          # losing an entry breaks a link already posted to social media.
+          mkdir -p minted gh-pages
+          [ -f minted/redirects.json ] || echo '{}' > minted/redirects.json
+          [ -f gh-pages/redirects.json ] || echo '{}' > gh-pages/redirects.json
+          cp gh-pages/redirects.json previous.json
+
+          # Argument order is load-bearing: the second operand wins every key
+          # collision, so gh-pages (the authoritative copy) always beats the
+          # freshly minted file. A missing or empty minted file is therefore a
+          # no-op and can never delete an existing redirect. Do NOT swap these.
+          # jq failing here (a corrupt authoritative mapping) fails the step by
+          # design -- pushing a merge derived from an unreadable file is exactly
+          # the data loss this ordering exists to prevent.
+          jq -s '.[0] * .[1]' minted/redirects.json previous.json > merged.json
+
+          # Reporting only -- never let a logging quirk fail the publish.
+          jq -r -n --slurpfile new merged.json --slurpfile old previous.json \
+            '(($new[0] | keys) - ($old[0] | keys)) as $added
+             | if ($added | length) == 0 then "No new redirects."
+               else "New redirects: " + ($added | join(", ")) end' || true
+          echo "Mapping now holds $(jq 'length' merged.json || echo '?') redirect(s)."
+
+      - name: Record mapping on gh-pages
+        if: ${{ inputs.mapping_artifact != '' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ ! -d gh-pages/.git ]; then
+            echo "gh-pages branch does not exist yet; initializing it."
+            git -C gh-pages init -q -b gh-pages
+            git -C gh-pages remote add origin \
+              "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          fi
+          cp merged.json gh-pages/redirects.json
+          cd gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # -f: master's .gitignore ignores the generated redirects.json, and
+          # gh-pages may carry a copy of that file. Without -f, git add exits 1
+          # and stages nothing, silently ending the redirect system.
+          git add -f redirects.json
+          if git diff --cached --quiet; then
+            echo "No new redirects to record."
+            exit 0
+          fi
+
+          # Commit BEFORE any pull. "git pull --rebase" refuses to run with a
+          # dirty index (exit 128) even when the remote has not moved, so
+          # pulling first would fail on every run that mints a redirect.
+          git commit -q -m "Record redirect mapping (automated)"
+          git push -q origin HEAD:gh-pages || {
+            git pull --rebase -q origin gh-pages
+            git push -q origin HEAD:gh-pages
+          }
+          echo "Redirect mapping updated on gh-pages."
+
+      - name: Assemble Pages site
+        run: |
+          mkdir -p _site
+          cp -r docs/. _site/
+          cp merged.json _site/redirects.json
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

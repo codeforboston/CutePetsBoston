@@ -12,6 +12,7 @@ import traceback
 
 import requests
 
+import redirects
 from adoption_sources import SourceManual, SourceRescueGroups
 from metric_collectors.bluesky import CollectorBluesky
 from metric_collectors.instagram import CollectorInstagram
@@ -83,7 +84,13 @@ def create_sources(debug=False):
     return [SourceRescueGroups()]
 
 
-def run(sources, posters, collectors=None, database_path="database.json"):
+def run(
+    sources,
+    posters,
+    collectors=None,
+    database_path="database.json",
+    redirects_path=None,
+):
     pets = []
     for source in sources:
         try:
@@ -99,6 +106,13 @@ def run(sources, posters, collectors=None, database_path="database.json"):
         logger.error("No pets available to post.")
     else:
         logger.info("Picked pet %s", pprint.pformat(pet))
+        # RFC 0001: when redirect minting is enabled (prod only), swap the
+        # adoption URL for our own hop so click data lands in redirects.json.
+        # This swap point is the seam for the future mint/post phase split.
+        if redirects.enabled():
+            redirect_url = redirects.mint_for_pet(pet, redirects_path=redirects_path)
+            if redirect_url:
+                pet.adoption_url = redirect_url
         results, published_results = publish_posts(pet, posters)
         record_publish_results(pet, published_results, database_path=database_path)
 
