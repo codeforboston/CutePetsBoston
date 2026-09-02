@@ -16,15 +16,15 @@ Required:
 - `CUTEPETSBOSTON_RESCUEGROUPS_API_KEY`
 
 Optional for Instagram posting:
-- `INSTAGRAM_HANDLE`
-- `INSTAGRAM_PASSWORD`
+- `INSTAGRAM_BUSINESS_ACCOUNT_ID` (or `INSTAGRAM_TEST_BUSINESS_ACCOUNT_ID`)
+- `INSTAGRAM_PAGE_ACCESS_TOKEN` (or `INSTAGRAM_TEST_PAGE_ACCESS_TOKEN`)
 
 Optional for Bluesky posting:
 - `BLUESKY_HANDLE` (or `BLUESKY_TEST_HANDLE`)
 - `BLUESKY_PASSWORD` (or `BLUESKY_TEST_PASSWORD`)
 
 Optional for Mastodon posting:
-- `MASTODON_TOKEN` or `MASTODON_TEST_TOKEN`
+- `MASTODON_TOKEN` (map this to the appropriate production or test-account secret in the runtime environment)
 - `MASTODON_API_BASE_URL` (defaults to `https://mastodon.social`)
 
 Optional platform selection:

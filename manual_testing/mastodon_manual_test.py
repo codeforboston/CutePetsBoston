@@ -1,9 +1,15 @@
-import sys, os
+import argparse
+import logging
+import os
+import sys
 import time
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from abstractions import AdoptablePet
 from social_posters.mastodon import PosterMastodon
+
+logger = logging.getLogger(__name__)
+
 
 def post_exceed_500_chars_limit_with_adoption_link():
     pet = AdoptablePet("Brian", 
@@ -106,13 +112,22 @@ testing_cases = [
 ]
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Format and split the Mastodon post without authenticating or publishing.",
+    )
+    args = parser.parse_args()
+
     poster = PosterMastodon()
 
-    if not poster.authenticate():
+    if not args.dry_run and not poster.authenticate():
         print("Authentication failed!")
         exit(1)
     
-    print("Authenticated to Mastodon!")
+    if not args.dry_run:
+        print("Authenticated to Mastodon!")
 
     for pet in testing_cases:
         pet_instance = pet()
@@ -121,6 +136,13 @@ def main():
         target_url = pet_instance.adoption_url
         if target_url and (target_url not in post.text):
             print("Adoption link not posted!")
+
+        if args.dry_run:
+            main_caption, replies = poster._format_caption_thread(post)
+            logger.info("Mastodon dry run post text: %s", post.text)
+            logger.info("Mastodon dry run main caption: %s", main_caption)
+            logger.info("Mastodon dry run replies: %s", replies)
+            continue
 
         result = poster.publish(post)
 

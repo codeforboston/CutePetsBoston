@@ -6,8 +6,13 @@ import requests
 from abstractions import Post, PostResult, SocialPoster
 
 
-GRAPH_API_VERSION = "v21.0"
-GRAPH_API_BASE = f"https://graph.facebook.com/{GRAPH_API_VERSION}"
+GRAPH_API_VERSION = "v26.0"
+GRAPH_API_BASE = f"https://graph.instagram.com/{GRAPH_API_VERSION}"
+
+# Images typically finish container processing in seconds; 
+# video would need Meta's suggested ~1-minute cadence
+CONTAINER_POLL_INTERVAL_SECONDS = 5
+CONTAINER_POLL_TIMEOUT_SECONDS = 60
 
 
 class PosterInstagram(SocialPoster):
@@ -16,10 +21,15 @@ class PosterInstagram(SocialPoster):
         self.access_token = os.environ.get("INSTAGRAM_PAGE_ACCESS_TOKEN")
         self._is_available = bool(self.account_id and self.access_token)
         self._authenticated = False
+        self.username = None
 
     @property
     def platform_name(self) -> str:
         return "Instagram"
+
+    @property
+    def _authorization_headers(self) -> dict[str, str]:
+        return {"Authorization": f"Bearer {self.access_token}"}
 
     def authenticate(self) -> bool:
         if not self._is_available:
@@ -28,10 +38,12 @@ class PosterInstagram(SocialPoster):
         try:
             response = requests.get(
                 f"{GRAPH_API_BASE}/{self.account_id}",
-                params={"fields": "id,username", "access_token": self.access_token},
+                params={"fields": "id,username"},
+                headers=self._authorization_headers,
                 timeout=10,
             )
             response.raise_for_status()
+            self.username = response.json().get("username")
             self._authenticated = True
             return True
         except requests.exceptions.HTTPError as exc:
@@ -59,15 +71,16 @@ class PosterInstagram(SocialPoster):
 
         try:
             container_id = self._create_media_container(post)
-            # Instagram needs time to process the uploaded image before publishing.
-            # Publishing immediately returns "Media ID is not available" (error 9007).
-            time.sleep(10)
-    
+            self._wait_for_container_ready(container_id)
+
             media_id = self._publish_media(container_id)
+            post_url = (
+                f"https://www.instagram.com/{self.username}/" if self.username else None
+            )
             return PostResult(
                 success=True,
                 post_id=media_id,
-                post_url="https://www.instagram.com/cute.pets.boston/",
+                post_url=post_url,
             )
         except requests.exceptions.HTTPError as exc:
             body = exc.response.text if exc.response is not None else "no response body"
@@ -84,23 +97,53 @@ class PosterInstagram(SocialPoster):
         caption = self._format_caption(post)
         response = requests.post(
             f"{GRAPH_API_BASE}/{self.account_id}/media",
+            headers=self._authorization_headers,
             data={
                 "image_url": post.image_url,
                 "caption": caption,
-                "access_token": self.access_token,
             },
             timeout=30,
         )
         response.raise_for_status()
         return response.json()["id"]
 
-  
+    def _wait_for_container_ready(self, container_id: str) -> None:
+        """Poll the container until Instagram finishes processing the image.
+
+        Publishing before the container is FINISHED returns "Media ID is not
+        available" (error 9007).
+        """
+        deadline = time.monotonic() + CONTAINER_POLL_TIMEOUT_SECONDS
+        while True:
+            response = requests.get(
+                f"{GRAPH_API_BASE}/{container_id}",
+                params={"fields": "status_code"},
+                headers=self._authorization_headers,
+                timeout=10,
+            )
+            response.raise_for_status()
+            status = response.json().get("status_code")
+
+            if status == "FINISHED":
+                return
+            if status in ("ERROR", "EXPIRED"):
+                raise RuntimeError(
+                    f"Instagram media container {container_id} failed with status {status}"
+                )
+            if time.monotonic() >= deadline:
+                raise RuntimeError(
+                    f"Instagram media container {container_id} did not finish "
+                    f"processing within {CONTAINER_POLL_TIMEOUT_SECONDS}s "
+                    f"(last status: {status})"
+                )
+            time.sleep(CONTAINER_POLL_INTERVAL_SECONDS)
+
     def _publish_media(self, container_id: str) -> str:
         response = requests.post(
             f"{GRAPH_API_BASE}/{self.account_id}/media_publish",
+            headers=self._authorization_headers,
             data={
                 "creation_id": container_id,
-                "access_token": self.access_token,
             },
             timeout=30,
         )

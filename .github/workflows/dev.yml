@@ -6,6 +6,17 @@ on:
       - '**'
       - '!master'
   workflow_dispatch:
+    inputs:
+      debugsources:
+        description: 'Use mock data sources instead of live RescueGroups API'
+        required: false
+        type: boolean
+        default: true
+      debugposters:
+        description: 'Skip posting to real social accounts (use test/mock posters)'
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   actions: read
@@ -59,18 +70,24 @@ jobs:
       - name: Call RescueGroups API
         env:
           CUTEPETSBOSTON_RESCUEGROUPS_API_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
-          INSTAGRAM_BUSINESS_ACCOUNT_ID: ${{ secrets.INSTAGRAM_BUSINESS_ACCOUNT_ID }}
-          INSTAGRAM_PAGE_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_PAGE_ACCESS_TOKEN }}
+          INSTAGRAM_BUSINESS_ACCOUNT_ID: ${{ secrets.INSTAGRAM_TEST_BUSINESS_ACCOUNT_ID }}
+          INSTAGRAM_PAGE_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_TEST_PAGE_ACCESS_TOKEN }}
           BLUESKY_HANDLE: ${{ secrets.BLUESKY_TEST_HANDLE }}
           BLUESKY_PASSWORD: ${{ secrets.BLUESKY_TEST_PASSWORD }}
+          MASTODON_TOKEN: ${{ secrets.MASTODON_TEST_TOKEN }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           APP_ENV: dev
           CITY_NAME: ${{ vars.CITY_NAME }}
           CITY_STATE: ${{ vars.CITY_STATE }}
           POSTAL_CODE: ${{ vars.POSTAL_CODE }}
+          DEBUG_SOURCES: ${{ github.event_name != 'workflow_dispatch' || inputs.debugsources }}
+          DEBUG_POSTERS: ${{ github.event_name != 'workflow_dispatch' || inputs.debugposters }}
         run: |
           #In order to create posts on the test accounts remove the --debugposters debug flag
-          python ./main.py --debugsources --debugposters
+          FLAGS=""
+          if [ "$DEBUG_SOURCES" = "true" ]; then FLAGS="$FLAGS --debugsources"; fi
+          if [ "$DEBUG_POSTERS" = "true" ]; then FLAGS="$FLAGS --debugposters"; fi
+          python ./main.py $FLAGS
 
       - name: Upload database artifact
         uses: actions/upload-artifact@v7
