@@ -6,9 +6,12 @@ on:
     # Every 4 hours
     - cron: "0 */4 * * *"
 
+# Default for jobs that do not set their own. Job-level permissions REPLACE
+# these wholesale rather than merging with them -- see both jobs below.
 permissions:
-      actions: read
-      
+  actions: read
+  contents: read
+
 # Limits to executing one workflow in a concurrency group at any time
 # Will queue 1 PENDING workflow run. New incoming runs cancel & replace the pending run
 concurrency:
@@ -16,8 +19,15 @@ concurrency:
   queue: single
 
 jobs:
+  # Posts a pet. Read-only token on purpose: this job pip-installs deps and
+  # feeds untrusted RescueGroups API responses to python, so it must not be
+  # able to write to the repo. Persisting the mapping is publish-redirects'
+  # job, below.
   run-cute-pets:
     runs-on: ubuntu-latest
+    permissions:
+      actions: read # gh run list, to find the previous database artifact
+      contents: read
     steps:
       - name: Checkout repo
         uses: actions/checkout@v6
@@ -64,6 +74,7 @@ jobs:
           MASTODON_TOKEN: ${{ secrets.MASTODON_TOKEN }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           APP_ENV: prod
+          REDIRECTS_ENABLED: true
         run: python ./main.py
 
       - name: Upload database artifact
@@ -73,6 +84,18 @@ jobs:
           retention-days: 14
           archive: false
 
+      - name: Upload redirect mapping
+        # Handed to publish-redirects, which merges it into the authoritative
+        # copy on gh-pages. Absent when nothing was minted, which that job
+        # treats as a no-op.
+        if: ${{ !cancelled() && hashFiles('redirects.json') != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: redirects-mapping
+          path: redirects.json
+          retention-days: 1
+          archive: false
+
       - name: Upload API Log artifact
         if: '!cancelled()' #This ensures this step runs even if the previous steps failed only if manually cancelled it doesnt run
         uses: actions/upload-artifact@v7
@@ -80,3 +103,17 @@ jobs:
           path: cutepets.log
           retention-days: 90
           archive: false
+
+  # Separate job so the elevated token never coexists with the posting steps.
+  # Shares the pages-publish concurrency group with deploy-pages.yml, so the
+  # two can no longer deploy Pages at the same time.
+  publish-redirects:
+    needs: run-cute-pets
+    if: '!cancelled()' # still record the mapping if a later step failed after posting
+    permissions:
+      contents: write # push the mapping to gh-pages
+      pages: write # deploy Pages
+      id-token: write # OIDC for actions/deploy-pages
+    uses: ./.github/workflows/publish-pages.yml
+    with:
+      mapping_artifact: redirects-mapping
