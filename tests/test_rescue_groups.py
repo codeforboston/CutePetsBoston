@@ -49,8 +49,8 @@ class BuildSpeciesFiltersTests(unittest.TestCase):
         self.assertEqual(
             filters,
             [
-                {"fieldName": "species.singular", "operation": "equals", "criteria": "Dog"},
-                {"fieldName": "species.singular", "operation": "equals", "criteria": "Cat"},
+                {"fieldName": "species.singular", "operation": "equal", "criteria": "Dog"},
+                {"fieldName": "species.singular", "operation": "equal", "criteria": "Cat"},
             ],
         )
         self.assertEqual(filter_processing, "1 OR 2")
@@ -174,8 +174,8 @@ class FetchPetsRequestTests(unittest.TestCase):
         self.assertEqual(
             payload["data"]["filters"],
             [
-                {"fieldName": "species.singular", "operation": "equals", "criteria": "Dog"},
-                {"fieldName": "species.singular", "operation": "equals", "criteria": "Cat"},
+                {"fieldName": "species.singular", "operation": "equal", "criteria": "Dog"},
+                {"fieldName": "species.singular", "operation": "equal", "criteria": "Cat"},
             ],
         )
         self.assertEqual(payload["data"]["filterProcessing"], "1 OR 2")

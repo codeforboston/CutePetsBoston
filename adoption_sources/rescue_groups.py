@@ -62,13 +62,17 @@ def _build_species_filters(species: Sequence[str]) -> tuple[list[dict], str]:
     documented RescueGroups multi-species search example. #124 was silently
     rejected by the live API (zero results), so any change here must be
     re-verified against the real API (tests/test_rescue_groups_live.py).
+
+    The API's documented operations are ``equal``/``notequal``/``contains``/
+    etc. -- there is no ``equals``, and an unrecognized operation is silently
+    ignored, which is why #124 returned zero results.
     """
     if not species:
         raise ValueError("At least one species is required")
     filters = [
         {
             "fieldName": "species.singular",
-            "operation": "equals",
+            "operation": "equal",
             "criteria": FILTER_SPECIES_SINGULAR[plural],
         }
         for plural in species
