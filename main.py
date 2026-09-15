@@ -13,6 +13,7 @@ import traceback
 import requests
 
 from adoption_sources import SourceManual, SourceRescueGroups
+from database import _read_database, _write_database
 from metric_collectors.bluesky import CollectorBluesky
 from metric_collectors.instagram import CollectorInstagram
 from metric_collectors.mastodon import CollectorMastodon
@@ -231,28 +232,6 @@ def collect_metrics(collectors, database_path="database.json", window_days=14):
             _write_database(database_path, data)
     except Exception as exc:
         logger.error("Metric collection failed: %s", exc)
-
-
-def _read_database(database_path):
-    path = Path(database_path)
-    if not path.exists() or path.stat().st_size == 0:
-        return {}
-
-    try:
-        with path.open() as database_file:
-            return json.load(database_file)
-    except (json.JSONDecodeError, ValueError) as exc:
-        logger.error("%s:%s", type(exc).__name__, exc)
-        traceback.print_exc()
-        return {}
-
-
-def _write_database(database_path, data):
-    path = Path(database_path)
-    temporary_path = path.with_name(f"{path.name}.tmp")
-    with temporary_path.open("w") as database_file:
-        json.dump(data, database_file, indent=4)
-    temporary_path.replace(path)
 
 
 # Slack incoming-webhook messages have a ~40k-char limit; cap the traceback
