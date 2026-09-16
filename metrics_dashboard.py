@@ -3,9 +3,9 @@ import plotly.express as px
 from database import read_database
 
 
-def dashboard(html_file_path="dashboard.html"):
+def dashboard(html_file_path="dashboard.html", database_path="database.json"):
     # 1. Fetch data
-    data = read_database(database_path="database.json")
+    data = read_database(database_path)
 
     df_posts = pd.json_normalize(
         data["posts"],

@@ -105,7 +105,7 @@ def run(sources, posters, collectors=None, database_path="database.json"):
         record_publish_results(pet, published_results, database_path=database_path)
 
     collect_metrics(collectors or [], database_path=database_path)
-    dashboard()
+    dashboard(database_path=database_path)
     return results
 
 
