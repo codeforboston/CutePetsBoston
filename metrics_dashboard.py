@@ -3,33 +3,55 @@ import plotly.express as px
 from database import read_database
 
 
+def empty_dashboard_html(message):
+    return f"""<!DOCTYPE html>
+    <html>
+    <head>
+        <title>Cute Pets Boston Top Pets</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; margin: 40px; text-align: center; background-color: #f9f9f9; }}
+            h1 {{ color: #333; }}
+        </style>
+    </head>
+    <body>
+        <h1>🐶 Cute Pets Boston Top Pets 🐶</h1>
+        <p>{message}</p>
+    </body>
+    </html>
+    """
+
+
 def dashboard(html_file_path="dashboard.html", database_path="database.json"):
     # 1. Fetch data
     data = read_database(database_path)
+    posts = data.get("posts", [])
+    posted_pets = data.get("posted_pets", [])
 
+    if not posts or not posted_pets:
+        with open(html_file_path, "w", encoding="utf-8") as f:
+            f.write(empty_dashboard_html("No analytics data available yet."))
+        return
+
+    df_pets = pd.DataFrame(posted_pets)
     df_posts = pd.json_normalize(
-        data["posts"],
+        posts,
         record_path=["metrics"],  # Unpacks the nested metrics array
-        meta=[
-            "pet_id",
-            "platform",
-            "post_id",
-            "post_url",
-            "posted_at",
-        ],  # Carries along parent post info
-    )
-    
-    # Create DataFrames for both sections
-    df_pets = pd.DataFrame(data["posted_pets"])
-    
-    df_posts = pd.json_normalize(
-        data["posts"],
-        record_path=["metrics"],
         meta=["pet_id", "platform", "post_id", "post_url"],
     )
     
     # Merge pets metadata with detailed post metrics
     df_metrics = pd.merge(df_pets, df_posts, on="pet_id", how="left")
+
+    # Posts with no recorded metrics yet leave the metric columns absent
+    missing = [col for col in ("likes", "reposts", "comments") if col not in df_metrics.columns]
+    df_metrics = df_metrics.reindex(
+        columns=[*df_metrics.columns, *missing]
+    )
+
+    if not df_metrics["likes"].notna().any():
+        with open(html_file_path, "w", encoding="utf-8") as f:
+            f.write(empty_dashboard_html("No metric data available yet."))
+        return
     
     # 2. Get unique platforms including 'All Platforms'
     platforms_html = ["All Platforms"] + sorted(
