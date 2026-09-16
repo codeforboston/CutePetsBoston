@@ -7,7 +7,7 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 
-def _read_database(database_path):
+def read_database(database_path):
     path = Path(database_path)
     if not path.exists() or path.stat().st_size == 0:
         return {}
@@ -21,7 +21,7 @@ def _read_database(database_path):
         return {}
 
 
-def _write_database(database_path, data):
+def write_database(database_path, data):
     path = Path(database_path)
     temporary_path = path.with_name(f"{path.name}.tmp")
     with temporary_path.open("w") as database_file:

@@ -13,7 +13,7 @@ import traceback
 import requests
 
 from adoption_sources import SourceManual, SourceRescueGroups
-from database import _read_database, _write_database
+from database import read_database, write_database
 from metrics_dashboard import dashboard
 from metric_collectors.bluesky import CollectorBluesky
 from metric_collectors.instagram import CollectorInstagram
@@ -134,7 +134,7 @@ def publish_posts(pet, posters):
 
 
 def pick_pet(pets, database_path="database.json"):
-    data = _read_database(database_path)
+    data = read_database(database_path)
     posted_pet_ids = {
         posted_pet["pet_id"] for posted_pet in data.get("posted_pets", [])
     }
@@ -152,7 +152,7 @@ def pick_pet(pets, database_path="database.json"):
 
 
 def record_publish_results(pet, results, database_path="database.json"):
-    data = _read_database(database_path)
+    data = read_database(database_path)
     posted_pets = data.setdefault("posted_pets", [])
     posts = data.setdefault("posts", [])
     posted_at = datetime.now(timezone.utc).isoformat()
@@ -185,12 +185,12 @@ def record_publish_results(pet, results, database_path="database.json"):
         for item in posts
         if datetime.fromisoformat(item["posted_at"]) >= cutoff
     ]
-    _write_database(database_path, data)
+    write_database(database_path, data)
 
 
 def collect_metrics(collectors, database_path="database.json", window_days=14):
     try:
-        data = _read_database(database_path)
+        data = read_database(database_path)
         posts = data.get("posts", [])
         if not posts:
             return
@@ -231,7 +231,7 @@ def collect_metrics(collectors, database_path="database.json", window_days=14):
                 )
 
         if updated:
-            _write_database(database_path, data)
+            write_database(database_path, data)
     except Exception as exc:
         logger.error("Metric collection failed: %s", exc)
 
