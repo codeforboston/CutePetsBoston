@@ -14,6 +14,7 @@ import requests
 
 from adoption_sources import SourceManual, SourceRescueGroups
 from database import _read_database, _write_database
+from metrics_dashboard import dashboard
 from metric_collectors.bluesky import CollectorBluesky
 from metric_collectors.instagram import CollectorInstagram
 from metric_collectors.mastodon import CollectorMastodon
@@ -104,6 +105,7 @@ def run(sources, posters, collectors=None, database_path="database.json"):
         record_publish_results(pet, published_results, database_path=database_path)
 
     collect_metrics(collectors or [], database_path=database_path)
+    dashboard()
     return results
 
 
