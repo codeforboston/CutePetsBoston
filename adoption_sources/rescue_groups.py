@@ -13,6 +13,7 @@ from collections.abc import Sequence
 from typing import Iterator
 
 import requests
+from ftfy import fix_and_explain
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
@@ -38,7 +39,6 @@ FILTER_SPECIES_SINGULAR = {"dogs": "Dog", "cats": "Cat"}
 # exponential backoff (0s, 2s, 4s, 8s between attempts).
 RETRY_TOTAL = 4
 RETRY_BACKOFF_FACTOR = 1
-
 
 def _session_with_retries() -> requests.Session:
     """Build a requests Session that retries transient errors with backoff."""
@@ -197,7 +197,7 @@ class SourceRescueGroups(PetSource):
             animal_id = animal.get("id", "")
 
             # Extract and clean the name
-            name = self._clean_name(attrs.get("name", "Unknown"))
+            name = self._clean_name(attrs.get("name", "Unknown"), animal_id=animal_id)
 
             # Determine species from the included species relationship
             species_id = (
@@ -217,10 +217,16 @@ class SourceRescueGroups(PetSource):
             species = SPECIES_SINGULAR[normalized_plural]
 
             # Get breed info
-            breed = attrs.get("breedString", attrs.get("breedPrimary", "Mixed"))
+            breed = self._repair_mojibake(
+                attrs.get("breedString", attrs.get("breedPrimary", "Mixed")),
+                "breed",
+                animal_id,
+            )
 
             # Clean up description (use text version, not HTML)
-            description = self._clean_description(attrs.get("descriptionText", ""))
+            description = self._clean_description(
+                attrs.get("descriptionText", ""), animal_id=animal_id
+            )
 
             # Get adoption_url
             org_id = (
@@ -256,7 +262,12 @@ class SourceRescueGroups(PetSource):
             image_url = self._get_image_url(attrs)
 
             # Location of the adoption org
-            location = f"{org_attrs.get('city')}, {org_attrs.get('state')}"
+            location = self._repair_mojibake(
+                f"{org_attrs.get('city')}, {org_attrs.get('state')}",
+                "location",
+                org_id or "unknown",
+                "organization",
+            )
 
 
             return AdoptablePet(
@@ -280,7 +291,36 @@ class SourceRescueGroups(PetSource):
     def _is_placeholder_name(self, name: str) -> bool:
         return name.lower() in PLACEHOLDER_NAMES
 
-    def _clean_name(self, name: str) -> str:
+    def _repair_mojibake(
+        self,
+        text: str,
+        field: str,
+        entity_id: str,
+        entity_type: str = "animal",
+    ) -> str:
+        """Apply ftfy's complete set of repairs to RescueGroups display text.
+
+        This deliberately uses ftfy's default configuration, including its
+        mixed/lossy encoding recovery and general Unicode cleanup. The complete
+        ``ExplainedText`` result is logged whenever ftfy changes a value.
+        """
+        if not text:
+            return text
+
+        result = fix_and_explain(text)
+        repaired = result.text
+        if repaired != text:
+            logger.info(
+                "Fixed RescueGroups %s for %s %s: ftfy_result=%r",
+                field,
+                entity_type,
+                entity_id,
+                result,
+            )
+            return repaired
+        return text
+
+    def _clean_name(self, name: str, animal_id: str = "unknown") -> str:
         """
         Clean up pet name by removing promotional text.
 
@@ -288,18 +328,30 @@ class SourceRescueGroups(PetSource):
             "Doli ***Home for the Holidays 1/2 price!" -> "Doli"
             "Kathy" -> "Kathy"
         """
+        name = self._repair_mojibake(name, "name", animal_id)
+
         # Remove common promotional suffixes
         # Split on common delimiters and take the first part
         cleaned = re.split(r"\s*[\*\-\|]+\s*", name)[0]
         return cleaned.strip()
 
-    def _clean_description(self, description: str) -> str:
+    def _clean_description(
+        self, description: str, animal_id: str = "unknown"
+    ) -> str:
         """Clean up description text."""
         if not description:
             return ""
 
-        # Decode HTML entities
+        # Decode HTML entities first, so mojibake that arrived entity-encoded
+        # (&#226;&euro;&trade;) is repairable too.
         text = html.unescape(description)
+        # A description may combine paragraphs copied from systems with
+        # different encodings. Treat natural line boundaries independently so
+        # ftfy can assess each paragraph on its own.
+        text = "".join(
+            self._repair_mojibake(line, "description", animal_id)
+            for line in text.splitlines(keepends=True)
+        )
 
         # Remove &nbsp; and normalize whitespace
         text = text.replace("&nbsp;", " ")
