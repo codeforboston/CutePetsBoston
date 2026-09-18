@@ -1,11 +1,11 @@
 # Redirect & Pages pipeline
 
-How a posted pet's link gets minted, persisted, and served — and how the
-analytics page will slot into the same path later.
+How a posted pet's link gets minted, persisted, and served. The same Pages
+pipeline also persists and publishes the analytics page.
 
 Implements RFC 0001 (`rfcs/0001-url-redirect-system.md`). Files involved:
 `.github/workflows/prod.yml`, `deploy-pages.yml`, `publish-pages.yml`,
-`redirects.py`, `docs/r/index.html`.
+`redirects.py`, `database.py`, `metrics_dashboard.py`, `docs/r/index.html`.
 
 ---
 
@@ -33,6 +33,7 @@ it exists only to own a trigger and a permission set, then delegates.
         │                      │                              │
         │                      │  ⇧ artifact database.json    │
         │                      │  ⇧ artifact redirects-mapping│
+        │                      │  ⇧ artifact analytics-page   │
         │                      └───────────────┬──────────────┘
         │                                      │ needs
         │                                      ▼
@@ -44,8 +45,10 @@ it exists only to own a trigger and a permission set, then delegates.
         │                      └───────────────┬──────────────┘
         │                                      │
    uses: publish-pages.yml            uses: publish-pages.yml
-   (no mapping_artifact)              with: mapping_artifact:
+   (no artifacts)                     with: mapping_artifact:
         │                                     redirects-mapping
+        │                                   analytics_artifact:
+        │                                     analytics-page
         └──────────────────┬───────────────────┘
                            ▼
    ╔══════════════════════════════════════════════════════╗
@@ -56,11 +59,14 @@ it exists only to own a trigger and a permission set, then delegates.
    ╠══════════════════════════════════════════════════════╣
    ║  1  checkout master                    → docs/       ║
    ║  2  download mapping artifact          [if passed]   ║
+   ║  2b download analytics artifact        [if passed]   ║
    ║  3  checkout gh-pages                  → authority   ║
    ║  4  merge  jq -s '.[0] * .[1]' minted previous       ║
    ║            gh-pages wins conflicts ⇒ append-only     ║
+   ║  4b copy fresh analytics.html into gh-pages           ║
    ║  5  commit + push to gh-pages          [if passed]   ║
    ║  6  assemble _site/ = docs/ + redirects.json         ║
+   ║                     + analytics.html                 ║
    ║  7  upload-pages-artifact                            ║
    ║  8  deploy-pages                                     ║
    ╚══════════════════════════════════════════════════════╝
@@ -76,9 +82,9 @@ it exists only to own a trigger and a permission set, then delegates.
 
 | Trigger | Mints a slug? | Writes gh-pages? | Deploys Pages? |
 |---|---|---|---|
-| `docs/**` pushed to master | no | no | yes |
+| `docs/**` pushed to master | no | no (uses existing assets) | yes |
 | cron, every 4 hours | yes | yes | yes |
-| prod run that posts nothing | no | no | yes |
+| successful prod run without a new redirect | no | yes (analytics) | yes |
 
 The cron path deploys ~6×/day because each run mints a new slug. Entry A exists
 for site changes made between posts.
@@ -87,13 +93,13 @@ for site changes made between posts.
 
 `gh-pages` is the durable, append-only store; `_site` is rebuilt from scratch on
 every deploy. Anything that must survive a deploy has to live on `gh-pages`, not
-be assembled from an artifact. That single rule is what the next section turns on.
+be assembled from an artifact. The analytics page follows the same rule.
 
 ---
 
-## Next: the analytics page
+## Analytics page
 
-The plan: `prod.yml` renders an analytics HTML page from the collected metrics,
+The production path renders an analytics HTML page from the collected metrics,
 uploads it as a second artifact, and `publish-pages.yml` folds it into `_site`
 the same way it folds in the mapping.
 
@@ -108,12 +114,12 @@ the same way it folds in the mapping.
         │                      │                              │
         │                      │  ... post the pet, as today  │
         │                      │  collect engagement metrics  │
-        │                      │  NEW render analytics page   │
+        │                      │  render analytics page       │
         │                      │      from database.json      │
         │                      │                              │
         │                      │  ⇧ artifact database.json    │
         │                      │  ⇧ artifact redirects-mapping│
-        │                      │  ⇧ artifact analytics-page ★ │
+        │                      │  ⇧ artifact analytics-page   │
         │                      └───────────────┬──────────────┘
         │                                      │ needs
         │                                      ▼
@@ -125,28 +131,28 @@ the same way it folds in the mapping.
    uses: publish-pages.yml            uses: publish-pages.yml
    (neither artifact)                 with: mapping_artifact:
         │                                     redirects-mapping
-        │                                   analytics_artifact: ★
+        │                                   analytics_artifact:
         │                                     analytics-page
         └──────────────────┬───────────────────┘
                            ▼
    ╔══════════════════════════════════════════════════════╗
    ║  publish-pages.yml                                   ║
    ║  inputs: mapping_artifact                            ║
-   ║          analytics_artifact  ★ new, optional         ║
+   ║          analytics_artifact  optional                ║
    ╠══════════════════════════════════════════════════════╣
    ║  1  checkout master                    → docs/       ║
    ║  2  download mapping artifact          [if passed]   ║
-   ║  2b NEW download analytics artifact    [if passed] ★ ║
+   ║  2b download analytics artifact        [if passed]   ║
    ║  3  checkout gh-pages                  → authority   ║
    ║  4  merge mapping (gh-pages wins)                    ║
-   ║  4b NEW copy analytics page INTO gh-pages ★          ║
+   ║  4b copy analytics page INTO gh-pages                ║
    ║        only when a fresh one was passed; otherwise   ║
    ║        keep the copy gh-pages already holds          ║
    ║  5  commit + push to gh-pages          [if passed]   ║
    ║       now carries redirects.json AND analytics.html  ║
    ║  6  assemble _site/ = docs/                          ║
    ║                     + gh-pages/redirects.json        ║
-   ║                     + gh-pages/analytics.html      ★ ║
+   ║                     + gh-pages/analytics.html        ║
    ║  7  upload-pages-artifact                            ║
    ║  8  deploy-pages                                     ║
    ╚══════════════════════════════════════════════════════╝
@@ -156,7 +162,7 @@ the same way it folds in the mapping.
                  ├─ /                 index.html
                  ├─ /r/?id=<slug>     interstitial
                  ├─ /redirects.json   the mapping
-                 └─ /analytics.html   ★ the new page
+                 └─ /analytics.html   analytics page
 ```
 
 ### The trap to avoid
@@ -172,7 +178,7 @@ directly from the artifact. The artifact's only job is to update gh-pages in ste
 4b. Whatever gh-pages holds is what gets published, so a deploy triggered by any
 path serves the last good analytics page.
 
-### Two open questions
+### Retention question
 
 **Retention — how far back can the page show?** Not limited by artifact expiry.
 The chain carries history forward: each run downloads the previous run's

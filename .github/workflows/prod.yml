@@ -85,10 +85,12 @@ jobs:
           archive: false
 
       - name: Upload analytics page artifact
+        if: ${{ !cancelled() && hashFiles('analytics.html') != '' }}
         uses: actions/upload-artifact@v7
         with:
-          path: dashboard.html
-          retention-days: 14
+          name: analytics-page
+          path: analytics.html
+          retention-days: 1
           archive: false
 
       - name: Upload redirect mapping
@@ -124,3 +126,4 @@ jobs:
     uses: ./.github/workflows/publish-pages.yml
     with:
       mapping_artifact: redirects-mapping
+      analytics_artifact: analytics-page

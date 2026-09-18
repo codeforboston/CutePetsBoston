@@ -1,8 +1,8 @@
 name: Publish Pages
 
 # Reusable workflow (RFC 0001). Assembles docs/ plus the redirect mapping and
-# deploys GitHub Pages; when handed a mapping artifact it also records the newly
-# minted redirects on the gh-pages branch.
+# analytics page, then deploys GitHub Pages. When handed either artifact it also
+# records the freshly generated Pages asset on the gh-pages branch.
 #
 # Lives in its own workflow rather than a composite action for two reasons:
 #   * a composite action runs inside the CALLING job and inherits its token, so
@@ -11,7 +11,8 @@ name: Publish Pages
 #     two Pages deployments from overlapping.
 #
 # The CALLING job must grant:
-#   contents: write  -- only when passing mapping_artifact (push to gh-pages)
+#   contents: write  -- only when passing a mapping or analytics artifact
+#                         (push to gh-pages)
 #   pages: write     -- deploy Pages
 #   id-token: write  -- OIDC for actions/deploy-pages
 
@@ -19,7 +20,12 @@ on:
   workflow_call:
     inputs:
       mapping_artifact:
-        description: 'Artifact holding a newly minted redirects.json. Empty = redeploy only.'
+        description: 'Artifact holding a newly minted redirects.json. Empty = no mapping update.'
+        type: string
+        required: false
+        default: ''
+      analytics_artifact:
+        description: 'Artifact holding a fresh analytics.html. Empty = keep the existing page.'
         type: string
         required: false
         default: ''
@@ -51,7 +57,15 @@ jobs:
           name: ${{ inputs.mapping_artifact }}
           path: minted
 
-      - name: Checkout gh-pages (redirect mapping)
+      - name: Download newly generated analytics page
+        if: ${{ inputs.analytics_artifact != '' }}
+        continue-on-error: true # a missing artifact keeps the last good page
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ inputs.analytics_artifact }}
+          path: analytics
+
+      - name: Checkout gh-pages (redirect mapping and analytics page)
         continue-on-error: true # the branch does not exist on the very first run
         uses: actions/checkout@v6
         with:
@@ -83,8 +97,8 @@ jobs:
                else "New redirects: " + ($added | join(", ")) end' || true
           echo "Mapping now holds $(jq 'length' merged.json || echo '?') redirect(s)."
 
-      - name: Record mapping on gh-pages
-        if: ${{ inputs.mapping_artifact != '' }}
+      - name: Record Pages assets on gh-pages
+        if: ${{ inputs.mapping_artifact != '' || inputs.analytics_artifact != '' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -95,6 +109,9 @@ jobs:
               "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           fi
           cp merged.json gh-pages/redirects.json
+          if [ -f analytics/analytics.html ]; then
+            cp analytics/analytics.html gh-pages/analytics.html
+          fi
           cd gh-pages
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -103,6 +120,9 @@ jobs:
           # gh-pages may carry a copy of that file. Without -f, git add exits 1
           # and stages nothing, silently ending the redirect system.
           git add -f redirects.json
+          if [ -f analytics.html ]; then
+            git add -f analytics.html
+          fi
           if git diff --cached --quiet; then
             echo "No new redirects to record."
             exit 0
@@ -111,18 +131,21 @@ jobs:
           # Commit BEFORE any pull. "git pull --rebase" refuses to run with a
           # dirty index (exit 128) even when the remote has not moved, so
           # pulling first would fail on every run that mints a redirect.
-          git commit -q -m "Record redirect mapping (automated)"
+          git commit -q -m "Record Pages assets (automated)"
           git push -q origin HEAD:gh-pages || {
             git pull --rebase -q origin gh-pages
             git push -q origin HEAD:gh-pages
           }
-          echo "Redirect mapping updated on gh-pages."
+          echo "Pages assets updated on gh-pages."
 
       - name: Assemble Pages site
         run: |
           mkdir -p _site
           cp -r docs/. _site/
           cp merged.json _site/redirects.json
+          if [ -f gh-pages/analytics.html ]; then
+            cp gh-pages/analytics.html _site/analytics.html
+          fi
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
