@@ -25,7 +25,7 @@ on:
         required: false
         default: ''
       analytics_artifact:
-        description: 'Artifact holding a fresh analytics.html. Empty = keep the existing page.'
+        description: 'Artifact holding a fresh dashboard.html. Empty = keep the existing page.'
         type: string
         required: false
         default: ''
@@ -109,8 +109,8 @@ jobs:
               "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           fi
           cp merged.json gh-pages/redirects.json
-          if [ -f analytics/analytics.html ]; then
-            cp analytics/analytics.html gh-pages/analytics.html
+          if [ -f analytics/dashboard.html ]; then
+            cp analytics/dashboard.html gh-pages/dashboard.html
           fi
           cd gh-pages
           git config user.name "github-actions[bot]"
@@ -120,8 +120,8 @@ jobs:
           # gh-pages may carry a copy of that file. Without -f, git add exits 1
           # and stages nothing, silently ending the redirect system.
           git add -f redirects.json
-          if [ -f analytics.html ]; then
-            git add -f analytics.html
+          if [ -f dashboard.html ]; then
+            git add -f dashboard.html
           fi
           if git diff --cached --quiet; then
             echo "No new redirects to record."
@@ -143,8 +143,8 @@ jobs:
           mkdir -p _site
           cp -r docs/. _site/
           cp merged.json _site/redirects.json
-          if [ -f gh-pages/analytics.html ]; then
-            cp gh-pages/analytics.html _site/analytics.html
+          if [ -f gh-pages/dashboard.html ]; then
+            cp gh-pages/dashboard.html _site/dashboard.html
           fi
 
       - name: Upload Pages artifact

@@ -32,8 +32,8 @@ it exists only to own a trigger and a permission set, then delegates.
         │                      │  post to Mastodon/Bluesky/IG  │
         │                      │                               │
         │                      │  + artifact database.json     │
-        │                      │  + artifact redirects-mapping │
-        │                      │  + artifact analytics-page    │
+        │                      │  + artifact redirects.json    │
+        │                      │  + artifact dashboard.html    │
         │                      └───────────────┬───────────────┘
         │                                      │ needs
         │                                      ▼
@@ -46,9 +46,9 @@ it exists only to own a trigger and a permission set, then delegates.
         │                                      │
    uses: publish-pages.yml            uses: publish-pages.yml
    (no artifacts)                     with: mapping_artifact:
-        │                                     redirects-mapping
+        │                                     redirects.json
         │                                   analytics_artifact:
-        │                                     analytics-page
+        │                                     dashboard.html
         └──────────────────┬───────────────────┘
                            ▼
    ╔══════════════════════════════════════════════════════╗
@@ -63,10 +63,10 @@ it exists only to own a trigger and a permission set, then delegates.
    ║  3  checkout gh-pages                  → authority   ║
    ║  4  merge  jq -s '.[0] * .[1]' minted previous       ║
    ║            gh-pages wins conflicts => append-only    ║
-   ║  4b copy fresh analytics.html into gh-pages          ║
+   ║  4b copy fresh dashboard.html into gh-pages          ║
    ║  5  commit + push to gh-pages          [if passed]   ║
    ║  6  assemble _site/ = docs/ + redirects.json         ║
-   ║                     + analytics.html                 ║
+   ║                     + dashboard.html                 ║
    ║  7  upload-pages-artifact                            ║
    ║  8  deploy-pages                                     ║
    ╚══════════════════════════════════════════════════════╝
@@ -76,7 +76,7 @@ it exists only to own a trigger and a permission set, then delegates.
                  ├─ /                 index.html
                  ├─ /r/?id=<slug>     interstitial
                  ├─ /redirects.json   the mapping
-                 └─ /analytics.html   analytics page
+                 └─ /dashboard.html   analytics page
 ```
 
 ### Redirect contract
@@ -87,7 +87,7 @@ it exists only to own a trigger and a permission set, then delegates.
   IDs that need sanitizing receive a short SHA-256 suffix so distinct IDs cannot
   collide.
 - New mappings are written to the local `redirects.json` and uploaded as the
-  `redirects-mapping` artifact. Existing mappings are never overwritten or
+  `redirects.json` artifact. Existing mappings are never overwritten or
   deleted; the `gh-pages` copy is authoritative if a collision is encountered.
 - Only `http` and `https` adoption targets are accepted. A missing pet ID, unsafe
   target, or unreadable local mapping falls back to the original adoption URL so
@@ -113,7 +113,7 @@ it passes no artifacts and therefore reuses the durable `gh-pages` assets.
 ### Why the split
 
 `gh-pages` is the durable Pages store: `redirects.json` is append-only, while
-`analytics.html` is replaced only when a fresh page is available. `_site` is
+`dashboard.html` is replaced only when a fresh page is available. `_site` is
 rebuilt from scratch on every deploy. Anything that must survive a deploy has to
 live on `gh-pages`, not be assembled directly from an artifact.
 
@@ -134,18 +134,18 @@ of racing while reading or updating `gh-pages`.
 ## Analytics page
 
 The production path collects engagement metrics, then `main.run` renders
-`analytics.html` from the carried-forward `database.json`. The page contains
+`dashboard.html` from the carried-forward `database.json`. The page contains
 platform-filtered Plotly charts for the top ten pets by maximum and total likes,
-reposts, and comments. `prod.yml` uploads the page as the `analytics-page`
+reposts, and comments. `prod.yml` uploads the page as the `dashboard.html`
 artifact, and `publish-pages.yml` persists it to `gh-pages` before folding it
 into `_site`. The artifact is retained for one day because the publishing job
-consumes it immediately; `gh-pages/analytics.html` is the durable copy.
+consumes it immediately; `gh-pages/dashboard.html` is the durable copy.
 
 Analytics is generated in the read-only posting job and passed to the publishing
 job as an optional artifact. The publishing job copies a fresh page to
-`gh-pages/analytics.html`; if no fresh artifact is available, it keeps the last
+`gh-pages/dashboard.html`; if no fresh artifact is available, it keeps the last
 good page. Pages is then assembled from `docs/`, `gh-pages/redirects.json`, and
-`gh-pages/analytics.html`.
+`gh-pages/dashboard.html`.
 
 ### The trap to avoid
 

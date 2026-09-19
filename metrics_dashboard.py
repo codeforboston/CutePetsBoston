@@ -21,7 +21,7 @@ def empty_dashboard_html(message):
     """
 
 
-def dashboard(html_file_path="analytics.html", database_path="database.json"):
+def dashboard(html_file_path="dashboard.html", database_path="database.json"):
     # 1. Fetch data
     data = read_database(database_path)
     posts = data.get("posts", [])
@@ -167,7 +167,7 @@ def dashboard(html_file_path="analytics.html", database_path="database.json"):
       f.write(html_content)
     
     print(
-        "Successfully generated analytics.html with all platforms, max/sum stats,"
+        "Successfully generated dashboard.html with all platforms, max/sum stats,"
         " and metrics!"
     )
 
