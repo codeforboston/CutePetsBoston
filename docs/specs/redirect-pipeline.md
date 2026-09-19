@@ -31,9 +31,9 @@ it exists only to own a trigger and a permission set, then delegates.
         │                      │    URL for /r/?id=<slug>      │
         │                      │  post to Mastodon/Bluesky/IG  │
         │                      │                               │
-        │                      │  ⇧ artifact database.json     │
-        │                      │  ⇧ artifact redirects-mapping │
-        │                      │  ⇧ artifact analytics-page    │
+        │                      │  + artifact database.json     │
+        │                      │  + artifact redirects-mapping │
+        │                      │  + artifact analytics-page    │
         │                      └───────────────┬───────────────┘
         │                                      │ needs
         │                                      ▼
@@ -62,7 +62,7 @@ it exists only to own a trigger and a permission set, then delegates.
    ║  2b download analytics artifact        [if passed]   ║
    ║  3  checkout gh-pages                  → authority   ║
    ║  4  merge  jq -s '.[0] * .[1]' minted previous       ║
-   ║            gh-pages wins conflicts ⇒ append-only     ║
+   ║            gh-pages wins conflicts => append-only    ║
    ║  4b copy fresh analytics.html into gh-pages          ║
    ║  5  commit + push to gh-pages          [if passed]   ║
    ║  6  assemble _site/ = docs/ + redirects.json         ║
