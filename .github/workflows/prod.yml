@@ -85,11 +85,10 @@ jobs:
           archive: false
 
       - name: Upload analytics page artifact
-        if: ${{ !cancelled() && hashFiles('analytics.html') != '' }}
+        if: ${{ !cancelled() && hashFiles('dashboard.html') != '' }}
         uses: actions/upload-artifact@v7
         with:
-          name: analytics-page
-          path: analytics.html
+          path: dashboard.html
           retention-days: 1
           archive: false
 
@@ -100,7 +99,6 @@ jobs:
         if: ${{ !cancelled() && hashFiles('redirects.json') != '' }}
         uses: actions/upload-artifact@v7
         with:
-          name: redirects-mapping
           path: redirects.json
           retention-days: 1
           archive: false
@@ -125,5 +123,5 @@ jobs:
       id-token: write # OIDC for actions/deploy-pages
     uses: ./.github/workflows/publish-pages.yml
     with:
-      mapping_artifact: redirects-mapping
-      analytics_artifact: analytics-page
+      mapping_artifact: redirects.json
+      analytics_artifact: dashboard.html

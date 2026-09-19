@@ -9,7 +9,7 @@ def test_dashboard_default_output_uses_public_analytics_name():
     with TemporaryDirectory() as temporary_directory, chdir(temporary_directory):
         dashboard()
 
-        analytics_path = Path("analytics.html")
-        assert analytics_path.exists()
-        assert "No analytics data available yet." in analytics_path.read_text()
-        assert not Path("dashboard.html").exists()
+        dashboard_path = Path("dashboard.html")
+        assert dashboard_path.exists()
+        assert "No analytics data available yet." in dashboard_path.read_text()
+        assert not Path("analytics.html").exists()
