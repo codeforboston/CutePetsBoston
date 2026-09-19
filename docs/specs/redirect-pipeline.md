@@ -9,7 +9,7 @@ Implements RFC 0001 (`rfcs/0001-url-redirect-system.md`). Files involved:
 
 ---
 
-## Today
+## Current flow
 
 Two entry points, one shared body. `deploy-pages.yml` has no steps of its own —
 it exists only to own a trigger and a permission set, then delegates.
@@ -17,7 +17,7 @@ it exists only to own a trigger and a permission set, then delegates.
 ```
  ENTRY A                              ENTRY B
  push to master touching docs/**      schedule: 0 */4 * * *
- (or workflow_dispatch)               (or workflow_dispatch)
+ or Pages workflow files              (or workflow_dispatch)
  deploy-pages.yml                     prod.yml
         │                                    │
         │                                    ▼
@@ -75,33 +75,71 @@ it exists only to own a trigger and a permission set, then delegates.
                  www.cutepetsboston.com
                  ├─ /                 index.html
                  ├─ /r/?id=<slug>     interstitial
-                 └─ /redirects.json   the mapping
+                 ├─ /redirects.json   the mapping
+                 └─ /analytics.html   analytics page
 ```
+
+### Redirect contract
+
+- Redirect minting is enabled only when `REDIRECTS_ENABLED` is truthy; local and
+  development runs keep the original adoption URL.
+- A RescueGroups `pet_id` becomes the slug. URL-safe IDs pass through unchanged;
+  IDs that need sanitizing receive a short SHA-256 suffix so distinct IDs cannot
+  collide.
+- New mappings are written to the local `redirects.json` and uploaded as the
+  `redirects-mapping` artifact. Existing mappings are never overwritten or
+  deleted; the `gh-pages` copy is authoritative if a collision is encountered.
+- Only `http` and `https` adoption targets are accepted. A missing pet ID, unsafe
+  target, or unreadable local mapping falls back to the original adoption URL so
+  redirect data cannot block a social post.
+- The `/r/` interstitial validates the slug and target again in the browser before
+  using `location.replace()`.
 
 ### What runs when
 
 | Trigger | Mints a slug? | Writes gh-pages? | Deploys Pages? |
 |---|---|---|---|
-| `docs/**` pushed to master | no | no (uses existing assets) | yes |
+| `docs/**` or Pages workflow pushed to master | no | no (uses existing assets) | yes |
 | cron, every 4 hours | yes | yes | yes |
 | successful prod run without a new redirect | no | yes (analytics) | yes |
 
-The cron path deploys ~6×/day because each run mints a new slug. Entry A exists
-for site changes made between posts.
+Both workflows also support `workflow_dispatch` for an explicit run. Changes to
+`metrics_dashboard.py` are reflected on the next successful production run (or a
+manual production dispatch), not by the docs-only deployment. The cron path
+deploys ~6×/day because each successful run normally mints a new slug and
+refreshes analytics. Entry A exists for site changes made between posts;
+it passes no artifacts and therefore reuses the durable `gh-pages` assets.
 
 ### Why the split
 
-`gh-pages` is the durable, append-only store; `_site` is rebuilt from scratch on
-every deploy. Anything that must survive a deploy has to live on `gh-pages`, not
-be assembled from an artifact. The analytics page follows the same rule.
+`gh-pages` is the durable Pages store: `redirects.json` is append-only, while
+`analytics.html` is replaced only when a fresh page is available. `_site` is
+rebuilt from scratch on every deploy. Anything that must survive a deploy has to
+live on `gh-pages`, not be assembled directly from an artifact.
+
+### Permissions and serialization
+
+The posting job has only `actions: read` and `contents: read`. It handles the
+external API responses and social credentials but cannot push repository changes.
+The publishing job is the only job with `contents: write`, `pages: write`, and
+`id-token: write`. The reusable workflow inherits those caller permissions rather
+than declaring broader ones itself.
+
+Both `prod.yml` and `deploy-pages.yml` use the `pages-publish` concurrency group.
+A scheduled post and a docs deployment therefore queue behind one another instead
+of racing while reading or updating `gh-pages`.
 
 ---
 
 ## Analytics page
 
-The production path renders an analytics HTML page from the collected metrics,
-uploads it as a second artifact, and `publish-pages.yml` folds it into `_site`
-the same way it folds in the mapping.
+The production path collects engagement metrics, then `main.run` renders
+`analytics.html` from the carried-forward `database.json`. The page contains
+platform-filtered Plotly charts for the top ten pets by maximum and total likes,
+reposts, and comments. `prod.yml` uploads the page as the `analytics-page`
+artifact, and `publish-pages.yml` persists it to `gh-pages` before folding it
+into `_site`. The artifact is retained for one day because the publishing job
+consumes it immediately; `gh-pages/analytics.html` is the durable copy.
 
 ```
  ENTRY A                              ENTRY B
