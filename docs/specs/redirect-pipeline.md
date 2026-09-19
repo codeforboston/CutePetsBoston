@@ -21,28 +21,28 @@ it exists only to own a trigger and a permission set, then delegates.
  deploy-pages.yml                     prod.yml
         │                                    │
         │                                    ▼
-        │                      ┌──────────────────────────────┐
-        │                      │ job 1  run-cute-pets         │
-        │                      │ token: contents READ         │
-        │                      │                              │
-        │                      │  fetch pets (RescueGroups)   │
-        │                      │  pick one not posted in 12w  │
-        │                      │  mint slug, swap adoption    │
-        │                      │    URL for /r/?id=<slug>     │
-        │                      │  post to Mastodon/Bluesky/IG │
-        │                      │                              │
-        │                      │  ⇧ artifact database.json    │
-        │                      │  ⇧ artifact redirects-mapping│
-        │                      │  ⇧ artifact analytics-page   │
-        │                      └───────────────┬──────────────┘
+        │                      ┌───────────────────────────────┐
+        │                      │ job 1  run-cute-pets          │
+        │                      │ token: contents READ          │
+        │                      │                               │
+        │                      │  fetch pets (RescueGroups)    │
+        │                      │  pick one not posted in 12w   │
+        │                      │  mint slug, swap adoption     │
+        │                      │    URL for /r/?id=<slug>      │
+        │                      │  post to Mastodon/Bluesky/IG  │
+        │                      │                               │
+        │                      │  ⇧ artifact database.json     │
+        │                      │  ⇧ artifact redirects-mapping │
+        │                      │  ⇧ artifact analytics-page    │
+        │                      └───────────────┬───────────────┘
         │                                      │ needs
         │                                      ▼
-        │                      ┌──────────────────────────────┐
-        │                      │ job 2  publish-redirects     │
-        │                      │ if: !cancelled()             │
-        │                      │ token: contents WRITE        │
-        │                      │        pages/id-token write  │
-        │                      └───────────────┬──────────────┘
+        │                      ┌───────────────────────────────┐
+        │                      │ job 2  publish-redirects      │
+        │                      │ if: !cancelled()              │
+        │                      │ token: contents WRITE         │
+        │                      │        pages/id-token write   │
+        │                      └───────────────┬───────────────┘
         │                                      │
    uses: publish-pages.yml            uses: publish-pages.yml
    (no artifacts)                     with: mapping_artifact:
