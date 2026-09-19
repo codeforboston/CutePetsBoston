@@ -63,7 +63,7 @@ it exists only to own a trigger and a permission set, then delegates.
    ║  3  checkout gh-pages                  → authority   ║
    ║  4  merge  jq -s '.[0] * .[1]' minted previous       ║
    ║            gh-pages wins conflicts ⇒ append-only     ║
-   ║  4b copy fresh analytics.html into gh-pages           ║
+   ║  4b copy fresh analytics.html into gh-pages          ║
    ║  5  commit + push to gh-pages          [if passed]   ║
    ║  6  assemble _site/ = docs/ + redirects.json         ║
    ║                     + analytics.html                 ║
@@ -141,67 +141,11 @@ artifact, and `publish-pages.yml` persists it to `gh-pages` before folding it
 into `_site`. The artifact is retained for one day because the publishing job
 consumes it immediately; `gh-pages/analytics.html` is the durable copy.
 
-```
- ENTRY A                              ENTRY B
- deploy-pages.yml                     prod.yml
-        │                                    │
-        │                                    ▼
-        │                      ┌──────────────────────────────┐
-        │                      │ job 1  run-cute-pets         │
-        │                      │ token: contents READ         │
-        │                      │                              │
-        │                      │  ... post the pet, as today  │
-        │                      │  collect engagement metrics  │
-        │                      │  render analytics page       │
-        │                      │      from database.json      │
-        │                      │                              │
-        │                      │  ⇧ artifact database.json    │
-        │                      │  ⇧ artifact redirects-mapping│
-        │                      │  ⇧ artifact analytics-page   │
-        │                      └───────────────┬──────────────┘
-        │                                      │ needs
-        │                                      ▼
-        │                      ┌──────────────────────────────┐
-        │                      │ job 2  publish-redirects     │
-        │                      │ token: contents WRITE        │
-        │                      └───────────────┬──────────────┘
-        │                                      │
-   uses: publish-pages.yml            uses: publish-pages.yml
-   (neither artifact)                 with: mapping_artifact:
-        │                                     redirects-mapping
-        │                                   analytics_artifact:
-        │                                     analytics-page
-        └──────────────────┬───────────────────┘
-                           ▼
-   ╔══════════════════════════════════════════════════════╗
-   ║  publish-pages.yml                                   ║
-   ║  inputs: mapping_artifact                            ║
-   ║          analytics_artifact  optional                ║
-   ╠══════════════════════════════════════════════════════╣
-   ║  1  checkout master                    → docs/       ║
-   ║  2  download mapping artifact          [if passed]   ║
-   ║  2b download analytics artifact        [if passed]   ║
-   ║  3  checkout gh-pages                  → authority   ║
-   ║  4  merge mapping (gh-pages wins)                    ║
-   ║  4b copy analytics page INTO gh-pages                ║
-   ║        only when a fresh one was passed; otherwise   ║
-   ║        keep the copy gh-pages already holds          ║
-   ║  5  commit + push to gh-pages          [if passed]   ║
-   ║       now carries redirects.json AND analytics.html  ║
-   ║  6  assemble _site/ = docs/                          ║
-   ║                     + gh-pages/redirects.json        ║
-   ║                     + gh-pages/analytics.html        ║
-   ║  7  upload-pages-artifact                            ║
-   ║  8  deploy-pages                                     ║
-   ╚══════════════════════════════════════════════════════╝
-                           │
-                           ▼
-                 www.cutepetsboston.com
-                 ├─ /                 index.html
-                 ├─ /r/?id=<slug>     interstitial
-                 ├─ /redirects.json   the mapping
-                 └─ /analytics.html   analytics page
-```
+Analytics is generated in the read-only posting job and passed to the publishing
+job as an optional artifact. The publishing job copies a fresh page to
+`gh-pages/analytics.html`; if no fresh artifact is available, it keeps the last
+good page. Pages is then assembled from `docs/`, `gh-pages/redirects.json`, and
+`gh-pages/analytics.html`.
 
 ### The trap to avoid
 
