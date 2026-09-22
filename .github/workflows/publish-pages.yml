@@ -1,6 +1,6 @@
 name: Publish Pages
 
-# Reusable workflow (RFC 0001). Assembles docs/ plus the redirect mapping and
+# Reusable workflow (RFC 0001). Assembles src/ plus the redirect mapping and
 # analytics page, then deploys GitHub Pages. When handed either artifact it also
 # records the freshly generated Pages asset on the gh-pages branch.
 #
@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
 
     # Repo-scoped group shared by every caller, so the scheduled posting run and
-    # a docs push can never deploy Pages at the same time.
+    # a site-source push can never deploy Pages at the same time.
     concurrency:
       group: pages-publish
       cancel-in-progress: false
@@ -141,7 +141,7 @@ jobs:
       - name: Assemble Pages site
         run: |
           mkdir -p _site
-          cp -r docs/. _site/
+          cp -r src/. _site/
           cp merged.json _site/redirects.json
           if [ -f gh-pages/dashboard.html ]; then
             cp gh-pages/dashboard.html _site/dashboard.html

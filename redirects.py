@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_REDIRECTS_PATH = "redirects.json"
 REDIRECT_PATH = "/r/"
 
-# Slugs must match what docs/r/index.html accepts: [A-Za-z0-9_-]+
+# Slugs must match what src/r/index.html accepts: [A-Za-z0-9_-]+
 _SLUG_FORBIDDEN = re.compile(r"[^A-Za-z0-9_-]")
 
 _TRUTHY = {"1", "true", "yes", "on"}
@@ -93,7 +93,7 @@ def save_redirects(mapping, path=None):
 def is_safe_target(url):
     """Whether url is safe to send a visitor to.
 
-    docs/r/index.html navigates with location.replace(), which would execute a
+    src/r/index.html navigates with location.replace(), which would execute a
     "javascript:" URL in our own origin. RescueGroups hands us adoption URLs
     verbatim and the mapping is append-only, so a bad target would be permanent
     -- reject anything that is not plain http(s).

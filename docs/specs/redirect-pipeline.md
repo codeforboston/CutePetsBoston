@@ -5,7 +5,7 @@ pipeline also persists and publishes the analytics page.
 
 Implements RFC 0001 (`rfcs/0001-url-redirect-system.md`). Files involved:
 `.github/workflows/prod.yml`, `deploy-pages.yml`, `publish-pages.yml`,
-`redirects.py`, `database.py`, `metrics_dashboard.py`, `docs/r/index.html`.
+`redirects.py`, `database.py`, `metrics_dashboard.py`, `src/r/index.html`.
 
 ---
 
@@ -16,7 +16,7 @@ it exists only to own a trigger and a permission set, then delegates.
 
 ```
  ENTRY A                              ENTRY B
- push to master touching docs/**      schedule: 0 */4 * * *
+ push to master touching src/**       schedule: 0 */4 * * *
  or Pages workflow files              (or workflow_dispatch)
  deploy-pages.yml                     prod.yml
         │                                    │
@@ -57,7 +57,7 @@ it exists only to own a trigger and a permission set, then delegates.
    ║  environment: github-pages                           ║
    ║  declares NO permissions — inherits the caller's     ║
    ╠══════════════════════════════════════════════════════╣
-   ║  1  checkout master                    → docs/       ║
+   ║  1  checkout master                    → src/        ║
    ║  2  download mapping artifact          [if passed]   ║
    ║  2b download analytics artifact        [if passed]   ║
    ║  3  checkout gh-pages                  → authority   ║
@@ -65,7 +65,7 @@ it exists only to own a trigger and a permission set, then delegates.
    ║            gh-pages wins conflicts => append-only    ║
    ║  4b copy fresh dashboard.html into gh-pages          ║
    ║  5  commit + push to gh-pages          [if passed]   ║
-   ║  6  assemble _site/ = docs/ + redirects.json         ║
+   ║  6  assemble _site/ = src/ + redirects.json          ║
    ║                     + dashboard.html                 ║
    ║  7  upload-pages-artifact                            ║
    ║  8  deploy-pages                                     ║
@@ -99,13 +99,13 @@ it exists only to own a trigger and a permission set, then delegates.
 
 | Trigger | Mints a slug? | Writes gh-pages? | Deploys Pages? |
 |---|---|---|---|
-| `docs/**` or Pages workflow pushed to master | no | no (uses existing assets) | yes |
+| `src/**` or Pages workflow pushed to master | no | no (uses existing assets) | yes |
 | cron, every 4 hours | yes | yes | yes |
 | successful prod run without a new redirect | no | yes (analytics) | yes |
 
 Both workflows also support `workflow_dispatch` for an explicit run. Changes to
 `metrics_dashboard.py` are reflected on the next successful production run (or a
-manual production dispatch), not by the docs-only deployment. The cron path
+manual production dispatch), not by the site-only deployment. The cron path
 deploys ~6×/day because each successful run normally mints a new slug and
 refreshes analytics. Entry A exists for site changes made between posts;
 it passes no artifacts and therefore reuses the durable `gh-pages` assets.
@@ -144,14 +144,14 @@ consumes it immediately; `gh-pages/dashboard.html` is the durable copy.
 Analytics is generated in the read-only posting job and passed to the publishing
 job as an optional artifact. The publishing job copies a fresh page to
 `gh-pages/dashboard.html`; if no fresh artifact is available, it keeps the last
-good page. Pages is then assembled from `docs/`, `gh-pages/redirects.json`, and
+good page. Pages is then assembled from `src/`, `gh-pages/redirects.json`, and
 `gh-pages/dashboard.html`.
 
 ### The trap to avoid
 
 Do **not** assemble the analytics page straight from the artifact into `_site`.
 `_site` is rebuilt from nothing on every deploy, and Entry A passes no artifacts
-— so a docs-only push would publish a site with the analytics page **missing**,
+— so a site-only push would publish a site with the analytics page **missing**,
 and it would stay missing until the next cron run four hours later. This is the
 same failure shape as the mapping wipe that the `jq` merge exists to prevent.
 
