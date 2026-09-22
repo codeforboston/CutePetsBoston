@@ -5,7 +5,7 @@ on:
     branches:
       - master
     paths:
-      - 'docs/**'
+      - 'src/**'
       - '.github/workflows/deploy-pages.yml'
       - '.github/workflows/publish-pages.yml'
   workflow_dispatch:
