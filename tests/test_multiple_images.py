@@ -42,7 +42,6 @@ def test_rescuegroups_uses_ordered_distinct_large_pictures_and_caps_at_four():
     }
     pet = source._parse_animal(animal, {}, {"dog": {"plural": "dogs"}}, pictures)
     assert pet.image_urls == URLS[:4]
-    assert pet.image_url == URLS[0]
 
     fallback = source._parse_animal(animal, {}, {"dog": {"plural": "dogs"}}, {})
     assert fallback.image_urls == ["https://example.com/thumb.jpg?width=800"]
@@ -77,7 +76,10 @@ def test_legacy_photo_and_list_only_pet_are_supported():
     assert selected_image_urls([], URLS[0]) == [URLS[0]]
     assert Post(text="legacy", image_url=URLS[0]).image_urls == [URLS[0]]
     assert Post(text="gallery", image_urls=URLS[:2]).image_url == URLS[0]
+    assert "image_url" not in AdoptablePet.__dataclass_fields__
     pet = AdoptablePet("Buddy", "dog", "Mix", "Boston", image_urls=URLS[:2])
+    assert pet.image_urls == URLS[:2]
+    assert AdoptablePet("Buddy", "dog", "Mix", "Boston", image_urls=[*URLS, URLS[0]]).image_urls == URLS[:4]
     post = PosterInstagram().format_post(pet)
     assert post.image_url == URLS[0]
     assert post.image_urls == URLS[:2]

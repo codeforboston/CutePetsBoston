@@ -21,7 +21,7 @@ def main():
     pets = list(source.fetch_pets())
     print(f"Fetched {len(pets)} pets")
 
-    with_images = [p for p in pets if p.image_url]
+    with_images = [p for p in pets if p.image_urls]
     if not with_images:
         print("No pets with images found.")
         exit(1)

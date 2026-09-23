@@ -189,7 +189,7 @@ class PosterBluesky(SocialPoster):
         species_tag = "DogsOfBluesky" if pet.species == "dog" else "CatsOfBluesky"
         tags = ["AdoptDontShop", *CITY_HASHTAGS, city, species_tag]
 
-        photos = selected_image_urls(pet.image_urls, pet.image_url)
+        photos = pet.image_urls
         return Post(
             text=text,
             image_url=photos[0] if photos else None,

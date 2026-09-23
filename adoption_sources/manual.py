@@ -49,7 +49,6 @@ class SourceManual(PetSource):
             location=self.location_label,
             description=(attrs.get("descriptionText") or "").strip(),
             adoption_url=self._adoption_url(attrs.get("slug")),
-            image_url=attrs.get("pictureThumbnailUrl"),
             image_urls=[attrs["pictureThumbnailUrl"]] if attrs.get("pictureThumbnailUrl") else [],
             pet_id=animal_id,
         )

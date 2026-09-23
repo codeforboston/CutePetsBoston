@@ -367,7 +367,7 @@ class PosterMastodon(SocialPoster):
             city = pet.location.split(",")[0].capitalize()
         logger.info("Mastodon derived city tag: %s", city)
 
-        photos = selected_image_urls(pet.image_urls, pet.image_url)
+        photos = pet.image_urls
         post = Post(
             text=text,
             image_url=photos[0] if photos else None,

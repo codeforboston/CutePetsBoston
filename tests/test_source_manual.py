@@ -14,7 +14,7 @@ class SourceManualTests(unittest.TestCase):
         expected_names = {d["attributes"]["name"] for d in MANUAL_SOURCE_DATA}
         self.assertSetEqual(names, expected_names)
         for pet in pets:
-            self.assertTrue(pet.image_url)
+            self.assertTrue(pet.image_urls)
             self.assertTrue(pet.adoption_url)
 
 

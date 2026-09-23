@@ -262,7 +262,6 @@ class SourceRescueGroups(PetSource):
             image_urls = self._get_image_urls(animal, pictures_by_id or {})
             if not image_urls:
                 image_urls = selected_image_urls([], self._get_image_url(attrs))
-            image_url = image_urls[0] if image_urls else None
 
             # Location of the adoption org
             location = f"{org_attrs.get('city')}, {org_attrs.get('state')}"
@@ -275,7 +274,6 @@ class SourceRescueGroups(PetSource):
                 location=location,
                 description=description,
                 adoption_url=adoption_url,
-                image_url=image_url,
                 image_urls=image_urls,
                 age_string=attrs.get("ageString"),
                 sex=attrs.get("sex"),

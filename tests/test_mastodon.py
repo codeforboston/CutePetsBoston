@@ -72,7 +72,7 @@ pet_strategy = st.builds(
         st.none(),
         st.just("https://example.com/adopt"),
     ),
-    image_url=st.just("https://example.com/image.jpg"),
+    image_urls=st.just(["https://example.com/image.jpg"]),
     age_string=st.one_of(
         st.none(),
         st.text(

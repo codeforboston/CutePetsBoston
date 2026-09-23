@@ -20,17 +20,15 @@ class AdoptablePet:
     location: str
     description: str = ""
     adoption_url: str | None = None
-    image_url: str | None = None
+    image_urls: list[str] = field(default_factory=list)
     age_string: str | None = None
     sex: str | None = None
     size_group: str | None = None
     pet_id: str | None = None
     rescue_id: str | None = None  # shelter's own animal id (RescueGroups "rescueId")
-    image_urls: list[str] = field(default_factory=list)
 
     def __post_init__(self) -> None:
-        self.image_urls = selected_image_urls(self.image_urls, self.image_url)
-        self.image_url = self.image_urls[0] if self.image_urls else None
+        self.image_urls = selected_image_urls(self.image_urls, None)
 
 
 class PetSource(ABC):
@@ -145,7 +143,7 @@ class SocialPoster(ABC):
         if pet.location != f"{CITY_NAME}, {CITY_STATE}":
             city = pet.location.split(",")[0].capitalize()
 
-        photos = selected_image_urls(pet.image_urls, pet.image_url)
+        photos = pet.image_urls
         return Post(
             text=text,
             image_url=photos[0] if photos else None,
