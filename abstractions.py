@@ -143,10 +143,9 @@ class SocialPoster(ABC):
         if pet.location != f"{CITY_NAME}, {CITY_STATE}":
             city = pet.location.split(",")[0].capitalize()
 
-        photos = pet.image_urls
         return Post(
             text=text,
-            image_urls=photos,
+            image_urls=pet.image_urls,
             link=pet.adoption_url,
             alt_text=f"Photo of {pet.name}, a {pet.breed} {pet.species} available for adoption",
             tags=[
