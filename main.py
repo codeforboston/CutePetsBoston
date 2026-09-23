@@ -11,6 +11,7 @@ import sys
 import traceback
 
 import requests
+from abstractions import selected_image_urls
 
 from adoption_sources import SourceManual, SourceRescueGroups
 from database import read_database, write_database
@@ -141,7 +142,7 @@ def pick_pet(pets, database_path="database.json"):
     eligible = [
         pet
         for pet in pets
-        if pet.image_url
+        if selected_image_urls(pet.image_urls, pet.image_url)
         and pet.adoption_url
         and pet.pet_id not in posted_pet_ids
     ]

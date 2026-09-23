@@ -16,7 +16,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from abstractions import AdoptablePet, PetSource
+from abstractions import AdoptablePet, PetSource, selected_image_urls
 from adoption_sources.pet_links import reconstruct_adoption_url
 from config import CITY_NAME, CITY_STATE, PET_SPECIES, POSTAL_CODE, RESCUEGROUPS_LIMIT
 
@@ -125,7 +125,7 @@ class SourceRescueGroups(PetSource):
 
         url = (
             f"{self.BASE_URL}/available/haspic"
-            f"?include=orgs,breeds,locations,species"
+            f"?include=orgs,breeds,locations,species,pictures"
             f"&sort=random"
             f"&limit={self.limit}"
         )
@@ -175,9 +175,14 @@ class SourceRescueGroups(PetSource):
             for item in body.get("included", [])
             if item.get("type") == "species"
         }
+        pictures_by_id = {
+            item["id"]: item.get("attributes", {})
+            for item in body.get("included", [])
+            if item.get("type") == "pictures"
+        }
 
         for animal in data:
-            pet = self._parse_animal(animal, orgs_by_id, species_by_id)
+            pet = self._parse_animal(animal, orgs_by_id, species_by_id, pictures_by_id)
             if not pet:
                 continue
             if self._is_placeholder_name(pet.name):
@@ -190,6 +195,7 @@ class SourceRescueGroups(PetSource):
         animal: dict,
         orgs_by_id: dict,
         species_by_id: dict,
+        pictures_by_id: dict | None = None,
     ) -> AdoptablePet | None:
         """Parse a single animal record from the API response."""
         try:
@@ -253,7 +259,10 @@ class SourceRescueGroups(PetSource):
             )
 
             # Get best available image
-            image_url = self._get_image_url(attrs)
+            image_urls = self._get_image_urls(animal, pictures_by_id or {})
+            if not image_urls:
+                image_urls = selected_image_urls([], self._get_image_url(attrs))
+            image_url = image_urls[0] if image_urls else None
 
             # Location of the adoption org
             location = f"{org_attrs.get('city')}, {org_attrs.get('state')}"
@@ -267,6 +276,7 @@ class SourceRescueGroups(PetSource):
                 description=description,
                 adoption_url=adoption_url,
                 image_url=image_url,
+                image_urls=image_urls,
                 age_string=attrs.get("ageString"),
                 sex=attrs.get("sex"),
                 size_group=attrs.get("sizeGroup"),
@@ -319,3 +329,9 @@ class SourceRescueGroups(PetSource):
             # Request a larger image instead of the 100px thumbnail
             return re.sub(r"\?width=\d+", "?width=800", thumbnail)
         return None
+
+    def _get_image_urls(self, animal: dict, pictures_by_id: dict) -> list[str]:
+        relationships = animal.get("relationships", {}).get("pictures", {}).get("data", [])
+        pictures = [pictures_by_id.get(item.get("id"), {}) for item in relationships]
+        pictures.sort(key=lambda picture: picture.get("order") or float("inf"))
+        return selected_image_urls([picture.get("large") for picture in pictures], None)

@@ -53,6 +53,7 @@ def test_create_media_container_uses_authorization_header(monkeypatch):
         headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
         data={
             "image_url": "https://example.com/poppy.jpg",
+            "alt_text": "Photo of an adoptable pet (photo 1)",
             "caption": "Meet Poppy!",
         },
         timeout=30,

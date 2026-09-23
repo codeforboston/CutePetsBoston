@@ -26,6 +26,11 @@ class AdoptablePet:
     size_group: str | None = None
     pet_id: str | None = None
     rescue_id: str | None = None  # shelter's own animal id (RescueGroups "rescueId")
+    image_urls: list[str] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        self.image_urls = selected_image_urls(self.image_urls, self.image_url)
+        self.image_url = self.image_urls[0] if self.image_urls else None
 
 
 class PetSource(ABC):
@@ -57,6 +62,20 @@ class Post:
     link: str | None = None
     alt_text: str | None = None  # For image accessibility
     tags: list[str] = field(default_factory=list)
+    image_urls: list[str] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        self.image_urls = selected_image_urls(self.image_urls, self.image_url)
+        self.image_url = self.image_urls[0] if self.image_urls else None
+
+
+MAX_POST_IMAGES = 4
+
+
+def selected_image_urls(image_urls: list[str], image_url: str | None) -> list[str]:
+    """Return up to four distinct photos, including legacy single-image posts."""
+    candidates = image_urls if image_urls else ([image_url] if image_url else [])
+    return list(dict.fromkeys(url for url in candidates if url))[:MAX_POST_IMAGES]
 
 
 @dataclass
@@ -126,9 +145,11 @@ class SocialPoster(ABC):
         if pet.location != f"{CITY_NAME}, {CITY_STATE}":
             city = pet.location.split(",")[0].capitalize()
 
+        photos = selected_image_urls(pet.image_urls, pet.image_url)
         return Post(
             text=text,
-            image_url=pet.image_url,
+            image_url=photos[0] if photos else None,
+            image_urls=photos,
             link=pet.adoption_url,
             alt_text=f"Photo of {pet.name}, a {pet.breed} {pet.species} available for adoption",
             tags=[
