@@ -119,7 +119,7 @@ class SpeciesParsingTests(unittest.TestCase):
 
     def test_skips_unconfigured_species(self):
         animal = _make_animal(species_id="99")
-        species_by_id = _make_species_by_id(plural="rabbits", species_id="99")
+        species_by_id = _make_species_by_id(plural="dragons", species_id="99")
 
         pet = self.source._parse_animal(animal, self.orgs, species_by_id)
 
@@ -176,9 +176,12 @@ class FetchPetsRequestTests(unittest.TestCase):
             [
                 {"fieldName": "species.singular", "operation": "equals", "criteria": "Dog"},
                 {"fieldName": "species.singular", "operation": "equals", "criteria": "Cat"},
+                {"fieldName": "species.singular", "operation": "equals", "criteria": "Bird"},
+                {"fieldName": "species.singular", "operation": "equals", "criteria": "Rabbit"},
+                {"fieldName": "species.singular", "operation": "equals", "criteria": "Guinea Pig"},
             ],
         )
-        self.assertEqual(payload["data"]["filterProcessing"], "1 OR 2")
+        self.assertEqual(payload["data"]["filterProcessing"], "1 OR 2 OR 3 OR 4 OR 5")
         self.assertEqual(
             payload["data"]["filterRadius"],
             {"miles": 50, "postalcode": "02108"},

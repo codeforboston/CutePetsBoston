@@ -187,7 +187,21 @@ class PosterBluesky(SocialPoster):
         if pet.adoption_url:
             text += f"\n\nLearn more and adopt me: {pet.adoption_url}"
 
-        species_tag = "DogsOfBluesky" if pet.species == "dog" else "CatsOfBluesky"
+        match pet.species:
+            case "dog":
+                species_tag = "DogsOfBluesky"
+            case "cat":
+                species_tag = "CatsOfBluesky"
+            case "guinea pig":
+                species_tag = "GuineaPigsOfBluesky"
+            case "rabbit":
+                species_tag = "RabbitsOfBluesky"
+            case "bird":
+                species_tag = "BirdsOfBluesky"
+            case _:
+                species_tag = "PLACEHOLDER" # TODO: Add more species tags as needed
+            
+        
         tags = ["AdoptDontShop", *CITY_HASHTAGS, city, species_tag]
 
         return Post(

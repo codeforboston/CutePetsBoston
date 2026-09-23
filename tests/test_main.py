@@ -139,7 +139,7 @@ class CreateSourcesTests(unittest.TestCase):
 
         self.assertEqual(len(sources), 1)
         self.assertIsInstance(sources[0], SourceRescueGroups)
-        self.assertEqual(sources[0].species, ("dogs", "cats"))
+        self.assertEqual(sources[0].species, ("dogs", "cats", "birds", "rabbits", "guinea pigs"))
 
     def test_debug_returns_manual_sources_for_dogs_and_cats(self):
         sources = create_sources(debug=True)

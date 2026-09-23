@@ -30,7 +30,7 @@ def test_live_multi_species_search_returns_usable_pets():
     # and returned records (a rejected body historically yielded zero).
     assert pets, "live search returned no pets — request shape likely rejected"
 
-    assert {pet.species for pet in pets} <= {"dog", "cat"}
+    assert {pet.species for pet in pets} <= {"dog", "cat", "bird", "rabbit", "guinea pig"}
     for pet in pets:
         assert pet.name
         assert pet.pet_id
