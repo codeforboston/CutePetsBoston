@@ -43,7 +43,7 @@ def rescuegroups_to_adoptable_pet(animal_data: Dict[str, Any]) -> AdoptablePet:
         location=location,
         description=description,
         adoption_url=adoption_url,
-        image_url=image_url,
+        image_urls=[image_url] if image_url else [],
     )
 
 
@@ -241,4 +241,3 @@ try:
 except ImportError:
     # pytest not available, fixtures won't be available
     HAS_PYTEST = False
-
