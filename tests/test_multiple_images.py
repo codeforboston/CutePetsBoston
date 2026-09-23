@@ -72,6 +72,42 @@ def test_rescuegroups_requests_and_joins_picture_includes():
     assert pets[0].image_urls == [URLS[1]]
 
 
+def test_rescuegroups_parses_large_picture_metadata_objects():
+    source = SourceRescueGroups(api_key="dummy")
+    animal = {
+        "id": "22750395",
+        "attributes": {"name": "Buddy", "pictureThumbnailUrl": "https://example.com/thumb.jpg?width=100"},
+        "relationships": {
+            "species": {"data": [{"id": "dog"}]},
+            "pictures": {"data": [{"id": "plain"}, {"id": "metadata"}]},
+        },
+    }
+    large_url = "https://cdn.rescuegroups.org/8866/pictures/animals/22689/22689209/103854123.png?width=500"
+    pictures = {
+        "plain": {"order": 2, "large": URLS[1]},
+        "metadata": {
+            "order": 1,
+            "large": {
+                "filesize": 838711,
+                "resolutionX": 500,
+                "resolutionY": 388,
+                "url": large_url,
+            },
+        },
+    }
+
+    pet = source._parse_animal(animal, {}, {"dog": {"plural": "dogs"}}, pictures)
+    assert pet is not None
+    assert pet.image_urls == [large_url, URLS[1]]
+
+    fallback = source._parse_animal(
+        animal, {}, {"dog": {"plural": "dogs"}},
+        {"metadata": {"order": 1, "large": {}}},
+    )
+    assert fallback is not None
+    assert fallback.image_urls == ["https://example.com/thumb.jpg?width=800"]
+
+
 def test_pet_and_post_use_ordered_image_urls_only():
     selected_post = Post(text="gallery", image_urls=[*URLS, URLS[0]])
     assert selected_post.selected_image_urls == URLS[:4]

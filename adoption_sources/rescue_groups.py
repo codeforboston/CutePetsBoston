@@ -13,6 +13,7 @@ from collections.abc import Sequence
 from typing import Iterator
 
 import requests
+from pydantic import BaseModel, ValidationError
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
@@ -38,6 +39,22 @@ FILTER_SPECIES_SINGULAR = {"dogs": "Dog", "cats": "Cat"}
 # exponential backoff (0s, 2s, 4s, 8s between attempts).
 RETRY_TOTAL = 4
 RETRY_BACKOFF_FACTOR = 1
+
+
+class PictureVariant(BaseModel):
+    url: str
+    filesize: int | None = None
+    resolutionX: int | None = None
+    resolutionY: int | None = None
+
+
+class PictureAttributes(BaseModel):
+    order: int | None = None
+    large: str | PictureVariant | None = None
+
+    @property
+    def large_url(self) -> str | None:
+        return self.large.url if isinstance(self.large, PictureVariant) else self.large
 
 
 def _session_with_retries() -> requests.Session:
@@ -331,6 +348,14 @@ class SourceRescueGroups(PetSource):
 
     def _get_image_urls(self, animal: dict, pictures_by_id: dict) -> list[str]:
         relationships = animal.get("relationships", {}).get("pictures", {}).get("data", [])
-        pictures = [pictures_by_id.get(item.get("id"), {}) for item in relationships]
-        pictures.sort(key=lambda picture: picture.get("order") or float("inf"))
-        return select_image_urls([picture.get("large") for picture in pictures])
+        pictures = []
+        for item in relationships:
+            attributes = pictures_by_id.get(item.get("id"))
+            if attributes is None:
+                continue
+            try:
+                pictures.append(PictureAttributes.model_validate(attributes))
+            except ValidationError as exc:
+                logger.debug("Invalid picture for animal %s: %s", animal.get("id"), exc)
+        pictures.sort(key=lambda picture: picture.order if picture.order is not None else float("inf"))
+        return select_image_urls([picture.large_url for picture in pictures])
