@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from functools import cached_property
 from typing import Iterable
 
 from config import CITY_NAME, CITY_STATE
@@ -28,7 +29,7 @@ class AdoptablePet:
     rescue_id: str | None = None  # shelter's own animal id (RescueGroups "rescueId")
 
     def __post_init__(self) -> None:
-        self.image_urls = selected_image_urls(self.image_urls)
+        self.image_urls = select_image_urls(self.image_urls)
 
 
 class PetSource(ABC):
@@ -61,14 +62,16 @@ class Post:
     alt_text: str | None = None  # For image accessibility
     tags: list[str] = field(default_factory=list)
 
-    def __post_init__(self) -> None:
-        self.image_urls = selected_image_urls(self.image_urls)
+    @cached_property
+    def selected_image_urls(self) -> list[str]:
+        """Return up to four distinct photo URLs in their original order."""
+        return select_image_urls(self.image_urls)
 
 
 MAX_POST_IMAGES = 4
 
 
-def selected_image_urls(image_urls: list[str]) -> list[str]:
+def select_image_urls(image_urls: list[str]) -> list[str]:
     """Return up to four distinct photo URLs in their original order."""
     return list(dict.fromkeys(url for url in image_urls if url))[:MAX_POST_IMAGES]
 

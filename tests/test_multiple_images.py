@@ -1,6 +1,6 @@
 from unittest.mock import Mock, patch
 
-from abstractions import AdoptablePet, Post, selected_image_urls
+from abstractions import AdoptablePet, Post
 from adoption_sources.rescue_groups import SourceRescueGroups
 from social_posters.bluesky import PosterBluesky
 from social_posters.instagram import PosterInstagram
@@ -73,7 +73,10 @@ def test_rescuegroups_requests_and_joins_picture_includes():
 
 
 def test_pet_and_post_use_ordered_image_urls_only():
-    assert selected_image_urls([*URLS, URLS[0]]) == URLS[:4]
+    selected_post = Post(text="gallery", image_urls=[*URLS, URLS[0]])
+    assert selected_post.selected_image_urls == URLS[:4]
+    assert selected_post.selected_image_urls is selected_post.selected_image_urls
+    assert selected_post.image_urls == [*URLS, URLS[0]]
     assert "image_url" not in AdoptablePet.__dataclass_fields__
     assert "image_url" not in Post.__dataclass_fields__
     pet = AdoptablePet("Buddy", "dog", "Mix", "Boston", image_urls=URLS[:2])
@@ -81,7 +84,6 @@ def test_pet_and_post_use_ordered_image_urls_only():
     assert AdoptablePet("Buddy", "dog", "Mix", "Boston", image_urls=[*URLS, URLS[0]]).image_urls == URLS[:4]
     post = PosterInstagram().format_post(pet)
     assert post.image_urls == URLS[:2]
-    assert Post(text="gallery", image_urls=[*URLS, URLS[0]]).image_urls == URLS[:4]
 
 
 def test_bluesky_embeds_four_photos_and_skips_one_failed_upload():

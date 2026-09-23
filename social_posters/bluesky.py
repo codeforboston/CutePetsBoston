@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 
 import requests
 
-from abstractions import Post, PostResult, SocialPoster, selected_image_urls
+from abstractions import Post, PostResult, SocialPoster
 from config import CITY_HASHTAGS, CITY_NAME, CITY_STATE
 
 logger = logging.getLogger(__name__)
@@ -73,7 +73,7 @@ class PosterBluesky(SocialPoster):
                 return result
 
         headers = {"Authorization": f"Bearer {self._access_token}"}
-        photo_urls = selected_image_urls(post.image_urls)
+        photo_urls = post.selected_image_urls
         images = []
         for index, image_url in enumerate(photo_urls, start=1):
             logger.info("Bluesky image %d: starting download/upload", index)

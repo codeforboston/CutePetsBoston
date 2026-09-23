@@ -16,7 +16,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from abstractions import AdoptablePet, PetSource, selected_image_urls
+from abstractions import AdoptablePet, PetSource, select_image_urls
 from adoption_sources.pet_links import reconstruct_adoption_url
 from config import CITY_NAME, CITY_STATE, PET_SPECIES, POSTAL_CODE, RESCUEGROUPS_LIMIT
 
@@ -262,7 +262,7 @@ class SourceRescueGroups(PetSource):
             image_urls = self._get_image_urls(animal, pictures_by_id or {})
             if not image_urls:
                 thumbnail = self._get_image_url(attrs)
-                image_urls = selected_image_urls([thumbnail] if thumbnail else [])
+                image_urls = select_image_urls([thumbnail] if thumbnail else [])
 
             # Location of the adoption org
             location = f"{org_attrs.get('city')}, {org_attrs.get('state')}"
@@ -333,4 +333,4 @@ class SourceRescueGroups(PetSource):
         relationships = animal.get("relationships", {}).get("pictures", {}).get("data", [])
         pictures = [pictures_by_id.get(item.get("id"), {}) for item in relationships]
         pictures.sort(key=lambda picture: picture.get("order") or float("inf"))
-        return selected_image_urls([picture.get("large") for picture in pictures])
+        return select_image_urls([picture.get("large") for picture in pictures])

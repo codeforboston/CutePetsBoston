@@ -10,7 +10,7 @@ from urllib.parse import urlparse
 import requests
 from mastodon import Mastodon
 
-from abstractions import AdoptablePet, Post, PostResult, SocialPoster, selected_image_urls
+from abstractions import AdoptablePet, Post, PostResult, SocialPoster
 from abstractions import CITY_NAME, CITY_STATE
 
 THREAD_SUFFIX = "\n\nMore details below ⬇️"
@@ -72,7 +72,7 @@ class PosterMastodon(SocialPoster):
             return result
         logger.info("Mastodon credentials available.")
 
-        photo_urls = selected_image_urls(post.image_urls)
+        photo_urls = post.selected_image_urls
         if not photo_urls:
             logger.warning("Mastodon posts require an image URL.")
             result = PostResult(
@@ -297,7 +297,7 @@ class PosterMastodon(SocialPoster):
     def _upload_media(
         self, session: Mastodon, post: Post, image_url: str | None = None, index: int = 1
     ) -> str:
-        image_url = image_url or (post.image_urls[0] if post.image_urls else None)
+        image_url = image_url or (post.selected_image_urls[0] if post.selected_image_urls else None)
         if not image_url:
             raise ValueError("Mastodon posts require an image URL.")
 
