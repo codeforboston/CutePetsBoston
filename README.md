@@ -40,7 +40,7 @@ Optional platform selection:
 
 # How to run the script
 
-    python main.py
+    python main.py --debugsources --debugposters
 
 To run only the Mastodon poster locally or in GitHub Actions:
 
