@@ -198,6 +198,8 @@ class PosterBluesky(SocialPoster):
                 species_tag = "RabbitsOfBluesky"
             case "bird":
                 species_tag = "BirdsOfBluesky"
+            case _:
+                species_tag = "AnimalsOfBluesky"
             
         
         tags = ["AdoptDontShop", *CITY_HASHTAGS, city, species_tag]
