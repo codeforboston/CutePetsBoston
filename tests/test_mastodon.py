@@ -362,7 +362,7 @@ class TestMastodonPublish:
         with pytest.raises(RuntimeError, match="upload failed"):
             poster._upload_media(
                 session,
-                Post(text="Meet Poppy!", image_url="https://example.com/pet.jpg"),
+                Post(text="Meet Poppy!", image_urls=["https://example.com/pet.jpg"]),
             )
 
         assert not image_path.exists()
@@ -420,7 +420,7 @@ class TestMastodonPublish:
         poster.authenticate = Mock(return_value=authenticate_result)
         caplog.set_level(logging.INFO, logger="social_posters.mastodon")
 
-        result = poster.publish(Post(text="Meet Poppy!", image_url=image_url))
+        result = poster.publish(Post(text="Meet Poppy!", image_urls=[image_url] if image_url else []))
 
         assert not result.success
         assert result.error_message == expected_error
@@ -445,7 +445,7 @@ class TestMastodonPublish:
         caplog.set_level(logging.INFO, logger="social_posters.mastodon")
 
         result = poster.publish(
-            Post(text="Original text", image_url="https://example.com/pet.jpg")
+            Post(text="Original text", image_urls=["https://example.com/pet.jpg"])
         )
 
         assert result.success
@@ -485,7 +485,7 @@ class TestMastodonPublish:
         caplog.set_level(logging.INFO, logger="social_posters.mastodon")
 
         result = poster.publish(
-            Post(text="Original text", image_url="https://example.com/pet.jpg")
+            Post(text="Original text", image_urls=["https://example.com/pet.jpg"])
         )
 
         assert not result.success

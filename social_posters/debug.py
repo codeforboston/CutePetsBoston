@@ -20,8 +20,7 @@ class PosterDebug(SocialPoster):
         output = (
             f"Debug post\n"
             f"Text:\n{post.text}\n"
-            f"Image: {post.image_url}\n"
-            f"Images: {selected_image_urls(post.image_urls, post.image_url)}\n"
+            f"Images: {selected_image_urls(post.image_urls)}\n"
             f"Link: {post.link}\n"
             f"Alt: {post.alt_text}\n"
             f"Tags: {post.tags}\n"

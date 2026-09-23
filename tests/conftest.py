@@ -29,10 +29,10 @@ def sample_posts():
     """Fixture providing a list of sample Post instances."""
     return [
         Post(text="Simple post"),
-        Post(text="Post with image", image_url="https://example.com/image.jpg"),
+        Post(text="Post with image", image_urls=["https://example.com/image.jpg"]),
         Post(
             text="Complete post",
-            image_url="https://example.com/image.jpg",
+            image_urls=["https://example.com/image.jpg"],
             link="https://example.com/link"
         ),
     ]
@@ -72,4 +72,3 @@ def single_pet():
 def single_pet_source(single_pet):
     """Fixture providing a MockPetSource with a single pet."""
     return MockPetSource([single_pet])
-

@@ -39,7 +39,7 @@ def test_create_media_container_uses_authorization_header(monkeypatch):
     poster = build_poster(monkeypatch)
     response = Mock()
     response.json.return_value = {"id": "container-id"}
-    post = Post(text="Meet Poppy!", image_url="https://example.com/poppy.jpg")
+    post = Post(text="Meet Poppy!", image_urls=["https://example.com/poppy.jpg"])
 
     with patch(
         "social_posters.instagram.requests.post",
@@ -125,7 +125,7 @@ def test_publish_builds_post_url_from_authenticated_username(monkeypatch):
     poster = build_poster(monkeypatch)
     poster._authenticated = True
     poster.username = "cutepetsboston2026_test"
-    post = Post(text="Meet Poppy!", image_url="https://example.com/poppy.jpg")
+    post = Post(text="Meet Poppy!", image_urls=["https://example.com/poppy.jpg"])
 
     with (
         patch.object(poster, "_create_media_container", return_value="container-id"),

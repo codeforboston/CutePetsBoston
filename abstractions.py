@@ -28,7 +28,7 @@ class AdoptablePet:
     rescue_id: str | None = None  # shelter's own animal id (RescueGroups "rescueId")
 
     def __post_init__(self) -> None:
-        self.image_urls = selected_image_urls(self.image_urls, None)
+        self.image_urls = selected_image_urls(self.image_urls)
 
 
 class PetSource(ABC):
@@ -56,24 +56,21 @@ class Post:
     """Represents a social media post about an adoptable pet."""
 
     text: str
-    image_url: str | None = None
+    image_urls: list[str] = field(default_factory=list)
     link: str | None = None
     alt_text: str | None = None  # For image accessibility
     tags: list[str] = field(default_factory=list)
-    image_urls: list[str] = field(default_factory=list)
 
     def __post_init__(self) -> None:
-        self.image_urls = selected_image_urls(self.image_urls, self.image_url)
-        self.image_url = self.image_urls[0] if self.image_urls else None
+        self.image_urls = selected_image_urls(self.image_urls)
 
 
 MAX_POST_IMAGES = 4
 
 
-def selected_image_urls(image_urls: list[str], image_url: str | None) -> list[str]:
-    """Return up to four distinct photos, including legacy single-image posts."""
-    candidates = image_urls if image_urls else ([image_url] if image_url else [])
-    return list(dict.fromkeys(url for url in candidates if url))[:MAX_POST_IMAGES]
+def selected_image_urls(image_urls: list[str]) -> list[str]:
+    """Return up to four distinct photo URLs in their original order."""
+    return list(dict.fromkeys(url for url in image_urls if url))[:MAX_POST_IMAGES]
 
 
 @dataclass
@@ -146,7 +143,6 @@ class SocialPoster(ABC):
         photos = pet.image_urls
         return Post(
             text=text,
-            image_url=photos[0] if photos else None,
             image_urls=photos,
             link=pet.adoption_url,
             alt_text=f"Photo of {pet.name}, a {pet.breed} {pet.species} available for adoption",

@@ -73,7 +73,7 @@ class PosterBluesky(SocialPoster):
                 return result
 
         headers = {"Authorization": f"Bearer {self._access_token}"}
-        photo_urls = selected_image_urls(post.image_urls, post.image_url)
+        photo_urls = selected_image_urls(post.image_urls)
         images = []
         for index, image_url in enumerate(photo_urls, start=1):
             logger.info("Bluesky image %d: starting download/upload", index)
@@ -192,7 +192,6 @@ class PosterBluesky(SocialPoster):
         photos = pet.image_urls
         return Post(
             text=text,
-            image_url=photos[0] if photos else None,
             image_urls=photos,
             link=pet.adoption_url,
             alt_text=f"Photo of {name}, a {pet.breed} available for adoption",

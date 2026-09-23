@@ -63,7 +63,7 @@ class PosterInstagram(SocialPoster):
         if not self._is_available:
             return PostResult(success=False, error_message="Instagram credentials not available.")
 
-        photo_urls = selected_image_urls(post.image_urls, post.image_url)
+        photo_urls = selected_image_urls(post.image_urls)
         if not photo_urls:
             return PostResult(success=False, error_message="Instagram posts require an image URL.")
 
@@ -121,7 +121,7 @@ class PosterInstagram(SocialPoster):
             f"{GRAPH_API_BASE}/{self.account_id}/media",
             headers=self._authorization_headers,
             data={
-                "image_url": image_url or post.image_url,
+                "image_url": image_url or post.image_urls[0],
                 "alt_text": f"{post.alt_text or 'Photo of an adoptable pet'} (photo {index})",
                 "caption": caption,
             },

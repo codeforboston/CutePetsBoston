@@ -72,7 +72,7 @@ class PosterMastodon(SocialPoster):
             return result
         logger.info("Mastodon credentials available.")
 
-        photo_urls = selected_image_urls(post.image_urls, post.image_url)
+        photo_urls = selected_image_urls(post.image_urls)
         if not photo_urls:
             logger.warning("Mastodon posts require an image URL.")
             result = PostResult(
@@ -297,7 +297,7 @@ class PosterMastodon(SocialPoster):
     def _upload_media(
         self, session: Mastodon, post: Post, image_url: str | None = None, index: int = 1
     ) -> str:
-        image_url = image_url or post.image_url
+        image_url = image_url or (post.image_urls[0] if post.image_urls else None)
         if not image_url:
             raise ValueError("Mastodon posts require an image URL.")
 
@@ -370,7 +370,6 @@ class PosterMastodon(SocialPoster):
         photos = pet.image_urls
         post = Post(
             text=text,
-            image_url=photos[0] if photos else None,
             image_urls=photos,
             link=pet.adoption_url,
             alt_text=(

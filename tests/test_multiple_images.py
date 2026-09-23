@@ -11,7 +11,7 @@ URLS = [f"https://example.com/{number}.jpg" for number in range(1, 6)]
 
 
 def make_post(count=4):
-    return Post(text="Meet Buddy", image_url=URLS[0], image_urls=URLS[:count], alt_text="Photo of Buddy")
+    return Post(text="Meet Buddy", image_urls=URLS[:count], alt_text="Photo of Buddy")
 
 
 def make_response(data=None, content=b"photo"):
@@ -72,17 +72,16 @@ def test_rescuegroups_requests_and_joins_picture_includes():
     assert pets[0].image_urls == [URLS[1]]
 
 
-def test_legacy_photo_and_list_only_pet_are_supported():
-    assert selected_image_urls([], URLS[0]) == [URLS[0]]
-    assert Post(text="legacy", image_url=URLS[0]).image_urls == [URLS[0]]
-    assert Post(text="gallery", image_urls=URLS[:2]).image_url == URLS[0]
+def test_pet_and_post_use_ordered_image_urls_only():
+    assert selected_image_urls([*URLS, URLS[0]]) == URLS[:4]
     assert "image_url" not in AdoptablePet.__dataclass_fields__
+    assert "image_url" not in Post.__dataclass_fields__
     pet = AdoptablePet("Buddy", "dog", "Mix", "Boston", image_urls=URLS[:2])
     assert pet.image_urls == URLS[:2]
     assert AdoptablePet("Buddy", "dog", "Mix", "Boston", image_urls=[*URLS, URLS[0]]).image_urls == URLS[:4]
     post = PosterInstagram().format_post(pet)
-    assert post.image_url == URLS[0]
     assert post.image_urls == URLS[:2]
+    assert Post(text="gallery", image_urls=[*URLS, URLS[0]]).image_urls == URLS[:4]
 
 
 def test_bluesky_embeds_four_photos_and_skips_one_failed_upload():

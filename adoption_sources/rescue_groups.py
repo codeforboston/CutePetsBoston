@@ -261,7 +261,8 @@ class SourceRescueGroups(PetSource):
             # Get best available image
             image_urls = self._get_image_urls(animal, pictures_by_id or {})
             if not image_urls:
-                image_urls = selected_image_urls([], self._get_image_url(attrs))
+                thumbnail = self._get_image_url(attrs)
+                image_urls = selected_image_urls([thumbnail] if thumbnail else [])
 
             # Location of the adoption org
             location = f"{org_attrs.get('city')}, {org_attrs.get('state')}"
@@ -332,4 +333,4 @@ class SourceRescueGroups(PetSource):
         relationships = animal.get("relationships", {}).get("pictures", {}).get("data", [])
         pictures = [pictures_by_id.get(item.get("id"), {}) for item in relationships]
         pictures.sort(key=lambda picture: picture.get("order") or float("inf"))
-        return selected_image_urls([picture.get("large") for picture in pictures], None)
+        return selected_image_urls([picture.get("large") for picture in pictures])
