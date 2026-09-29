@@ -5,7 +5,6 @@ from typing import Iterable
 
 from config import CITY_NAME, CITY_STATE
 
-
 # =============================================================================
 # Pet Ingestor Interface
 # =============================================================================

@@ -1,6 +1,7 @@
-from mastodon import Mastodon
 import os
 from datetime import datetime
+
+from mastodon import Mastodon
 
 client = Mastodon(
     access_token=os.environ.get("MASTODON_TOKEN"),

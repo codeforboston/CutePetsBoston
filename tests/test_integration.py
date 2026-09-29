@@ -1,9 +1,7 @@
 """Integration tests for the pets module using real sample data."""
 
-import pytest
 from abstractions import AdoptablePet, Post
 from tests.test_pets import MockPetSource, MockSocialSink
-from tests.test_data_utils import RescueGroupsDataHelper
 
 
 class TestRealDataIntegration:
@@ -20,7 +18,7 @@ class TestRealDataIntegration:
         for pet in fetched_pets:
             post = Post(
                 text=f"🐾 Meet {pet.name}! This sweet pet is looking for their forever home. Could it be with you?",
-                link="https://angelsrescue.org/adopt"
+                link="https://angelsrescue.org/adopt",
             )
             mock_social_sink.post(post)
 
@@ -41,7 +39,7 @@ class TestRealDataIntegration:
         for pet in pet_source.fetch_pets():
             post = Post(
                 text=f"💝 Senior spotlight: {pet.name} has so much love to give! Senior pets make wonderful companions.",
-                link="https://angelsrescue.org/adopt"
+                link="https://angelsrescue.org/adopt",
             )
             mock_social_sink.post(post)
 
@@ -61,7 +59,7 @@ class TestRealDataIntegration:
         for pet in small_pets:
             post = Post(
                 text=f"🏠 {pet.name} is perfect for apartment living! Small size, big personality!",
-                link="https://angelsrescue.org/adopt"
+                link="https://angelsrescue.org/adopt",
             )
             mock_social_sink.post(post)
 
@@ -69,7 +67,7 @@ class TestRealDataIntegration:
         for pet in large_pets:
             post = Post(
                 text=f"🏡 {pet.name} is a beautiful large breed looking for a home with space to roam!",
-                link="https://angelsrescue.org/adopt"
+                link="https://angelsrescue.org/adopt",
             )
             mock_social_sink.post(post)
 
@@ -136,8 +134,12 @@ class TestErrorHandling:
         # Test with unusual names
         unusual_pets = [
             AdoptablePet(name="", species="dog", breed="unknown", location="Unknown"),
-            AdoptablePet(name="   ", species="dog", breed="unknown", location="Unknown"),
-            AdoptablePet(name="A" * 100, species="dog", breed="unknown", location="Unknown"),
+            AdoptablePet(
+                name="   ", species="dog", breed="unknown", location="Unknown"
+            ),
+            AdoptablePet(
+                name="A" * 100, species="dog", breed="unknown", location="Unknown"
+            ),
         ]
 
         pet_source = MockPetSource(unusual_pets)
@@ -155,7 +157,9 @@ class TestScalability:
         """Test handling a large number of pets."""
         # Create many pets
         many_pets = [
-            AdoptablePet(name=f"Pet{i}", species="dog", breed="unknown", location="Unknown")
+            AdoptablePet(
+                name=f"Pet{i}", species="dog", breed="unknown", location="Unknown"
+            )
             for i in range(1000)
         ]
         pet_source = MockPetSource(many_pets)
@@ -181,4 +185,3 @@ class TestScalability:
             pets = list(pet_source.fetch_pets())
             assert len(pets) == len(real_pets_from_api)
             assert pets == real_pets_from_api
-

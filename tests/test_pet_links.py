@@ -6,13 +6,20 @@ from adoption_sources.rescue_groups import SourceRescueGroups
 
 class DomainOfTests(unittest.TestCase):
     def test_strips_www_and_scheme(self):
-        self.assertEqual(_domain_of("https://www.sterlingshelter.org/"), "sterlingshelter.org")
+        self.assertEqual(
+            _domain_of("https://www.sterlingshelter.org/"), "sterlingshelter.org"
+        )
 
     def test_keeps_subdomain_other_than_www(self):
-        self.assertEqual(_domain_of("https://adopt.sterlingshelter.org/x"), "adopt.sterlingshelter.org")
+        self.assertEqual(
+            _domain_of("https://adopt.sterlingshelter.org/x"),
+            "adopt.sterlingshelter.org",
+        )
 
     def test_drops_port(self):
-        self.assertEqual(_domain_of("https://sterlingshelter.org:8443/pet"), "sterlingshelter.org")
+        self.assertEqual(
+            _domain_of("https://sterlingshelter.org:8443/pet"), "sterlingshelter.org"
+        )
 
     def test_none_and_empty(self):
         self.assertIsNone(_domain_of(None))
@@ -43,27 +50,38 @@ class ReconstructAdoptionUrlTests(unittest.TestCase):
         # Unknown domain is skipped; the known one is used.
         self.assertEqual(
             reconstruct_adoption_url(
-                [None, "https://rescuegroups.org/foo", "https://sterlingshelter.org/"], "42"
+                [None, "https://rescuegroups.org/foo", "https://sterlingshelter.org/"],
+                "42",
             ),
             "https://sterlingshelter.org/pet-finder/#action_0=pet&animalID_0=42&petIndex_0=-1",
         )
 
     def test_mspca_uses_lowercased_rescue_id(self):
         self.assertEqual(
-            reconstruct_adoption_url(["http://www.mspca.org/boston"], "22301016", rescue_id="A467410"),
+            reconstruct_adoption_url(
+                ["http://www.mspca.org/boston"], "22301016", rescue_id="A467410"
+            ),
             "https://www.mspca.org/pets/a467410/",
         )
 
     def test_mspca_without_rescue_id_returns_none(self):
         # MSPCA's template needs rescue_id, not the RescueGroups pet_id.
-        self.assertIsNone(reconstruct_adoption_url(["http://www.mspca.org/boston"], "22301016"))
+        self.assertIsNone(
+            reconstruct_adoption_url(["http://www.mspca.org/boston"], "22301016")
+        )
 
     def test_unknown_domain_returns_none(self):
-        self.assertIsNone(reconstruct_adoption_url(["https://www.example.org/adoption-search/"], "5"))
+        self.assertIsNone(
+            reconstruct_adoption_url(["https://www.example.org/adoption-search/"], "5")
+        )
 
     def test_missing_pet_id_returns_none(self):
-        self.assertIsNone(reconstruct_adoption_url(["https://sterlingshelter.org/"], None))
-        self.assertIsNone(reconstruct_adoption_url(["https://sterlingshelter.org/"], ""))
+        self.assertIsNone(
+            reconstruct_adoption_url(["https://sterlingshelter.org/"], None)
+        )
+        self.assertIsNone(
+            reconstruct_adoption_url(["https://sterlingshelter.org/"], "")
+        )
 
 
 class ParseAnimalIntegrationTests(unittest.TestCase):
@@ -85,16 +103,26 @@ class ParseAnimalIntegrationTests(unittest.TestCase):
         }
 
     def test_toolkit_org_gets_deep_link(self):
-        orgs = {"org1": {"city": "Sterling", "state": "MA", "url": "https://sterlingshelter.org/"}}
+        orgs = {
+            "org1": {
+                "city": "Sterling",
+                "state": "MA",
+                "url": "https://sterlingshelter.org/",
+            }
+        }
         pet = self.source._parse_animal(self._animal(), orgs, self.species_by_id)
+        assert pet is not None
         self.assertEqual(
             pet.adoption_url,
             "https://sterlingshelter.org/pet-finder/#action_0=pet&animalID_0=22506352&petIndex_0=-1",
         )
 
     def test_non_toolkit_org_keeps_landing_url(self):
-        orgs = {"org1": {"city": "Boston", "state": "MA", "url": "https://www.mspca.org/"}}
+        orgs = {
+            "org1": {"city": "Boston", "state": "MA", "url": "https://www.mspca.org/"}
+        }
         pet = self.source._parse_animal(self._animal(), orgs, self.species_by_id)
+        assert pet is not None
         self.assertEqual(pet.adoption_url, "https://www.mspca.org/")
 
 

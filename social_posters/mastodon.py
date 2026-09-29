@@ -10,8 +10,14 @@ from urllib.parse import urlparse
 import requests
 from mastodon import Mastodon
 
-from abstractions import AdoptablePet, Post, PostResult, SocialPoster
-from abstractions import CITY_NAME, CITY_STATE
+from abstractions import (
+    CITY_NAME,
+    CITY_STATE,
+    AdoptablePet,
+    Post,
+    PostResult,
+    SocialPoster,
+)
 
 THREAD_SUFFIX = "\n\nMore details below ⬇️"
 MASTODON_CHARACTER_LIMIT = 500
@@ -47,16 +53,12 @@ class PosterMastodon(SocialPoster):
             self._session.account_verify_credentials()
             self._auth_error = None
         except Exception as exc:
-            logger.exception(
-                "Mastodon authentication failed"
-            )
+            logger.exception("Mastodon authentication failed")
             self._session = None
             self._auth_error = f"{type(exc).__name__}: {exc}"
             return False
         else:
-            logger.info(
-                "Mastodon authentication succeeded"
-            )
+            logger.info("Mastodon authentication succeeded")
         return True
 
     def publish(self, post: Post) -> PostResult:
@@ -106,7 +108,7 @@ class PosterMastodon(SocialPoster):
             logger.info("Mastodon publish result: %s", pprint.pformat(result))
             return result
         logger.info("Mastodon authentication successful")
-        
+
         root_status: dict | None = None
         completed_reply_count = 0
         stage = "preparing publish"
@@ -116,7 +118,9 @@ class PosterMastodon(SocialPoster):
             media_ids = []
             for index, image_url in enumerate(photo_urls, start=1):
                 try:
-                    media_ids.append(self._upload_media(session, post, image_url, index))
+                    media_ids.append(
+                        self._upload_media(session, post, image_url, index)
+                    )
                 except Exception as exc:
                     logger.warning("Mastodon image %d skipped: %s", index, exc)
             if not media_ids:
@@ -134,7 +138,7 @@ class PosterMastodon(SocialPoster):
             )
             logger.info("Mastodon main caption: %s", main_caption_formatted)
             logger.info("Mastodon replies: %s", replies_formatted)
-            
+
             stage = "posting thread"
             logger.info("Mastodon start posting thread")
             logger.info(
@@ -203,7 +207,7 @@ class PosterMastodon(SocialPoster):
     ) -> Iterator[tuple[str, int | None, dict]]:
         status = session.status_post(
             main_caption,
-            media_ids=media_ids,
+            media_ids=[media_id for media_id in media_ids],
         )
         yield "root", None, status
 
@@ -231,12 +235,7 @@ class PosterMastodon(SocialPoster):
         main_text, overflow = self._safe_truncate(caption_text, main_limit)
         replies = self._split_reply_chunks(overflow)
 
-        main_caption = (
-            f"{main_text}"
-            f"{TRUNCATION_SUFFIX}"
-            f"{THREAD_SUFFIX}"
-            f"{tag_suffix}"
-        )
+        main_caption = f"{main_text}{TRUNCATION_SUFFIX}{THREAD_SUFFIX}{tag_suffix}"
 
         return main_caption, replies
 
@@ -295,9 +294,15 @@ class PosterMastodon(SocialPoster):
             return tmp.name
 
     def _upload_media(
-        self, session: Mastodon, post: Post, image_url: str | None = None, index: int = 1
+        self,
+        session: Mastodon,
+        post: Post,
+        image_url: str | None = None,
+        index: int = 1,
     ) -> str:
-        image_url = image_url or (post.selected_image_urls[0] if post.selected_image_urls else None)
+        image_url = image_url or (
+            post.selected_image_urls[0] if post.selected_image_urls else None
+        )
         if not image_url:
             raise ValueError("Mastodon posts require an image URL.")
 
@@ -311,7 +316,9 @@ class PosterMastodon(SocialPoster):
             image_path = self._download_image(image_url)
             logger.info("Finish downloading image: image_path=%s", image_path)
 
-            media_description = f"{post.alt_text or 'Photo of an adoptable pet'} (photo {index})"
+            media_description = (
+                f"{post.alt_text or 'Photo of an adoptable pet'} (photo {index})"
+            )
             logger.info(
                 "Mastodon media upload input: image_path=%s description=%s",
                 image_path,
