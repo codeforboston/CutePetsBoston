@@ -6,8 +6,8 @@ API Documentation: https://api.rescuegroups.org/v5/public/docs
 
 import html
 import logging
-import pprint
 import os
+import pprint
 import re
 from collections.abc import Sequence
 from typing import Iterator
@@ -179,8 +179,7 @@ class SourceRescueGroups(PetSource):
         logger.info(f"Received {len(data)} pets from RescueGroups")
 
         data_log = pprint.pformat(data)
-        logger.debug('API Response: \n%s', data_log)
-
+        logger.debug("API Response: \n%s", data_log)
 
         orgs_by_id = {
             item["id"]: item.get("attributes", {})
@@ -230,12 +229,16 @@ class SourceRescueGroups(PetSource):
                 .get("id")
             )
             if not species_id:
-                logger.warning(f"Skipping animal {animal_id} with no species relationship")
+                logger.warning(
+                    f"Skipping animal {animal_id} with no species relationship"
+                )
                 return None
             plural = species_by_id.get(species_id, {}).get("plural")
             normalized_plural = plural.lower() if isinstance(plural, str) else ""
             if normalized_plural not in self.species:
-                logger.info(f"Skipping animal {animal_id} with unconfigured species: {plural!r}")
+                logger.info(
+                    f"Skipping animal {animal_id} with unconfigured species: {plural!r}"
+                )
                 return None
             species = SPECIES_SINGULAR[normalized_plural]
 
@@ -259,9 +262,14 @@ class SourceRescueGroups(PetSource):
                 org_attrs.get("url"),
             )
             adoption_url = next(
-                (u for u in url_candidates
-                 if u and u.strip().rstrip("/") not in ("http:", "https:", "http://", "https://")),
-                None
+                (
+                    u
+                    for u in url_candidates
+                    if u
+                    and u.strip().rstrip("/")
+                    not in ("http:", "https:", "http://", "https://")
+                ),
+                None,
             )
 
             # Shelter's own animal id (e.g. MSPCA's "A468573"); some orgs' deep
@@ -283,7 +291,6 @@ class SourceRescueGroups(PetSource):
 
             # Location of the adoption org
             location = f"{org_attrs.get('city')}, {org_attrs.get('state')}"
-
 
             return AdoptablePet(
                 name=name,
@@ -347,7 +354,9 @@ class SourceRescueGroups(PetSource):
         return None
 
     def _get_image_urls(self, animal: dict, pictures_by_id: dict) -> list[str]:
-        relationships = animal.get("relationships", {}).get("pictures", {}).get("data", [])
+        relationships = (
+            animal.get("relationships", {}).get("pictures", {}).get("data", [])
+        )
         pictures = []
         for item in relationships:
             attributes = pictures_by_id.get(item.get("id"))
@@ -357,5 +366,9 @@ class SourceRescueGroups(PetSource):
                 pictures.append(PictureAttributes.model_validate(attributes))
             except ValidationError as exc:
                 logger.debug("Invalid picture for animal %s: %s", animal.get("id"), exc)
-        pictures.sort(key=lambda picture: picture.order if picture.order is not None else float("inf"))
+        pictures.sort(
+            key=lambda picture: (
+                picture.order if picture.order is not None else float("inf")
+            )
+        )
         return select_image_urls([picture.large_url for picture in pictures])

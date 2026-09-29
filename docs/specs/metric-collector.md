@@ -110,9 +110,9 @@ Both prunes run on every `record_publish_results` write. The collector never pru
 ```python
 @dataclass
 class PostMetrics:
-    collected_at: str            # ISO8601 UTC, assigned by orchestration
-    likes: int | None = None     # likes/favourites
-    reposts: int | None = None   # reposts/reblogs; None when unavailable
+    collected_at: str  # ISO8601 UTC, assigned by orchestration
+    likes: int | None = None  # likes/favourites
+    reposts: int | None = None  # reposts/reblogs; None when unavailable
     comments: int | None = None  # replies/comments
 
 
@@ -122,7 +122,9 @@ class MetricCollector(ABC):
     def platform_name(self) -> str: ...
 
     @abstractmethod
-    def fetch_metrics(self, post_id: str, post_url: str | None = None) -> PostMetrics | None:
+    def fetch_metrics(
+        self, post_id: str, post_url: str | None = None
+    ) -> PostMetrics | None:
         """
         Return a PostMetrics snapshot for the given post.
         Return None if the post is unreachable (deleted, 404, transient error).
@@ -173,10 +175,14 @@ def main():
         pets = fetch_all_pets(sources)
         pet = pick_pet(pets, database_path="database.json")  # no longer writes
         if pet:
-            results = publish(pet, posters)                  # existing per-poster loop
-            record_publish_results(pet, results, database_path="database.json")  # writes pet + posts
+            results = publish(pet, posters)  # existing per-poster loop
+            record_publish_results(
+                pet, results, database_path="database.json"
+            )  # writes pet + posts
 
-        collect_metrics(collectors, database_path="database.json", window_days=14)  # new
+        collect_metrics(
+            collectors, database_path="database.json", window_days=14
+        )  # new
     except Exception:
         notify_slack_of_exception(traceback.format_exc())
         raise

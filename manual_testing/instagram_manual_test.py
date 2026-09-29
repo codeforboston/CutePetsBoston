@@ -16,7 +16,9 @@ def sample_pet():
         location="Boston, MA",
         description="Brian is a laid-back lab mix who loves a good nap and a good book.",
         adoption_url="https://example.org/adopt/brian",
-        image_urls=["https://static.wikia.nocookie.net/familyguy/images/c/c2/FamilyGuy_Single_BrianWriter_R7.jpg/revision/latest?cb=20230807152447"],
+        image_urls=[
+            "https://static.wikia.nocookie.net/familyguy/images/c/c2/FamilyGuy_Single_BrianWriter_R7.jpg/revision/latest?cb=20230807152447"
+        ],
         age_string="4 years",
         sex="Male",
         size_group="Large",
@@ -71,7 +73,9 @@ def main():
         result = poster.publish(post)
 
         if result.success:
-            print(f"\nPosted successfully! Media ID: {result.post_id}, URL: {result.post_url}")
+            print(
+                f"\nPosted successfully! Media ID: {result.post_id}, URL: {result.post_url}"
+            )
         else:
             print(f"\nPost failed: {result.error_message}")
             sys.exit(1)

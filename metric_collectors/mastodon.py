@@ -1,7 +1,7 @@
 """Mastodon engagement metric collector."""
 
-from datetime import datetime, timezone
 import os
+from datetime import datetime, timezone
 
 from mastodon import Mastodon
 

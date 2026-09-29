@@ -3,8 +3,8 @@
 import pytest
 
 from abstractions import AdoptablePet, Post
-from tests.test_pets import MockPetSource, MockSocialSink
 from tests.test_data_utils import RescueGroupsDataHelper
+from tests.test_pets import MockPetSource, MockSocialSink
 
 
 @pytest.fixture(scope="session")
@@ -15,7 +15,9 @@ def data_helper():
 
 def _pet(name, species="dog", breed="unknown", location="Unknown", **kwargs):
     """Shortcut to create an AdoptablePet with required fields for tests."""
-    return AdoptablePet(name=name, species=species, breed=breed, location=location, **kwargs)
+    return AdoptablePet(
+        name=name, species=species, breed=breed, location=location, **kwargs
+    )
 
 
 @pytest.fixture
@@ -33,7 +35,7 @@ def sample_posts():
         Post(
             text="Complete post",
             image_urls=["https://example.com/image.jpg"],
-            link="https://example.com/link"
+            link="https://example.com/link",
         ),
     ]
 

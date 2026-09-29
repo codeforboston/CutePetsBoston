@@ -1,28 +1,27 @@
 import argparse
-from dataclasses import asdict
-from datetime import datetime, timedelta, timezone
 import json
 import logging
 import os
-from pathlib import Path
 import pprint
 import random
 import sys
 import traceback
+from dataclasses import asdict
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import requests
 
 from adoption_sources import SourceManual, SourceRescueGroups
 from database import read_database, write_database
-from metrics_dashboard import dashboard
 from metric_collectors.bluesky import CollectorBluesky
 from metric_collectors.instagram import CollectorInstagram
 from metric_collectors.mastodon import CollectorMastodon
+from metrics_dashboard import dashboard
 from social_posters.bluesky import PosterBluesky
 from social_posters.debug import PosterDebug
 from social_posters.instagram import PosterInstagram
 from social_posters.mastodon import PosterMastodon
-
 
 file_handler = logging.FileHandler("cutepets.log")
 file_handler.setLevel(logging.DEBUG)
@@ -42,8 +41,8 @@ logger = logging.getLogger(__name__)
 def main():
     logger.info("Log started")
     parser = argparse.ArgumentParser()
-    parser.add_argument("--debugsources", action="store_true") # this defaults to False
-    parser.add_argument("--debugposters", action="store_true") # this defaults to False
+    parser.add_argument("--debugsources", action="store_true")  # this defaults to False
+    parser.add_argument("--debugposters", action="store_true")  # this defaults to False
 
     args = parser.parse_args()
 
@@ -74,7 +73,9 @@ def create_collectors(debug=False):
 
 def create_sources(debug=False):
     if debug:
-        cat_fixture_path = Path(__file__).parent / "tests" / "fixtures" / "sample_cats.json"
+        cat_fixture_path = (
+            Path(__file__).parent / "tests" / "fixtures" / "sample_cats.json"
+        )
         with cat_fixture_path.open() as fixture_file:
             cat_animals = json.load(fixture_file)
         return [
@@ -85,7 +86,7 @@ def create_sources(debug=False):
     return [SourceRescueGroups()]
 
 
-def run(sources, posters, collectors=None, database_path="database.json"):
+def run(sources, posters, collectors=None, database_path: str | Path = "database.json"):
     pets = []
     for source in sources:
         try:
@@ -133,7 +134,7 @@ def publish_posts(pet, posters):
     return results, published_results
 
 
-def pick_pet(pets, database_path="database.json"):
+def pick_pet(pets, database_path: str | Path = "database.json"):
     data = read_database(database_path)
     posted_pet_ids = {
         posted_pet["pet_id"] for posted_pet in data.get("posted_pets", [])
@@ -141,9 +142,7 @@ def pick_pet(pets, database_path="database.json"):
     eligible = [
         pet
         for pet in pets
-        if pet.image_urls
-        and pet.adoption_url
-        and pet.pet_id not in posted_pet_ids
+        if pet.image_urls and pet.adoption_url and pet.pet_id not in posted_pet_ids
     ]
     if not eligible:
         raise ValueError("No eligible pet found")
@@ -151,15 +150,13 @@ def pick_pet(pets, database_path="database.json"):
     return random.choice(eligible)
 
 
-def record_publish_results(pet, results, database_path="database.json"):
+def record_publish_results(pet, results, database_path: str | Path = "database.json"):
     data = read_database(database_path)
     posted_pets = data.setdefault("posted_pets", [])
     posts = data.setdefault("posts", [])
     posted_at = datetime.now(timezone.utc).isoformat()
 
-    posted_pets.append(
-        {"name": pet.name, "pet_id": pet.pet_id, "posted_at": posted_at}
-    )
+    posted_pets.append({"name": pet.name, "pet_id": pet.pet_id, "posted_at": posted_at})
     for poster, result in results:
         if not result.success:
             continue
@@ -181,14 +178,14 @@ def record_publish_results(pet, results, database_path="database.json"):
         if datetime.fromisoformat(item["posted_at"]) >= cutoff
     ]
     data["posts"] = [
-        item
-        for item in posts
-        if datetime.fromisoformat(item["posted_at"]) >= cutoff
+        item for item in posts if datetime.fromisoformat(item["posted_at"]) >= cutoff
     ]
     write_database(database_path, data)
 
 
-def collect_metrics(collectors, database_path="database.json", window_days=14):
+def collect_metrics(
+    collectors, database_path: str | Path = "database.json", window_days=14
+):
     try:
         data = read_database(database_path)
         posts = data.get("posts", [])
@@ -255,9 +252,7 @@ def notify_slack_of_exception(traceback_text):
     repo = os.environ.get("GITHUB_REPOSITORY")
     run_id = os.environ.get("GITHUB_RUN_ID")
     run_link = (
-        f"https://github.com/{repo}/actions/runs/{run_id}"
-        if repo and run_id
-        else None
+        f"https://github.com/{repo}/actions/runs/{run_id}" if repo and run_id else None
     )
 
     header = f"CutePetsBoston [{app_env}] run failed in *{workflow}*"

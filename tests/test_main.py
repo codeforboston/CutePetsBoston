@@ -1,7 +1,7 @@
 import json
+import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
-import unittest
 
 from abstractions import AdoptablePet, Post, PostMetrics, PostResult
 from adoption_sources import SourceManual

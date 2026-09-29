@@ -1,7 +1,7 @@
 """Instagram engagement metric collector."""
 
-from datetime import datetime, timezone
 import os
+from datetime import datetime, timezone
 
 import requests
 

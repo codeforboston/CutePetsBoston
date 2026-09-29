@@ -54,7 +54,11 @@ def test_collects_only_recent_posts_with_registered_collectors(tmp_path):
             {
                 "posted_pets": [],
                 "posts": [
-                    post("recent", (now - timedelta(days=1)).isoformat(), metrics=[previous]),
+                    post(
+                        "recent",
+                        (now - timedelta(days=1)).isoformat(),
+                        metrics=[previous],
+                    ),
                     post("none", (now - timedelta(days=2)).isoformat()),
                     post("old", (now - timedelta(days=15)).isoformat()),
                     post(
@@ -107,11 +111,11 @@ def test_collector_error_does_not_stop_other_posts(tmp_path):
     database_path = tmp_path / "database.json"
     recent = datetime.now(timezone.utc).isoformat()
     database_path.write_text(
-        json.dumps({"posted_pets": [], "posts": [post("bad", recent), post("good", recent)]})
+        json.dumps(
+            {"posted_pets": [], "posts": [post("bad", recent), post("good", recent)]}
+        )
     )
-    collector = FakeCollector(
-        {"bad": RuntimeError("unreachable"), "good": snapshot(4)}
-    )
+    collector = FakeCollector({"bad": RuntimeError("unreachable"), "good": snapshot(4)})
 
     collect_metrics([collector], database_path=database_path)
 

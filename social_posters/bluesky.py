@@ -1,8 +1,8 @@
-from datetime import datetime, timezone
 import logging
 import mimetypes
 import os
 import pprint
+from datetime import datetime, timezone
 from urllib.parse import urlparse
 
 import requests
@@ -40,7 +40,9 @@ class PosterBluesky(SocialPoster):
             self._did = session.get("did")
             ok = bool(self._access_token and self._did)
             if ok:
-                logger.info("Bluesky authentication succeeded (did present=%s)", bool(self._did))
+                logger.info(
+                    "Bluesky authentication succeeded (did present=%s)", bool(self._did)
+                )
             else:
                 logger.warning("Bluesky auth response missing accessJwt or did")
             return ok
@@ -57,8 +59,7 @@ class PosterBluesky(SocialPoster):
         if not self._is_available:
             logger.warning("Bluesky credentials not available.")
             result = PostResult(
-                success=False,
-                error_message="Bluesky credentials not available."
+                success=False, error_message="Bluesky credentials not available."
             )
             logger.info("Bluesky publish result: %s", pprint.pformat(result))
             return result
@@ -80,12 +81,19 @@ class PosterBluesky(SocialPoster):
             try:
                 img_response = requests.get(image_url, timeout=20)
                 img_response.raise_for_status()
-                logger.info("Bluesky image downloaded (%d bytes)", len(img_response.content))
+                logger.info(
+                    "Bluesky image downloaded (%d bytes)", len(img_response.content)
+                )
                 if len(img_response.content) > 2_000_000:
                     raise ValueError("Image exceeds Bluesky's 2 MB limit")
-                content_type = img_response.headers.get("Content-Type", "").split(";", 1)[0]
+                content_type = img_response.headers.get("Content-Type", "").split(
+                    ";", 1
+                )[0]
                 if not content_type.startswith("image/"):
-                    content_type = mimetypes.guess_type(urlparse(image_url).path)[0] or "image/jpeg"
+                    content_type = (
+                        mimetypes.guess_type(urlparse(image_url).path)[0]
+                        or "image/jpeg"
+                    )
                 upload = requests.post(
                     "https://bsky.social/xrpc/com.atproto.repo.uploadBlob",
                     headers={**headers, "Content-Type": content_type},
@@ -106,11 +114,13 @@ class PosterBluesky(SocialPoster):
 
         logger.info("Building Bluesky text and facets")
         text, facets = self._build_text_and_facets(post)
-        logger.info("Built text/facets (text_len=%d, facets_count=%d)", len(text), len(facets))
+        logger.info(
+            "Built text/facets (text_len=%d, facets_count=%d)", len(text), len(facets)
+        )
         logger.debug("Bluesky text preview: %s", text[:280])
         logger.debug("Bluesky facets: %s", pprint.pformat(facets))
 
-        record = {
+        record: dict[str, object] = {
             "$type": "app.bsky.feed.post",
             "text": text,
             "createdAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
@@ -218,7 +228,11 @@ class PosterBluesky(SocialPoster):
             )
         else:
             truncated_body = body[:max_body]
-        full_text = f"{truncated_body}{separator}{tags_section}" if tags_section else truncated_body
+        full_text = (
+            f"{truncated_body}{separator}{tags_section}"
+            if tags_section
+            else truncated_body
+        )
 
         encoded = full_text.encode("utf-8")
 
@@ -226,25 +240,31 @@ class PosterBluesky(SocialPoster):
             link_bytes = post.link.encode("utf-8")
             link_idx = encoded.find(link_bytes)
             if link_idx != -1:
-                facets.append({
-                    "index": {
-                        "byteStart": link_idx,
-                        "byteEnd": link_idx + len(link_bytes),
-                    },
-                    "features": [
-                        {"$type": "app.bsky.richtext.facet#link", "uri": post.link}
-                    ],
-                })
+                facets.append(
+                    {
+                        "index": {
+                            "byteStart": link_idx,
+                            "byteEnd": link_idx + len(link_bytes),
+                        },
+                        "features": [
+                            {"$type": "app.bsky.richtext.facet#link", "uri": post.link}
+                        ],
+                    }
+                )
 
         search_from = 0
         for tag_str in tag_strings:
             tag_bytes = tag_str.encode("utf-8")
             idx = encoded.find(tag_bytes, search_from)
             if idx != -1:
-                facets.append({
-                    "index": {"byteStart": idx, "byteEnd": idx + len(tag_bytes)},
-                    "features": [{"$type": "app.bsky.richtext.facet#tag", "tag": tag_str[1:]}],
-                })
+                facets.append(
+                    {
+                        "index": {"byteStart": idx, "byteEnd": idx + len(tag_bytes)},
+                        "features": [
+                            {"$type": "app.bsky.richtext.facet#tag", "tag": tag_str[1:]}
+                        ],
+                    }
+                )
                 search_from = idx + len(tag_bytes)
 
         facets.sort(key=lambda f: f["index"]["byteStart"])
@@ -276,7 +296,9 @@ class PosterBluesky(SocialPoster):
         trimmed_prefix = prefix[:prefix_limit].rstrip()
         if len(prefix) > prefix_limit:
             line_start = trimmed_prefix.rfind("\n")
-            clean_prefix = trimmed_prefix[:line_start].rstrip() if line_start != -1 else ""
+            clean_prefix = (
+                trimmed_prefix[:line_start].rstrip() if line_start != -1 else ""
+            )
             if clean_prefix:
                 trimmed_prefix = clean_prefix
 
