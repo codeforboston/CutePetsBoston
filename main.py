@@ -271,7 +271,7 @@ def notify_slack_of_exception(traceback_text):
         response = requests.post(webhook_url, json={"text": text}, timeout=10)
         response.raise_for_status()
     except Exception as slack_exc:
-        logger.error("Failed to post Slack alert: %s", slack_exc)
+        logger.error("Failed to post Slack alert: %s", type(slack_exc).name)
 
 
 if __name__ == "__main__":
