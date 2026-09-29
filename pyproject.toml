@@ -1,0 +1,23 @@
+[tool.ruff]
+target-version = "py314"
+extend-exclude = ["vendor", ".serena"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
+
+[tool.pyright]
+include = [
+    "abstractions.py",
+    "adoption_sources",
+    "config.py",
+    "database.py",
+    "main.py",
+    "metric_collectors",
+    "metrics_dashboard.py",
+    "social_posters",
+    "tests",
+    "manual_testing",
+]
+exclude = ["vendor", ".venv", ".serena", "**/__pycache__"]
+pythonVersion = "3.14"
+typeCheckingMode = "basic"
