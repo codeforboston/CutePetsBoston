@@ -1,0 +1,5 @@
+-r requirements.txt
+
+ruff==0.16.9
+pyright==1.1.414
+pandas-stubs==3.0.5.260914
