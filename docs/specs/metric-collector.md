@@ -107,12 +107,13 @@ Both prunes run on every `record_publish_results` write. The collector never pru
 
 #### `abstractions.py` additions
 
+<!-- fmt:off -->
 ```python
 @dataclass
 class PostMetrics:
-    collected_at: str  # ISO8601 UTC, assigned by orchestration
-    likes: int | None = None  # likes/favourites
-    reposts: int | None = None  # reposts/reblogs; None when unavailable
+    collected_at: str            # ISO8601 UTC, assigned by orchestration
+    likes: int | None = None     # likes/favourites
+    reposts: int | None = None   # reposts/reblogs; None when unavailable
     comments: int | None = None  # replies/comments
 
 
@@ -132,6 +133,7 @@ class MetricCollector(ABC):
         """
         ...
 ```
+<!-- fmt:on -->
 
 Notes:
 
