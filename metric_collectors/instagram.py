@@ -32,10 +32,8 @@ class CollectorInstagram(MetricCollector):
         try:
             response = requests.get(
                 f"{GRAPH_API_BASE}/{post_id}",
-                params={
-                    "fields": "like_count,comments_count",
-                    "access_token": self.access_token,
-                },
+                params={"fields": "like_count,comments_count"},
+                headers={"Authorization": f"Bearer {self.access_token}"},
                 timeout=20,
             )
             response.raise_for_status()

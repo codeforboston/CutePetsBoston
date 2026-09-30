@@ -16,8 +16,8 @@ Required:
 - `CUTEPETSBOSTON_RESCUEGROUPS_API_KEY`
 
 Optional for Instagram posting:
-- `INSTAGRAM_HANDLE`
-- `INSTAGRAM_PASSWORD`
+- `INSTAGRAM_BUSINESS_ACCOUNT_ID` (or `INSTAGRAM_TEST_BUSINESS_ACCOUNT_ID`)
+- `INSTAGRAM_PAGE_ACCESS_TOKEN` (or `INSTAGRAM_TEST_PAGE_ACCESS_TOKEN`)
 
 Optional for Bluesky posting:
 - `BLUESKY_HANDLE` (or `BLUESKY_TEST_HANDLE`)
@@ -40,7 +40,7 @@ Optional platform selection:
 
 # How to run the script
 
-    python main.py
+    python main.py --debugsources --debugposters
 
 To run only the Mastodon poster locally or in GitHub Actions:
 

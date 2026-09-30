@@ -12,7 +12,7 @@ def make_pet(pet_id="pet-123", name="Poppy"):
         species="dog",
         breed="mutt",
         location="Boston, MA",
-        image_url="https://example.com/poppy.jpg",
+        image_urls=["https://example.com/poppy.jpg"],
         adoption_url="https://example.com/adopt/poppy",
         pet_id=pet_id,
     )
