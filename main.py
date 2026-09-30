@@ -6,15 +6,27 @@ import pprint
 import random
 import sys
 import traceback
-from dataclasses import asdict
+from collections.abc import Iterable
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import cast
 
 import requests
 
 import redirects
+from abstractions import (
+    AdoptablePet,
+    MetricCollector,
+    MetricsProvider,
+    NamedPlatform,
+    PetProvider,
+    PetSource,
+    PostPublisher,
+    PostResult,
+    SocialPoster,
+)
 from adoption_sources import SourceManual, SourceRescueGroups
-from database import read_database, write_database
+from database import MetricSnapshot, read_database, write_database
 from metric_collectors.bluesky import CollectorBluesky
 from metric_collectors.instagram import CollectorInstagram
 from metric_collectors.mastodon import CollectorMastodon
@@ -39,7 +51,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def main():
+def main() -> None:
     logger.info("Log started")
     parser = argparse.ArgumentParser()
     parser.add_argument("--debugsources", action="store_true")  # this defaults to False
@@ -58,21 +70,21 @@ def main():
         raise
 
 
-def create_posters(debug=False):
+def create_posters(debug: bool = False) -> list[SocialPoster]:
     if debug:
         return [PosterDebug()]
 
     return [PosterMastodon(), PosterBluesky(), PosterInstagram()]
 
 
-def create_collectors(debug=False):
+def create_collectors(debug: bool = False) -> list[MetricCollector]:
     if debug:
         return []
 
     return [CollectorBluesky(), CollectorMastodon(), CollectorInstagram()]
 
 
-def create_sources(debug=False):
+def create_sources(debug: bool = False) -> list[PetSource]:
     if debug:
         cat_fixture_path = Path(__file__).parent / "tests" / "fixtures" / "sample_cats.json"
         with cat_fixture_path.open() as fixture_file:
@@ -86,13 +98,13 @@ def create_sources(debug=False):
 
 
 def run(
-    sources,
-    posters,
-    collectors=None,
+    sources: Iterable[PetProvider],
+    posters: Iterable[PostPublisher],
+    collectors: Iterable[MetricsProvider] | None = None,
     database_path: str | Path = "database.json",
-    redirects_path=None,
-):
-    pets = []
+    redirects_path: str | Path | None = None,
+) -> list[PostResult]:
+    pets: list[AdoptablePet] = []
     for source in sources:
         try:
             pets.extend(list(source.fetch_pets()))
@@ -101,7 +113,7 @@ def run(
 
     logger.info("Fetched %d records", len(pets))
     pet = pick_pet(pets, database_path=database_path)
-    results = []
+    results: list[PostResult] = []
 
     if not pet:
         logger.error("No pets available to post.")
@@ -126,9 +138,11 @@ def run(
     return results
 
 
-def publish_posts(pet, posters):
-    results = []
-    published_results = []
+def publish_posts(
+    pet: AdoptablePet, posters: Iterable[PostPublisher]
+) -> tuple[list[PostResult], list[tuple[PostPublisher, PostResult]]]:
+    results: list[PostResult] = []
+    published_results: list[tuple[PostPublisher, PostResult]] = []
 
     if not posters:
         logger.error("No social media credentials set; skipping post.")
@@ -150,7 +164,7 @@ def publish_posts(pet, posters):
     return results, published_results
 
 
-def pick_pet(pets, database_path: str | Path = "database.json"):
+def pick_pet(pets: Iterable[AdoptablePet], database_path: str | Path = "database.json") -> AdoptablePet:
     data = read_database(database_path)
     posted_pet_ids = {posted_pet["pet_id"] for posted_pet in data.get("posted_pets", [])}
     eligible = [pet for pet in pets if pet.image_urls and pet.adoption_url and pet.pet_id not in posted_pet_ids]
@@ -160,7 +174,11 @@ def pick_pet(pets, database_path: str | Path = "database.json"):
     return random.choice(eligible)
 
 
-def record_publish_results(pet, results, database_path: str | Path = "database.json"):
+def record_publish_results(
+    pet: AdoptablePet,
+    results: Iterable[tuple[NamedPlatform, PostResult]],
+    database_path: str | Path = "database.json",
+) -> None:
     data = read_database(database_path)
     posted_pets = data.setdefault("posted_pets", [])
     posts = data.setdefault("posts", [])
@@ -187,7 +205,11 @@ def record_publish_results(pet, results, database_path: str | Path = "database.j
     write_database(database_path, data)
 
 
-def collect_metrics(collectors, database_path: str | Path = "database.json", window_days=14):
+def collect_metrics(
+    collectors: Iterable[MetricsProvider],
+    database_path: str | Path = "database.json",
+    window_days: int = 14,
+) -> None:
     try:
         data = read_database(database_path)
         posts = data.get("posts", [])
@@ -207,12 +229,22 @@ def collect_metrics(collectors, database_path: str | Path = "database.json", win
                 if collector is None:
                     continue
 
-                metrics = collector.fetch_metrics(entry["post_id"], entry.get("post_url"))
+                metrics = collector.fetch_metrics(
+                    # Collectors declare string IDs, but existing records permit
+                    # null. Preserve forwarding those values without coercion
+                    # or filtering; each collector retains its error handling.
+                    cast(str, entry["post_id"]),
+                    entry.get("post_url"),
+                )
                 if metrics is None:
                     continue
 
-                snapshot = asdict(metrics)
-                snapshot["collected_at"] = datetime.now(timezone.utc).isoformat()
+                snapshot: MetricSnapshot = {
+                    "collected_at": datetime.now(timezone.utc).isoformat(),
+                    "likes": metrics.likes,
+                    "reposts": metrics.reposts,
+                    "comments": metrics.comments,
+                }
                 entry.setdefault("metrics", []).append(snapshot)
                 updated = True
             except Exception as exc:
@@ -236,7 +268,7 @@ def collect_metrics(collectors, database_path: str | Path = "database.json", win
 MAX_TRACEBACK_CHARS = 2500
 
 
-def _slack_run_header(status):
+def _slack_run_header(status: str) -> str:
     app_env = os.environ.get("APP_ENV", "local")
     workflow = os.environ.get("GITHUB_WORKFLOW", "local run")
     event = os.environ.get("GITHUB_EVENT_NAME")
@@ -252,7 +284,7 @@ def _slack_run_header(status):
     return header
 
 
-def _post_slack_message(text):
+def _post_slack_message(text: str) -> None:
     webhook_url = os.environ.get("SLACK_WEBHOOK_URL")
     if not webhook_url:
         logger.warning("SLACK_WEBHOOK_URL not set; skipping Slack alert.")
@@ -265,13 +297,13 @@ def _post_slack_message(text):
         logger.error("Failed to post Slack alert: %s", type(slack_exc).__name__)
 
 
-def notify_slack_of_exception(traceback_text):
+def notify_slack_of_exception(traceback_text: str) -> None:
     logger.info(traceback_text)
     text = f"{_slack_run_header('run failed')}\n```{traceback_text.strip()[-MAX_TRACEBACK_CHARS:]}```"
     _post_slack_message(text)
 
 
-def notify_slack_of_warning(message):
+def notify_slack_of_warning(message: str) -> None:
     logger.warning(message)
     text = f"{_slack_run_header('warning')}\n```{message.strip()}```"
     _post_slack_message(text)
