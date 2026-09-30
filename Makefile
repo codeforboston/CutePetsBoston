@@ -8,7 +8,7 @@ install:
 lint:
 	$(PYTHON) -m ruff check .
 	$(PYTHON) -m ruff format --check .
-	$(PYTHON) -m pyright --pythonpath $(PYTHON)
+	$(PYTHON) -m pyright --pythonpath "$$($(PYTHON) -c 'import sys; print(sys.executable)')"
 
 format:
 	$(PYTHON) -m ruff check --select I --fix .
