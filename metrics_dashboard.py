@@ -6,7 +6,7 @@ import plotly.express as px
 from database import read_database
 
 
-def empty_dashboard_html(message):
+def empty_dashboard_html(message: str) -> str:
     return f"""<!DOCTYPE html>
     <html>
     <head>
@@ -25,8 +25,9 @@ def empty_dashboard_html(message):
 
 
 def dashboard(
-    html_file_path="dashboard.html", database_path: str | Path = "database.json"
-):
+    html_file_path: str | Path = "dashboard.html",
+    database_path: str | Path = "database.json",
+) -> None:
     # 1. Fetch data
     data = read_database(database_path)
     posts = data.get("posts", [])
@@ -39,7 +40,7 @@ def dashboard(
 
     df_pets = pd.DataFrame(posted_pets)
     df_posts = pd.json_normalize(
-        posts,
+        [dict(post) for post in posts],
         record_path=["metrics"],  # Unpacks the nested metrics array
         meta=["pet_id", "platform", "post_id", "post_url"],
     )

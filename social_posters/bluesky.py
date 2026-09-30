@@ -7,14 +7,14 @@ from urllib.parse import urlparse
 
 import requests
 
-from abstractions import Post, PostResult, SocialPoster
+from abstractions import AdoptablePet, Post, PostResult, SocialPoster
 from config import CITY_HASHTAGS, CITY_NAME, CITY_STATE
 
 logger = logging.getLogger(__name__)
 
 
 class PosterBluesky(SocialPoster):
-    def __init__(self):
+    def __init__(self) -> None:
         # Handle environment variable validation internally
         self.username = os.environ.get("BLUESKY_HANDLE")
         self.password = os.environ.get("BLUESKY_PASSWORD")
@@ -165,9 +165,7 @@ class PosterBluesky(SocialPoster):
             logger.info("Bluesky publish result: %s", pprint.pformat(result))
             return result
 
-    def format_post(self, pet):
-        from abstractions import Post
-
+    def format_post(self, pet: AdoptablePet) -> Post:
         name = pet.name.split("*")[0].strip()
 
         text = f"Hi, I'm {name}! I'm a {pet.breed} looking for a forever home"
