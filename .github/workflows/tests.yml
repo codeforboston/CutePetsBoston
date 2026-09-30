@@ -20,7 +20,7 @@ jobs:
           cache: pip
 
       - name: Install dependencies
-        run: pip install --break-system-packages -r requirements-dev.txt
+        run: make install
 
       - name: Run lint checks
         run: make lint
