@@ -54,6 +54,16 @@ class MintSlugTests(unittest.TestCase):
         # listing.
         self.assertNotEqual(mint_slug("pet/42 x"), mint_slug("pet-42-x"))
 
+    def test_sanitisation_calls_warning_callback(self):
+        warning_callback = mock.Mock()
+
+        slug = mint_slug("pet/42 x", warning_callback=warning_callback)
+
+        self.assertTrue(slug.startswith("pet-42-x-"))
+        warning_callback.assert_called_once()
+        self.assertIn("pet/42 x", warning_callback.call_args.args[0])
+        self.assertIn(slug, warning_callback.call_args.args[0])
+
     def test_slug_is_stable_across_processes(self):
         # Guards against reaching for the builtin hash(), which is salted per
         # process and would mint a different slug for the same pet every run.

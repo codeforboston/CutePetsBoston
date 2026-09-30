@@ -5,7 +5,7 @@ pipeline also persists and publishes the analytics page.
 
 Implements RFC 0001 (`rfcs/0001-url-redirect-system.md`). Files involved:
 `.github/workflows/prod.yml`, `deploy-pages.yml`, `publish-pages.yml`,
-`redirects.py`, `database.py`, `metrics_dashboard.py`, `src/r/index.html`.
+`redirects.py`, `database.py`, `metrics_dashboard.py`, `web/r/index.html`.
 
 ---
 
@@ -16,7 +16,7 @@ it exists only to own a trigger and a permission set, then delegates.
 
 ```
  ENTRY A                              ENTRY B
- push to master touching src/**       schedule: 0 */4 * * *
+ push to master touching web/**       schedule: 0 */4 * * *
  or Pages workflow files              (or workflow_dispatch)
  deploy-pages.yml                     prod.yml
         │                                    │
@@ -57,7 +57,7 @@ it exists only to own a trigger and a permission set, then delegates.
    ║  environment: github-pages                           ║
    ║  declares NO permissions — inherits the caller's     ║
    ╠══════════════════════════════════════════════════════╣
-   ║  1  checkout master                    → src/        ║
+   ║  1  checkout master                    → web/        ║
    ║  2  download mapping artifact          [if passed]   ║
    ║  2b download analytics artifact        [if passed]   ║
    ║  3  checkout gh-pages                  → authority   ║
@@ -65,7 +65,7 @@ it exists only to own a trigger and a permission set, then delegates.
    ║            gh-pages wins conflicts => append-only    ║
    ║  4b copy fresh dashboard.html into gh-pages          ║
    ║  5  commit + push to gh-pages          [if passed]   ║
-   ║  6  assemble _site/ = src/ + redirects.json          ║
+   ║  6  assemble _site/ = web/ + redirects.json          ║
    ║                     + dashboard.html                 ║
    ║  7  upload-pages-artifact                            ║
    ║  8  deploy-pages                                     ║
@@ -99,7 +99,7 @@ it exists only to own a trigger and a permission set, then delegates.
 
 | Trigger | Mints a slug? | Writes gh-pages? | Deploys Pages? |
 |---|---|---|---|
-| `src/**` or Pages workflow pushed to master | no | no (uses existing assets) | yes |
+| `web/**` or Pages workflow pushed to master | no | no (uses existing assets) | yes |
 | cron, every 4 hours | yes | yes | yes |
 | successful prod run without a new redirect | no | yes (analytics) | yes |
 
@@ -144,7 +144,7 @@ consumes it immediately; `gh-pages/dashboard.html` is the durable copy.
 Analytics is generated in the read-only posting job and passed to the publishing
 job as an optional artifact. The publishing job copies a fresh page to
 `gh-pages/dashboard.html`; if no fresh artifact is available, it keeps the last
-good page. Pages is then assembled from `src/`, `gh-pages/redirects.json`, and
+good page. Pages is then assembled from `web/`, `gh-pages/redirects.json`, and
 `gh-pages/dashboard.html`.
 
 ### The trap to avoid

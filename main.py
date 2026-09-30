@@ -112,7 +112,11 @@ def run(
         # adoption URL for our own hop so click data lands in redirects.json.
         # This swap point is the seam for the future mint/post phase split.
         if redirects.enabled():
-            redirect_url = redirects.mint_for_pet(pet, redirects_path=redirects_path)
+            redirect_url = redirects.mint_for_pet(
+                pet,
+                redirects_path=redirects_path,
+                warning_callback=notify_slack_of_warning,
+            )
             if redirect_url:
                 pet.adoption_url = redirect_url
         results, published_results = publish_posts(pet, posters)
@@ -255,14 +259,7 @@ def collect_metrics(collectors, database_path="database.json", window_days=14):
 MAX_TRACEBACK_CHARS = 2500
 
 
-def notify_slack_of_exception(traceback_text):
-    logger.info(traceback_text)
-
-    webhook_url = os.environ.get("SLACK_WEBHOOK_URL")
-    if not webhook_url:
-        logger.warning("SLACK_WEBHOOK_URL not set; skipping Slack alert.")
-        return
-
+def _slack_run_header(status):
     app_env = os.environ.get("APP_ENV", "local")
     workflow = os.environ.get("GITHUB_WORKFLOW", "local run")
     event = os.environ.get("GITHUB_EVENT_NAME")
@@ -274,18 +271,40 @@ def notify_slack_of_exception(traceback_text):
         else None
     )
 
-    header = f"CutePetsBoston [{app_env}] run failed in *{workflow}*"
+    header = f"CutePetsBoston [{app_env}] {status} in *{workflow}*"
     if event:
         header += f" (trigger: {event})"
     if run_link:
         header += f" (<{run_link}|view run>)"
-    text = f"{header}\n```{traceback_text.strip()[-MAX_TRACEBACK_CHARS:]}```"
+    return header
+
+
+def _post_slack_message(text):
+    webhook_url = os.environ.get("SLACK_WEBHOOK_URL")
+    if not webhook_url:
+        logger.warning("SLACK_WEBHOOK_URL not set; skipping Slack alert.")
+        return
 
     try:
         response = requests.post(webhook_url, json={"text": text}, timeout=10)
         response.raise_for_status()
     except Exception as slack_exc:
-        logger.error("Failed to post Slack alert: %s", type(slack_exc).name)
+        logger.error("Failed to post Slack alert: %s", type(slack_exc).__name__)
+
+
+def notify_slack_of_exception(traceback_text):
+    logger.info(traceback_text)
+    text = (
+        f"{_slack_run_header('run failed')}\n"
+        f"```{traceback_text.strip()[-MAX_TRACEBACK_CHARS:]}```"
+    )
+    _post_slack_message(text)
+
+
+def notify_slack_of_warning(message):
+    logger.warning(message)
+    text = f"{_slack_run_header('warning')}\n```{message.strip()}```"
+    _post_slack_message(text)
 
 
 if __name__ == "__main__":

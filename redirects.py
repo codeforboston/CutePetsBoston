@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_REDIRECTS_PATH = "redirects.json"
 REDIRECT_PATH = "/r/"
 
-# Slugs must match what src/r/index.html accepts: [A-Za-z0-9_-]+
+# Slugs must match what web/r/index.html accepts: [A-Za-z0-9_-]+
 _SLUG_FORBIDDEN = re.compile(r"[^A-Za-z0-9_-]")
 
 _TRUTHY = {"1", "true", "yes", "on"}
@@ -34,8 +34,12 @@ def enabled():
     return os.environ.get("REDIRECTS_ENABLED", "").strip().lower() in _TRUTHY
 
 
-def mint_slug(pet_id):
+def mint_slug(pet_id, warning_callback=None):
     """Derive a stable, URL-safe slug from a RescueGroups pet id (RFC D6).
+
+    ``warning_callback`` is called after logging when the raw ID needs
+    sanitization, allowing the caller to route the unusual input to an alert
+    channel without coupling this pure slug logic to Slack.
 
     Sanitising alone is not injective -- "pet/42 x" and "pet-42-x" both collapse
     to "pet-42-x", which would silently point one pet's post at another pet's
@@ -52,6 +56,16 @@ def mint_slug(pet_id):
         # hashlib, not the builtin hash(): that one is salted per process, so
         # it would mint a different slug for the same pet on every run.
         slug = f"{slug}-{hashlib.sha256(raw.encode('utf-8')).hexdigest()[:6]}"
+        message = (
+            f"RescueGroups pet_id {raw!r} required slug sanitization; "
+            f"minted slug {slug!r}"
+        )
+        logger.warning(message)
+        if warning_callback is not None:
+            try:
+                warning_callback(message)
+            except Exception:
+                logger.exception("Slug sanitization warning callback failed")
     return slug
 
 
@@ -93,7 +107,7 @@ def save_redirects(mapping, path=None):
 def is_safe_target(url):
     """Whether url is safe to send a visitor to.
 
-    src/r/index.html navigates with location.replace(), which would execute a
+    web/r/index.html navigates with location.replace(), which would execute a
     "javascript:" URL in our own origin. RescueGroups hands us adoption URLs
     verbatim and the mapping is append-only, so a bad target would be permanent
     -- reject anything that is not plain http(s).
@@ -135,7 +149,7 @@ def register_redirect(mapping, slug, adoption_url):
     return mapping, True
 
 
-def mint_for_pet(pet, redirects_path=None):
+def mint_for_pet(pet, redirects_path=None, warning_callback=None):
     """Mint (or reuse) the slug for pet and persist the mapping.
 
     Returns the redirect URL to post, or None when no redirect can be minted
@@ -159,7 +173,7 @@ def mint_for_pet(pet, redirects_path=None):
         return None
 
     mapping_path = redirects_path or DEFAULT_REDIRECTS_PATH
-    slug = mint_slug(pet.pet_id)
+    slug = mint_slug(pet.pet_id, warning_callback=warning_callback)
     try:
         mapping = load_redirects(mapping_path)
     except ValueError as exc:

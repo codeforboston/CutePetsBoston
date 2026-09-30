@@ -8,7 +8,35 @@ from abstractions import AdoptablePet, Post, PostMetrics, PostResult
 from adoption_sources import SourceManual
 from adoption_sources.rescue_groups import SourceRescueGroups
 from config import SITE_URL
-from main import create_collectors, create_posters, create_sources, run
+from main import (
+    create_collectors,
+    create_posters,
+    create_sources,
+    notify_slack_of_warning,
+    run,
+)
+
+
+class SlackNotificationTests(unittest.TestCase):
+    @mock.patch("main.requests.post")
+    def test_warning_is_sent_to_slack(self, post):
+        with mock.patch.dict(
+            "os.environ",
+            {
+                "SLACK_WEBHOOK_URL": "https://hooks.example.test/slack",
+                "APP_ENV": "prod",
+                "GITHUB_WORKFLOW": "Prod Account Post",
+            },
+            clear=True,
+        ):
+            notify_slack_of_warning("pet ID required slug sanitization")
+
+        post.assert_called_once()
+        args, kwargs = post.call_args
+        self.assertEqual(args[0], "https://hooks.example.test/slack")
+        self.assertIn("CutePetsBoston [prod] warning", kwargs["json"]["text"])
+        self.assertIn("pet ID required slug sanitization", kwargs["json"]["text"])
+        self.assertEqual(kwargs["timeout"], 10)
 
 
 class FakeSource:
