@@ -1,7 +1,6 @@
 import json
-import traceback
 import logging
-
+import traceback
 from pathlib import Path
 
 logger = logging.getLogger(__name__)

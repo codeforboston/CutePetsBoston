@@ -15,6 +15,7 @@ class TestCollectorInstagram:
 
         metrics = CollectorInstagram(access_token="token").fetch_metrics("media-123")
 
+        assert metrics is not None
         assert metrics.likes == 13
         assert metrics.reposts is None
         assert metrics.comments == 5
@@ -32,9 +33,7 @@ class TestCollectorInstagram:
         response.raise_for_status.side_effect = requests.HTTPError("not found")
         mock_get.return_value = response
 
-        metrics = CollectorInstagram(access_token="token").fetch_metrics(
-            "media-123"
-        )
+        metrics = CollectorInstagram(access_token="token").fetch_metrics("media-123")
 
         assert metrics is None
 

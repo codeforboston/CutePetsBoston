@@ -6,7 +6,6 @@ import requests
 
 from abstractions import MetricCollector, PostMetrics
 
-
 POST_THREAD_URL = "https://public.api.bsky.app/xrpc/app.bsky.feed.getPostThread"
 
 

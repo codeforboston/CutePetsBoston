@@ -14,6 +14,7 @@ class TestCollectorMastodon:
 
         metrics = CollectorMastodon(client=client).fetch_metrics("status-123")
 
+        assert metrics is not None
         assert metrics.likes == 11
         assert metrics.reposts == 4
         assert metrics.comments == 6

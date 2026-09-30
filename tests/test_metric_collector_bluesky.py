@@ -2,7 +2,7 @@ from unittest.mock import Mock, patch
 
 import requests
 
-from metric_collectors.bluesky import CollectorBluesky, POST_THREAD_URL
+from metric_collectors.bluesky import POST_THREAD_URL, CollectorBluesky
 
 
 class TestCollectorBluesky:
@@ -10,9 +10,7 @@ class TestCollectorBluesky:
     def test_maps_post_thread_counts(self, mock_get):
         response = Mock()
         response.json.return_value = {
-            "thread": {
-                "post": {"likeCount": 8, "repostCount": 3, "replyCount": 2}
-            }
+            "thread": {"post": {"likeCount": 8, "repostCount": 3, "replyCount": 2}}
         }
         mock_get.return_value = response
 
@@ -20,6 +18,7 @@ class TestCollectorBluesky:
             "cid-123", "at://did:plc:abc/app.bsky.feed.post/xyz"
         )
 
+        assert metrics is not None
         assert metrics.likes == 8
         assert metrics.reposts == 3
         assert metrics.comments == 2

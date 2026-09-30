@@ -1,27 +1,38 @@
 from typing import Iterable
-from unittest.mock import Mock, MagicMock
 
-from abstractions import AdoptablePet, PetSource, Post
+from abstractions import AdoptablePet, Post
 
 
-def _pet(name: str, species: str = "dog", breed: str = "unknown", location: str = "Unknown", **kwargs) -> AdoptablePet:
+def _pet(
+    name: str,
+    species: str = "dog",
+    breed: str = "unknown",
+    location: str = "Unknown",
+    **kwargs,
+) -> AdoptablePet:
     """Shortcut to create an AdoptablePet with required fields for tests."""
-    return AdoptablePet(name=name, species=species, breed=breed, location=location, **kwargs)
+    return AdoptablePet(
+        name=name, species=species, breed=breed, location=location, **kwargs
+    )
 
 
 # Try to import pytest, but don't fail if it's not available
 try:
     import pytest
+
     HAS_PYTEST = True
 except ImportError:
     HAS_PYTEST = False
+
     # Mock pytest for when it's not available
     class MockPytest:
         @staticmethod
         def fixture(*args, **kwargs):
             def decorator(func):
                 return func
+
             return decorator
+
     pytest = MockPytest()
     PYTEST_AVAILABLE = False
 
@@ -63,8 +74,7 @@ class TestPost:
     def test_post_creation_with_image(self):
         """Test creating a Post with text and image."""
         post = Post(
-            text="Check out this cute pet!",
-            image_urls=["https://example.com/pet.jpg"]
+            text="Check out this cute pet!", image_urls=["https://example.com/pet.jpg"]
         )
         assert post.text == "Check out this cute pet!"
         assert post.image_urls == ["https://example.com/pet.jpg"]
@@ -75,7 +85,7 @@ class TestPost:
         post = Post(
             text="Check out this cute pet!",
             image_urls=["https://example.com/pet.jpg"],
-            link="https://example.com/adopt"
+            link="https://example.com/adopt",
         )
         assert post.text == "Check out this cute pet!"
         assert post.image_urls == ["https://example.com/pet.jpg"]
@@ -147,7 +157,7 @@ class TestPetSourceProtocol:
 
         # Should be able to call fetch_pets without type errors
         pets = source.fetch_pets()
-        assert hasattr(pets, '__iter__')
+        assert hasattr(pets, "__iter__")
 
 
 class TestSocialSinkProtocol:
@@ -169,7 +179,7 @@ class TestSocialSinkProtocol:
         posts = [
             Post(text="First post"),
             Post(text="Second post", image_urls=["img.jpg"]),
-            Post(text="Third post", link="link.com")
+            Post(text="Third post", link="link.com"),
         ]
 
         for post in posts:
@@ -204,7 +214,7 @@ class TestIntegration:
         for pet in fetched_pets:
             post = Post(
                 text=f"Meet {pet.name}! This adorable pet is looking for a home.",
-                link="https://example.com/adopt"
+                link="https://example.com/adopt",
             )
             social_sink.post(post)
 
@@ -230,7 +240,11 @@ def sample_posts():
     return [
         Post(text="Simple post"),
         Post(text="Post with image", image_urls=["https://example.com/image.jpg"]),
-        Post(text="Complete post", image_urls=["https://example.com/image.jpg"], link="https://example.com/link"),
+        Post(
+            text="Complete post",
+            image_urls=["https://example.com/image.jpg"],
+            link="https://example.com/link",
+        ),
     ]
 
 

@@ -1,9 +1,11 @@
 """Debug poster that prints post content instead of publishing."""
 
-from abstractions import AdoptablePet, Post, PostResult, SocialPoster
 import logging
 
+from abstractions import Post, PostResult, SocialPoster
+
 logger = logging.getLogger(__name__)
+
 
 class PosterDebug(SocialPoster):
     def __init__(self, stream=None):
