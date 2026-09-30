@@ -31,7 +31,7 @@ def _pet(pet_id="12345", adoption_url="https://example.com/adopt/pet"):
         species="dog",
         breed="mutt",
         location="Boston, MA",
-        image_url="https://example.com/poppy.jpg",
+        image_urls=["https://example.com/poppy.jpg"],
         adoption_url=adoption_url,
         pet_id=pet_id,
     )

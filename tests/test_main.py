@@ -142,7 +142,7 @@ class RedirectRunTests(unittest.TestCase):
         def format_post(self, pet):
             self.format_called = True
             self.last_adoption_url = pet.adoption_url
-            return Post(text=f"Meet {pet.name}", image_url=pet.image_url)
+            return Post(text=f"Meet {pet.name}", image_urls=pet.image_urls)
 
     def _pet(self, pet_id="pet-redirect"):
         return AdoptablePet(
@@ -150,7 +150,7 @@ class RedirectRunTests(unittest.TestCase):
             species="dog",
             breed="mutt",
             location="Boston, MA",
-            image_url="https://example.com/poppy.jpg",
+            image_urls=["https://example.com/poppy.jpg"],
             adoption_url="https://example.com/adopt/poppy",
             pet_id=pet_id,
         )
