@@ -111,7 +111,7 @@ class SourceRescueGroups(PetSource):
         species: Sequence[str] | None = None,
         limit: int = RESCUEGROUPS_LIMIT,
         location_label: str = f"{CITY_NAME}, {CITY_STATE}",
-    ):
+    ) -> None:
         self._api_key = api_key or os.environ.get("CUTEPETSBOSTON_RESCUEGROUPS_API_KEY")
         self.postal_code = postal_code
         self.radius_miles = radius_miles

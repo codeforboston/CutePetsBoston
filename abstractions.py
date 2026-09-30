@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from functools import cached_property
-from typing import Iterable
+from typing import Iterable, Protocol
 
 from config import CITY_NAME, CITY_STATE
 
@@ -187,3 +187,26 @@ class MetricCollector(ABC):
     ) -> PostMetrics | None:
         """Return a metric snapshot, or None when the post cannot be read."""
         ...
+
+
+class PetProvider(Protocol):
+    """The pet-source capability required by orchestration."""
+
+    def fetch_pets(self) -> Iterable[AdoptablePet]: ...
+
+
+class NamedPlatform(Protocol):
+    @property
+    def platform_name(self) -> str: ...
+
+
+class PostPublisher(NamedPlatform, Protocol):
+    def format_post(self, pet: AdoptablePet) -> Post: ...
+
+    def publish(self, post: Post) -> PostResult: ...
+
+
+class MetricsProvider(NamedPlatform, Protocol):
+    def fetch_metrics(
+        self, post_id: str, post_url: str | None = None
+    ) -> PostMetrics | None: ...

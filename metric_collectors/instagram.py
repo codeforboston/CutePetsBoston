@@ -10,7 +10,7 @@ from social_posters.instagram import GRAPH_API_BASE
 
 
 class CollectorInstagram(MetricCollector):
-    def __init__(self, access_token=None):
+    def __init__(self, access_token: str | None = None) -> None:
         self.access_token = access_token or os.environ.get(
             "INSTAGRAM_PAGE_ACCESS_TOKEN"
         )

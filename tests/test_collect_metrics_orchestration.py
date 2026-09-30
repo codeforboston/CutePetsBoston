@@ -1,5 +1,6 @@
 import json
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 from abstractions import PostMetrics
 from main import collect_metrics
@@ -8,11 +9,15 @@ from main import collect_metrics
 class FakeCollector:
     platform_name = "Bluesky"
 
-    def __init__(self, responses):
+    def __init__(
+        self, responses: dict[str | None, PostMetrics | Exception | None]
+    ) -> None:
         self.responses = responses
-        self.calls = []
+        self.calls: list[tuple[str | None, str | None]] = []
 
-    def fetch_metrics(self, post_id, post_url=None):
+    def fetch_metrics(
+        self, post_id: str | None, post_url: str | None = None
+    ) -> PostMetrics | None:
         self.calls.append((post_id, post_url))
         response = self.responses[post_id]
         if isinstance(response, Exception):
@@ -139,3 +144,17 @@ def test_repeated_collection_appends_snapshots_without_adding_posts(tmp_path):
     data = json.loads(database_path.read_text())
     assert len(data["posts"]) == 1
     assert [item["likes"] for item in data["posts"][0]["metrics"]] == [5, 7]
+
+
+def test_nullable_post_id_is_forwarded_without_coercion(tmp_path: Path) -> None:
+    database_path = tmp_path / "database.json"
+    recent = datetime.now(timezone.utc).isoformat()
+    database_path.write_text(json.dumps({"posts": [post(None, recent)]}))
+    collector = FakeCollector({None: snapshot(3)})
+
+    collect_metrics([collector], database_path=database_path)
+
+    data = json.loads(database_path.read_text())
+    assert collector.calls == [(None, "at://None")]
+    assert data["posts"][0]["post_id"] is None
+    assert data["posts"][0]["metrics"][0]["likes"] == 3
