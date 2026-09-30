@@ -1,6 +1,9 @@
 PYTHON ?= $(if $(wildcard .venv/bin/python),.venv/bin/python,python3)
 
-.PHONY: lint format test
+.PHONY: install lint format test
+
+install:
+	$(PYTHON) -m pip install -r requirements-dev.txt
 
 lint:
 	$(PYTHON) -m ruff check .
