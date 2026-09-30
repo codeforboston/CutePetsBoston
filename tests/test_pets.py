@@ -57,35 +57,35 @@ class TestPost:
         """Test creating a Post with only text."""
         post = Post(text="Check out this cute pet!")
         assert post.text == "Check out this cute pet!"
-        assert post.image_url is None
+        assert post.image_urls == []
         assert post.link is None
 
     def test_post_creation_with_image(self):
         """Test creating a Post with text and image."""
         post = Post(
             text="Check out this cute pet!",
-            image_url="https://example.com/pet.jpg"
+            image_urls=["https://example.com/pet.jpg"]
         )
         assert post.text == "Check out this cute pet!"
-        assert post.image_url == "https://example.com/pet.jpg"
+        assert post.image_urls == ["https://example.com/pet.jpg"]
         assert post.link is None
 
     def test_post_creation_with_all_fields(self):
         """Test creating a Post with all fields."""
         post = Post(
             text="Check out this cute pet!",
-            image_url="https://example.com/pet.jpg",
+            image_urls=["https://example.com/pet.jpg"],
             link="https://example.com/adopt"
         )
         assert post.text == "Check out this cute pet!"
-        assert post.image_url == "https://example.com/pet.jpg"
+        assert post.image_urls == ["https://example.com/pet.jpg"]
         assert post.link == "https://example.com/adopt"
 
     def test_post_equality(self):
         """Test equality comparison of Post instances."""
-        post1 = Post(text="Hello", image_url="img.jpg")
-        post2 = Post(text="Hello", image_url="img.jpg")
-        post3 = Post(text="Different", image_url="img.jpg")
+        post1 = Post(text="Hello", image_urls=["img.jpg"])
+        post2 = Post(text="Hello", image_urls=["img.jpg"])
+        post3 = Post(text="Different", image_urls=["img.jpg"])
 
         assert post1 == post2
         assert post1 != post3
@@ -168,7 +168,7 @@ class TestSocialSinkProtocol:
         sink = MockSocialSink()
         posts = [
             Post(text="First post"),
-            Post(text="Second post", image_url="img.jpg"),
+            Post(text="Second post", image_urls=["img.jpg"]),
             Post(text="Third post", link="link.com")
         ]
 
@@ -229,8 +229,8 @@ def sample_posts():
     """Fixture providing sample posts for testing."""
     return [
         Post(text="Simple post"),
-        Post(text="Post with image", image_url="https://example.com/image.jpg"),
-        Post(text="Complete post", image_url="https://example.com/image.jpg", link="https://example.com/link"),
+        Post(text="Post with image", image_urls=["https://example.com/image.jpg"]),
+        Post(text="Complete post", image_urls=["https://example.com/image.jpg"], link="https://example.com/link"),
     ]
 
 
@@ -261,4 +261,3 @@ class TestWithFixtures:
 
         assert len(social_sink.posted_content) == len(sample_posts)
         assert social_sink.posted_content == sample_posts
-

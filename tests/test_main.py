@@ -29,7 +29,7 @@ class FakePoster:
 
     def format_post(self, pet):
         self.format_called = True
-        return Post(text=f"Meet {pet.name}", image_url=pet.image_url)
+        return Post(text=f"Meet {pet.name}", image_urls=pet.image_urls)
 
     def publish(self, post):
         self.publish_called = True
@@ -64,7 +64,7 @@ class RunFlowTests(unittest.TestCase):
             species="dog",
             breed="mutt",
             location="Boston, MA",
-            image_url="https://example.com/poppy.jpg",
+            image_urls=["https://example.com/poppy.jpg"],
             adoption_url="https://example.com/adopt/poppy",
             pet_id="pet-poppy",
         )
@@ -100,7 +100,7 @@ class RunFlowTests(unittest.TestCase):
             species="dog",
             breed="mutt",
             location="Boston, MA",
-            image_url="https://example.com/rex.jpg",
+            image_urls=["https://example.com/rex.jpg"],
             adoption_url="https://example.com/adopt/rex",
             pet_id="test-dog",
         )
@@ -109,7 +109,7 @@ class RunFlowTests(unittest.TestCase):
             species="cat",
             breed="tabby",
             location="Boston, MA",
-            image_url="https://example.com/luna.jpg",
+            image_urls=["https://example.com/luna.jpg"],
             adoption_url="https://example.com/adopt/luna",
             pet_id="test-cat",
         )
