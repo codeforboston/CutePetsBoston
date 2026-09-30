@@ -141,7 +141,7 @@ def pick_pet(pets, database_path="database.json"):
     eligible = [
         pet
         for pet in pets
-        if pet.image_url
+        if pet.image_urls
         and pet.adoption_url
         and pet.pet_id not in posted_pet_ids
     ]

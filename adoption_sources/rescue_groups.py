@@ -13,10 +13,11 @@ from collections.abc import Sequence
 from typing import Iterator
 
 import requests
+from pydantic import BaseModel, ValidationError
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from abstractions import AdoptablePet, PetSource
+from abstractions import AdoptablePet, PetSource, select_image_urls
 from adoption_sources.pet_links import reconstruct_adoption_url
 from config import CITY_NAME, CITY_STATE, PET_SPECIES, POSTAL_CODE, RESCUEGROUPS_LIMIT
 
@@ -38,6 +39,22 @@ FILTER_SPECIES_SINGULAR = {"dogs": "Dog", "cats": "Cat"}
 # exponential backoff (0s, 2s, 4s, 8s between attempts).
 RETRY_TOTAL = 4
 RETRY_BACKOFF_FACTOR = 1
+
+
+class PictureVariant(BaseModel):
+    url: str
+    filesize: int | None = None
+    resolutionX: int | None = None
+    resolutionY: int | None = None
+
+
+class PictureAttributes(BaseModel):
+    order: int | None = None
+    large: str | PictureVariant | None = None
+
+    @property
+    def large_url(self) -> str | None:
+        return self.large.url if isinstance(self.large, PictureVariant) else self.large
 
 
 def _session_with_retries() -> requests.Session:
@@ -125,7 +142,7 @@ class SourceRescueGroups(PetSource):
 
         url = (
             f"{self.BASE_URL}/available/haspic"
-            f"?include=orgs,breeds,locations,species"
+            f"?include=orgs,breeds,locations,species,pictures"
             f"&sort=random"
             f"&limit={self.limit}"
         )
@@ -175,9 +192,14 @@ class SourceRescueGroups(PetSource):
             for item in body.get("included", [])
             if item.get("type") == "species"
         }
+        pictures_by_id = {
+            item["id"]: item.get("attributes", {})
+            for item in body.get("included", [])
+            if item.get("type") == "pictures"
+        }
 
         for animal in data:
-            pet = self._parse_animal(animal, orgs_by_id, species_by_id)
+            pet = self._parse_animal(animal, orgs_by_id, species_by_id, pictures_by_id)
             if not pet:
                 continue
             if self._is_placeholder_name(pet.name):
@@ -190,6 +212,7 @@ class SourceRescueGroups(PetSource):
         animal: dict,
         orgs_by_id: dict,
         species_by_id: dict,
+        pictures_by_id: dict | None = None,
     ) -> AdoptablePet | None:
         """Parse a single animal record from the API response."""
         try:
@@ -253,7 +276,10 @@ class SourceRescueGroups(PetSource):
             )
 
             # Get best available image
-            image_url = self._get_image_url(attrs)
+            image_urls = self._get_image_urls(animal, pictures_by_id or {})
+            if not image_urls:
+                thumbnail = self._get_image_url(attrs)
+                image_urls = select_image_urls([thumbnail] if thumbnail else [])
 
             # Location of the adoption org
             location = f"{org_attrs.get('city')}, {org_attrs.get('state')}"
@@ -266,7 +292,7 @@ class SourceRescueGroups(PetSource):
                 location=location,
                 description=description,
                 adoption_url=adoption_url,
-                image_url=image_url,
+                image_urls=image_urls,
                 age_string=attrs.get("ageString"),
                 sex=attrs.get("sex"),
                 size_group=attrs.get("sizeGroup"),
@@ -319,3 +345,17 @@ class SourceRescueGroups(PetSource):
             # Request a larger image instead of the 100px thumbnail
             return re.sub(r"\?width=\d+", "?width=800", thumbnail)
         return None
+
+    def _get_image_urls(self, animal: dict, pictures_by_id: dict) -> list[str]:
+        relationships = animal.get("relationships", {}).get("pictures", {}).get("data", [])
+        pictures = []
+        for item in relationships:
+            attributes = pictures_by_id.get(item.get("id"))
+            if attributes is None:
+                continue
+            try:
+                pictures.append(PictureAttributes.model_validate(attributes))
+            except ValidationError as exc:
+                logger.debug("Invalid picture for animal %s: %s", animal.get("id"), exc)
+        pictures.sort(key=lambda picture: picture.order if picture.order is not None else float("inf"))
+        return select_image_urls([picture.large_url for picture in pictures])

@@ -72,7 +72,8 @@ class PosterMastodon(SocialPoster):
             return result
         logger.info("Mastodon credentials available.")
 
-        if not post.image_url:
+        photo_urls = post.selected_image_urls
+        if not photo_urls:
             logger.warning("Mastodon posts require an image URL.")
             result = PostResult(
                 success=False,
@@ -80,7 +81,7 @@ class PosterMastodon(SocialPoster):
             )
             logger.info("Mastodon publish result: %s", pprint.pformat(result))
             return result
-        logger.info("Mastodon posts have image URL")
+        logger.info("Mastodon post has %d photo URLs", len(photo_urls))
 
         if self._session is None and not self.authenticate():
             logger.warning("Mastodon authentication failed.")
@@ -112,7 +113,14 @@ class PosterMastodon(SocialPoster):
 
         try:
             stage = "preparing media"
-            media_id = self._upload_media(session, post)
+            media_ids = []
+            for index, image_url in enumerate(photo_urls, start=1):
+                try:
+                    media_ids.append(self._upload_media(session, post, image_url, index))
+                except Exception as exc:
+                    logger.warning("Mastodon image %d skipped: %s", index, exc)
+            if not media_ids:
+                raise RuntimeError("No usable Mastodon images.")
 
             stage = "formatting caption thread"
             logger.info("Mastodon formatting caption thread")
@@ -130,16 +138,16 @@ class PosterMastodon(SocialPoster):
             stage = "posting thread"
             logger.info("Mastodon start posting thread")
             logger.info(
-                "Mastodon posting thread input: main_caption_length=%d reply_count=%d media_id=%s",
+                "Mastodon posting thread input: main_caption_length=%d reply_count=%d media_ids=%s",
                 len(main_caption),
                 len(replies),
-                media_id,
+                media_ids,
             )
             for post_kind, reply_number, status in self._post_thread(
                 session,
                 main_caption,
                 replies,
-                media_id,
+                media_ids,
             ):
                 if post_kind == "root":
                     root_status = status
@@ -191,11 +199,11 @@ class PosterMastodon(SocialPoster):
         session: Mastodon,
         main_caption: str,
         replies: list[str],
-        media_id: str,
+        media_ids: list[str],
     ) -> Iterator[tuple[str, int | None, dict]]:
         status = session.status_post(
             main_caption,
-            media_ids=[media_id],
+            media_ids=media_ids,
         )
         yield "root", None, status
 
@@ -274,17 +282,23 @@ class PosterMastodon(SocialPoster):
         ext = os.path.splitext(parsed_url.path)[1] or ".jpg"
 
         with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
-            with requests.get(image_url, stream=True, timeout=20) as response:
-                response.raise_for_status()
+            try:
+                with requests.get(image_url, stream=True, timeout=20) as response:
+                    response.raise_for_status()
 
-                for chunk in response.iter_content(chunk_size=1024 * 128):
-                    if chunk:
-                        tmp.write(chunk)
-
+                    for chunk in response.iter_content(chunk_size=1024 * 128):
+                        if chunk:
+                            tmp.write(chunk)
+            except Exception:
+                os.unlink(tmp.name)
+                raise
             return tmp.name
 
-    def _upload_media(self, session: Mastodon, post: Post) -> str:
-        if not post.image_url:
+    def _upload_media(
+        self, session: Mastodon, post: Post, image_url: str | None = None, index: int = 1
+    ) -> str:
+        image_url = image_url or (post.selected_image_urls[0] if post.selected_image_urls else None)
+        if not image_url:
             raise ValueError("Mastodon posts require an image URL.")
 
         image_path = None
@@ -292,12 +306,12 @@ class PosterMastodon(SocialPoster):
             logger.info("Start downloading image")
             logger.info(
                 "Mastodon download image input: image_url=%s",
-                post.image_url,
+                image_url,
             )
-            image_path = self._download_image(post.image_url)
+            image_path = self._download_image(image_url)
             logger.info("Finish downloading image: image_path=%s", image_path)
 
-            media_description = post.alt_text or "Photo of an adoptable pet"
+            media_description = f"{post.alt_text or 'Photo of an adoptable pet'} (photo {index})"
             logger.info(
                 "Mastodon media upload input: image_path=%s description=%s",
                 image_path,
@@ -353,9 +367,10 @@ class PosterMastodon(SocialPoster):
             city = pet.location.split(",")[0].capitalize()
         logger.info("Mastodon derived city tag: %s", city)
 
+        photos = pet.image_urls
         post = Post(
             text=text,
-            image_url=pet.image_url,
+            image_urls=photos,
             link=pet.adoption_url,
             alt_text=(
                 f"Photo of {pet.name}, a {pet.breed} {pet.species} "

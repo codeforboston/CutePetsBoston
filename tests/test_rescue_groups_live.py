@@ -37,5 +37,5 @@ def test_live_multi_species_search_returns_usable_pets():
 
     # The bot can only post pets with an image and a link; if parsing lost
     # these for every record the run would fail even with a 200 response.
-    postable = [pet for pet in pets if pet.image_url and pet.adoption_url]
+    postable = [pet for pet in pets if pet.image_urls and pet.adoption_url]
     assert postable, "no pet had both an image and an adoption URL"

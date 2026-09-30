@@ -211,8 +211,8 @@ class RealCaptureParsingTests(unittest.TestCase):
             self.assertEqual(pet.species, "dog")
             self.assertTrue(pet.name)
             self.assertTrue(pet.breed)
-            self.assertTrue(pet.image_url)
-            self.assertIn("width=800", pet.image_url)
+            self.assertTrue(pet.image_urls)
+            self.assertIn("width=800", pet.image_urls[0])
 
 
 if __name__ == "__main__":
