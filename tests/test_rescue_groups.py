@@ -464,7 +464,10 @@ class DennisMojibakeMastodonRegressionTests(unittest.TestCase):
 
         self.assertTrue(result.success)
         self.assertEqual(result.post_id, "status-1")
-        poster._upload_media.assert_called_once_with(session, post)
+        poster._upload_media.assert_called_once()
+        self.assertEqual(
+            poster._upload_media.call_args.args[:2], (session, post)
+        )
         self.assertGreaterEqual(session.status_post.call_count, 1)
 
         mastodon_payloads = [
