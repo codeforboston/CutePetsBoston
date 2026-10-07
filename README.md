@@ -10,6 +10,11 @@ It should be easily extendable to other shelters and social media feeds for vari
 
 This Project runs on github actions and runs periodically.
 
+Team notes:
+
+- [Meta account ecosystem](docs/meta-account-ecosystem.md): account setup, the developer portal, access tokens, and GitHub secrets.
+- [Instagram debugging](docs/instagram-debugging.md): connection checks, test posts, logs, and troubleshooting.
+
 ## Set up your environment variables
 
 Required:
