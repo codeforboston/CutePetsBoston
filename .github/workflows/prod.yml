@@ -64,6 +64,9 @@ jobs:
           MASTODON_TOKEN: ${{ secrets.MASTODON_TOKEN }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           APP_ENV: prod
+          CITY_NAME: ${{ vars.CITY_NAME }}
+          CITY_STATE: ${{ vars.CITY_STATE }}
+          POSTAL_CODE: ${{ vars.POSTAL_CODE }}
         run: python ./main.py
 
       - name: Upload database artifact
