@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import os
 import pprint
+import re
 import tempfile
 from collections.abc import Iterator
 from urllib.parse import urlparse
@@ -15,6 +16,7 @@ from abstractions import CITY_NAME, CITY_STATE, AdoptablePet, Post, PostResult, 
 THREAD_SUFFIX = "\n\nMore details below ⬇️"
 MASTODON_CHARACTER_LIMIT = 500
 TRUNCATION_SUFFIX = "..."
+SENTENCE_END_RE = re.compile(r"[.!?]\s")
 MAX_REPLIES = 5
 
 logger = logging.getLogger(__name__)
@@ -314,7 +316,12 @@ class PosterMastodon(SocialPoster):
         if len(text) <= limit:
             return text, ""
 
-        cut = text.rfind(" ", 0, limit)
+        cut = -1
+        for match in SENTENCE_END_RE.finditer(text[:limit]):
+            cut = match.start() + 1
+
+        if cut == -1:
+            cut = text.rfind(" ", 0, limit)
 
         if cut == -1:
             cut = limit
