@@ -349,6 +349,27 @@ class TestMastodonCaption:
         assert kept == "hello world"
         assert remaining == "again"
 
+    def test_safe_truncate_cuts_at_sentence_boundary_when_available(self):
+        kept, remaining = self.poster._safe_truncate("One. Two words", 7)
+
+        # The word-boundary cut would keep "One. Two", breaking mid-sentence.
+        assert kept == "One."
+        assert remaining == "Two words"
+
+    def test_safe_truncate_prefers_last_sentence_boundary_before_limit(self):
+        kept, remaining = self.poster._safe_truncate(
+            "First. Second. Third sentence continues here", 20
+        )
+
+        assert kept == "First. Second."
+        assert remaining == "Third sentence continues here"
+
+    def test_safe_truncate_falls_back_when_no_complete_sentence_fits(self):
+        kept, remaining = self.poster._safe_truncate("sentence ends. tail", 14)
+
+        assert kept == "sentence"
+        assert remaining == "ends. tail"
+
 
 class TestMastodonPublish:
     def test_upload_media_cleans_up_file_when_upload_fails(self, tmp_path):
