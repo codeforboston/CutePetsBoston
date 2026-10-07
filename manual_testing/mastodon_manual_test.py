@@ -138,10 +138,9 @@ def main():
             print("Adoption link not posted!")
 
         if args.dry_run:
-            main_caption, replies = poster._format_caption_thread(post)
+            main_caption = poster._format_caption(post)
             logger.info("Mastodon dry run post text: %s", post.text)
             logger.info("Mastodon dry run main caption: %s", main_caption)
-            logger.info("Mastodon dry run replies: %s", replies)
             continue
 
         result = poster.publish(post)
