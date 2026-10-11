@@ -1,0 +1,23 @@
+name: Update PR 201 description
+on:
+  push:
+    branches: [fix/177-description-spacing]
+    paths: [.github/workflows/update-201-description.yml]
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v8
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const pr = (await github.rest.pulls.get({ owner, repo, pull_number: 201 })).data;
+            const body = pr.body.replace(
+              'The reusable live Mastodon test is included; it requires `MASTODON_TEST_TOKEN` and does not fall back to a production token.',
+              'The temporary live Mastodon workflow and manual script were removed after the successful run. This PR contains only the description parsing fix and regression tests; the completed live-test evidence remains linked above.'
+            );
+            await github.rest.pulls.update({ owner, repo, pull_number: 201, body });
+            core.notice('PR #201 description updated to match the final scope.');
