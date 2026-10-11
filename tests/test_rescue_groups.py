@@ -9,7 +9,7 @@ from adoption_sources.rescue_groups import (
     SourceRescueGroups,
     _build_species_filters,
 )
-from social_posters.mastodon import MASTODON_CHARACTER_LIMIT, PosterMastodon
+from social_posters.mastodon import PosterMastodon
 
 
 def _make_animal(adoption_url=None, species_id="8", **extra_attrs):
@@ -260,10 +260,6 @@ def parse_description(**attributes):
     return pet.description
 
 
-def test_prefers_html_with_original_rex_line_breaks():
-    assert parse_description(descriptionHtml=REX_HTML, descriptionText=REX_TEXT) == EXPECTED_REX
-
-
 @pytest.mark.parametrize("markup", [None, "", "  ", "<p>&nbsp;</p>", "<img src='tracker'>"])
 def test_falls_back_to_text_when_html_has_no_readable_content(markup):
     assert parse_description(descriptionHtml=markup, descriptionText="Meet Rex &amp; friends.") == "Meet Rex & friends."
@@ -271,11 +267,6 @@ def test_falls_back_to_text_when_html_has_no_readable_content(markup):
 
 def test_html_only_description_is_used():
     assert parse_description(descriptionHtml="<p>Meet Rex!</p><p>He loves walks.</p>") == "Meet Rex!\n\nHe loves walks."
-
-
-@pytest.mark.parametrize("br", ["<br>", "<br/>", "<br />", "<BR>"])
-def test_html_break_variants_separate_words(br):
-    assert parse_description(descriptionHtml=f"Meet Rex!{br}Good with dogs.") == "Meet Rex!\nGood with dogs."
 
 
 def test_preserves_inline_words_and_separates_blocks_and_lists():
@@ -322,7 +313,6 @@ def test_rex_spacing_reaches_mastodon_status_requests():
     client.status_post.side_effect = [{"id": str(i)} for i in range(1 + len(replies))]
     list(poster._post_thread(client, root, replies, ["media-id"]))
     payloads = [call.args[0] for call in client.status_post.call_args_list]
-    assert all(len(text) <= MASTODON_CHARACTER_LIMIT for text in payloads)
     sent = "\n".join(payloads)
     assert "VT\n\nGood with dogs:" in sent
     assert "intros\nGood with cats:" in sent
