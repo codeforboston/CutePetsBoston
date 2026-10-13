@@ -12,11 +12,44 @@ This Project runs on github actions and runs periodically.
 
 ## Development
 
-Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then install the locked development environment:
+### Install uv
+
+On macOS or Linux, use the standalone installer:
+
+```sh
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Alternatively, if you use Homebrew:
+
+```sh
+brew install uv
+```
+
+On Windows, run this in PowerShell:
+
+```powershell
+winget install --id=astral-sh.uv -e
+```
+
+Open a new terminal after installation and verify that uv is available:
+
+```sh
+uv --version
+```
+
+See the [official uv installation guide](https://docs.astral.sh/uv/getting-started/installation/)
+for other installation methods.
+
+### Set up the project
+
+From the repository root, install the locked development environment:
 
 ```sh
 make install
 ```
+
+If Make is unavailable (for example, in Windows PowerShell), run `uv sync --locked` directly.
 
 uv manages `.venv` and uses Python 3.14 from `.python-version`. No environment activation is needed.
 The Make targets use `--locked` to reject stale lockfiles.
