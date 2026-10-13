@@ -12,15 +12,18 @@ This Project runs on github actions and runs periodically.
 
 ## Development
 
-Use Python 3.14, matching CI, and install the development dependencies:
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then install the locked development environment:
 
 ```sh
-python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements-dev.txt
+make install
 ```
 
-The Makefile uses `.venv/bin/python` when available, otherwise `python3`.
-Override it with `make PYTHON=/path/to/python lint` if needed.
+uv manages `.venv` and uses Python 3.14 from `.python-version`. No environment activation is needed.
+The Make targets use `--locked` to reject stale lockfiles.
+
+Add runtime dependencies with `uv add PACKAGE` and development tools with
+`uv add --dev PACKAGE`. Commit both `pyproject.toml` and `uv.lock` after dependency
+changes. Use `uv lock` after editing dependency declarations manually.
 
 - `make lint`: run Ruff lint checks, check formatting, and run Pyright.
 - `make format`: sort imports and format Python files with Ruff.
@@ -59,11 +62,11 @@ Optional platform selection:
 
 # How to run the script
 
-    python main.py --debugsources --debugposters
+    uv run --locked python main.py --debugsources --debugposters
 
 To run only the Mastodon poster locally or in GitHub Actions:
 
-    POSTER_PLATFORMS=mastodon python main.py
+    POSTER_PLATFORMS=mastodon uv run --locked python main.py
 
 # History
 
