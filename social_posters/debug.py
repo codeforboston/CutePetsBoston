@@ -1,14 +1,19 @@
 """Debug poster that prints post content instead of publishing."""
 
 import logging
+from typing import Protocol
 
 from abstractions import Post, PostResult, SocialPoster
 
 logger = logging.getLogger(__name__)
 
 
+class TextWriter(Protocol):
+    def write(self, text: str, /) -> object: ...
+
+
 class PosterDebug(SocialPoster):
-    def __init__(self, stream=None):
+    def __init__(self, stream: TextWriter | None = None) -> None:
         self.stream = stream
 
     @property
