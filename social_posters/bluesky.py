@@ -1,8 +1,8 @@
-from datetime import datetime, timezone
 import logging
 import mimetypes
 import os
 import pprint
+from datetime import datetime, timezone
 from urllib.parse import urlparse
 
 import requests
@@ -56,19 +56,14 @@ class PosterBluesky(SocialPoster):
 
         if not self._is_available:
             logger.warning("Bluesky credentials not available.")
-            result = PostResult(
-                success=False,
-                error_message="Bluesky credentials not available."
-            )
+            result = PostResult(success=False, error_message="Bluesky credentials not available.")
             logger.info("Bluesky publish result: %s", pprint.pformat(result))
             return result
 
         if not self._access_token or not self._did:
             logger.info("No active Bluesky session; authenticating now")
             if not self.authenticate():
-                result = PostResult(
-                    success=False, error_message="Bluesky authentication failed."
-                )
+                result = PostResult(success=False, error_message="Bluesky authentication failed.")
                 logger.info("Bluesky publish result: %s", pprint.pformat(result))
                 return result
 
@@ -110,7 +105,7 @@ class PosterBluesky(SocialPoster):
         logger.debug("Bluesky text preview: %s", text[:280])
         logger.debug("Bluesky facets: %s", pprint.pformat(facets))
 
-        record = {
+        record: dict[str, object] = {
             "$type": "app.bsky.feed.post",
             "text": text,
             "createdAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
@@ -186,7 +181,7 @@ class PosterBluesky(SocialPoster):
         if pet.adoption_url:
             text += f"\n\nLearn more and adopt me: {pet.adoption_url}"
 
-        species_tag = "DogsOfBluesky" if pet.species == "dog" else "CatsOfBluesky"
+        species_tag = f"{pet.species.capitalize()}sOfBluesky"
         tags = ["AdoptDontShop", *CITY_HASHTAGS, city, species_tag]
 
         photos = pet.image_urls
@@ -226,25 +221,27 @@ class PosterBluesky(SocialPoster):
             link_bytes = post.link.encode("utf-8")
             link_idx = encoded.find(link_bytes)
             if link_idx != -1:
-                facets.append({
-                    "index": {
-                        "byteStart": link_idx,
-                        "byteEnd": link_idx + len(link_bytes),
-                    },
-                    "features": [
-                        {"$type": "app.bsky.richtext.facet#link", "uri": post.link}
-                    ],
-                })
+                facets.append(
+                    {
+                        "index": {
+                            "byteStart": link_idx,
+                            "byteEnd": link_idx + len(link_bytes),
+                        },
+                        "features": [{"$type": "app.bsky.richtext.facet#link", "uri": post.link}],
+                    }
+                )
 
         search_from = 0
         for tag_str in tag_strings:
             tag_bytes = tag_str.encode("utf-8")
             idx = encoded.find(tag_bytes, search_from)
             if idx != -1:
-                facets.append({
-                    "index": {"byteStart": idx, "byteEnd": idx + len(tag_bytes)},
-                    "features": [{"$type": "app.bsky.richtext.facet#tag", "tag": tag_str[1:]}],
-                })
+                facets.append(
+                    {
+                        "index": {"byteStart": idx, "byteEnd": idx + len(tag_bytes)},
+                        "features": [{"$type": "app.bsky.richtext.facet#tag", "tag": tag_str[1:]}],
+                    }
+                )
                 search_from = idx + len(tag_bytes)
 
         facets.sort(key=lambda f: f["index"]["byteStart"])

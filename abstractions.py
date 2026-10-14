@@ -5,7 +5,6 @@ from typing import Iterable
 
 from config import CITY_NAME, CITY_STATE
 
-
 # =============================================================================
 # Pet Ingestor Interface
 # =============================================================================
@@ -133,7 +132,9 @@ class SocialPoster(ABC):
 
         Override this method to customize post formatting for specific platforms.
         """
-        text = f"Meet {pet.name}! This adorable {pet.breed} {pet.species} is looking for a forever home in {pet.location}."
+        text = (
+            f"Meet {pet.name}! This adorable {pet.breed} {pet.species} is looking for a forever home in {pet.location}."
+        )
         if pet.description:
             text += f"\n\n{pet.description}"
         if pet.adoption_url:
@@ -183,8 +184,6 @@ class MetricCollector(ABC):
         ...
 
     @abstractmethod
-    def fetch_metrics(
-        self, post_id: str, post_url: str | None = None
-    ) -> PostMetrics | None:
+    def fetch_metrics(self, post_id: str, post_url: str | None = None) -> PostMetrics | None:
         """Return a metric snapshot, or None when the post cannot be read."""
         ...
