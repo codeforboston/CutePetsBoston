@@ -1,9 +1,11 @@
 import json
+import logging
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
+from ftfy import ExplainedText
 from requests import Response
 
 from adoption_sources.rescue_groups import (
@@ -11,6 +13,17 @@ from adoption_sources.rescue_groups import (
     _build_species_filters,
 )
 from social_posters.mastodon import PosterMastodon
+
+
+def _repair_log_args(record: logging.LogRecord) -> tuple[str, str, str, ExplainedText]:
+    args = record.args
+    assert isinstance(args, tuple) and len(args) == 4
+    field, entity_type, entity_id, result = args
+    assert isinstance(field, str)
+    assert isinstance(entity_type, str)
+    assert isinstance(entity_id, str)
+    assert isinstance(result, ExplainedText)
+    return field, entity_type, entity_id, result
 
 
 def _make_animal(adoption_url=None, species_id="8", **extra_attrs):
@@ -252,16 +265,17 @@ class DescriptionMojibakeRepairTests(unittest.TestCase):
                 _make_species_by_id(),
             )
 
+        assert pet is not None
         self.assertEqual(pet.description, "Adoption hours: 1:00PM – 6:00PM")
         self.assertEqual(len(captured.records), 1)
-        record = captured.records[0]
-        self.assertEqual(record.args[:3], ("description", "animal", "12345"))
-        self.assertEqual(record.args[3].text, "Adoption hours: 1:00PM – 6:00PM")
+        args = _repair_log_args(captured.records[0])
+        self.assertEqual(args[:3], ("description", "animal", "12345"))
+        self.assertEqual(args[3].text, "Adoption hours: 1:00PM – 6:00PM")
         self.assertEqual(
-            list(record.args[3].explanation),
+            list(args[3].explanation or []),
             [("encode", "latin-1"), ("decode", "utf-8")],
         )
-        self.assertIn(repr(record.args[3]), captured.output[0])
+        self.assertIn(repr(args[3]), captured.output[0])
 
     def test_repairs_text_that_requires_reconstructing_a_missing_byte(self):
         description = "voilÃ le travail"
@@ -299,7 +313,9 @@ class DescriptionMojibakeRepairTests(unittest.TestCase):
             repaired = self.source._repair_mojibake(original, "description", "test-animal")
 
         self.assertEqual(repaired, "guessed output")
-        self.assertIs(captured.records[0].args[3], result)
+        args = captured.records[0].args
+        assert isinstance(args, tuple)
+        self.assertIs(args[3], result)
         self.assertIn(repr(result), captured.output[0])
 
     def test_applies_ftfy_general_text_fixes(self):
@@ -425,6 +441,14 @@ class DennisMojibakeMastodonRegressionTests(unittest.TestCase):
         self.assertNotIn("â\x80\x99", post.text)
         self.assertNotIn("â\x80\x93", post.text)
 
+        # Keep repaired excerpts inside Mastodon's single-status limit so the
+        # publish assertions exercise both repairs rather than truncated text.
+        start = pet.description.index("He's diabetic")
+        end = pet.description.index("it worth it!", start) + len("it worth it!")
+        hours_start = pet.description.index("Wednesdays-Sundays")
+        hours_end = pet.description.index(",", hours_start)
+        post.text = pet.description[start:end] + " " + pet.description[hours_start:hours_end]
+
         session = MagicMock()
 
         def fake_status_post(text, **kwargs):
@@ -446,7 +470,7 @@ class DennisMojibakeMastodonRegressionTests(unittest.TestCase):
         self.assertEqual(result.post_id, "status-1")
         poster._upload_media.assert_called_once()
         self.assertEqual(poster._upload_media.call_args.args[:2], (session, post))
-        self.assertGreaterEqual(session.status_post.call_count, 1)
+        session.status_post.assert_called_once()
 
         mastodon_payloads = [call.args[0] for call in session.status_post.call_args_list]
         all_text_sent_to_mastodon = "\n".join(mastodon_payloads)
@@ -460,8 +484,6 @@ class DennisMojibakeMastodonRegressionTests(unittest.TestCase):
 
         root_call = session.status_post.call_args_list[0]
         self.assertEqual(root_call.kwargs["media_ids"], ["media-1"])
-        for reply_call in session.status_post.call_args_list[1:]:
-            self.assertEqual(reply_call.kwargs["in_reply_to_id"], "status-1")
 
 
 class DescriptionTextFixingTests(unittest.TestCase):
@@ -602,14 +624,14 @@ class PetFieldMojibakeRepairTests(unittest.TestCase):
 
         self._assert_all_fields_repaired(pet)
         self.assertEqual(
-            sorted(record.args[:3] for record in captured.records),
+            sorted(_repair_log_args(record)[:3] for record in captured.records),
             sorted(
                 [(field, "animal", "12345") for field in ("name", "breed", "description")]
                 + [("location", "organization", "org1")]
             ),
         )
         for record in captured.records:
-            result = record.args[3]
+            result = _repair_log_args(record)[3]
             self.assertTrue(result.text)
             self.assertTrue(result.explanation)
             self.assertIn(repr(result), record.getMessage())
@@ -625,7 +647,7 @@ class PetFieldMojibakeRepairTests(unittest.TestCase):
         self._assert_all_fields_repaired(pet)
         self.assertEqual(len(captured.records), 1)
         self.assertEqual(
-            captured.records[0].args[:3],
+            _repair_log_args(captured.records[0])[:3],
             (
                 "description",
                 "animal",

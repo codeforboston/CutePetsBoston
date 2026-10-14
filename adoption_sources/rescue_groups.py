@@ -10,7 +10,7 @@ import os
 import pprint
 import re
 from collections.abc import Sequence
-from typing import Iterator
+from typing import Iterator, overload
 
 import requests
 from ftfy import fix_and_explain
@@ -299,13 +299,19 @@ class SourceRescueGroups(PetSource):
     def _is_placeholder_name(self, name: str) -> bool:
         return name.lower() in PLACEHOLDER_NAMES
 
+    @overload
+    def _repair_mojibake(self, text: str, field: str, entity_id: str, entity_type: str = "animal") -> str: ...
+
+    @overload
+    def _repair_mojibake(self, text: None, field: str, entity_id: str, entity_type: str = "animal") -> None: ...
+
     def _repair_mojibake(
         self,
-        text: str,
+        text: str | None,
         field: str,
         entity_id: str,
         entity_type: str = "animal",
-    ) -> str:
+    ) -> str | None:
         """Apply ftfy's complete set of repairs to RescueGroups display text.
 
         This deliberately uses ftfy's default configuration, including its
