@@ -16,10 +16,7 @@ def build_poster(monkeypatch) -> PosterInstagram:
 def test_authenticate_keeps_access_token_out_of_query_params(monkeypatch):
     poster = build_poster(monkeypatch)
     response = Mock()
-    response.json.return_value = {
-        "id": ACCOUNT_ID,
-        "username": "cutepetsboston2026_test",
-    }
+    response.json.return_value = {"id": ACCOUNT_ID, "username": "cutepetsboston2026_test"}
 
     with patch(
         "social_posters.instagram.requests.get",

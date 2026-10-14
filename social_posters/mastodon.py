@@ -10,14 +10,7 @@ from urllib.parse import urlparse
 import requests
 from mastodon import Mastodon
 
-from abstractions import (
-    CITY_NAME,
-    CITY_STATE,
-    AdoptablePet,
-    Post,
-    PostResult,
-    SocialPoster,
-)
+from abstractions import CITY_NAME, CITY_STATE, AdoptablePet, Post, PostResult, SocialPoster
 
 THREAD_SUFFIX = "\n\nMore details below ⬇️"
 MASTODON_CHARACTER_LIMIT = 500
@@ -118,9 +111,7 @@ class PosterMastodon(SocialPoster):
             media_ids = []
             for index, image_url in enumerate(photo_urls, start=1):
                 try:
-                    media_ids.append(
-                        self._upload_media(session, post, image_url, index)
-                    )
+                    media_ids.append(self._upload_media(session, post, image_url, index))
                 except Exception as exc:
                     logger.warning("Mastodon image %d skipped: %s", index, exc)
             if not media_ids:
@@ -184,8 +175,7 @@ class PosterMastodon(SocialPoster):
 
         except Exception as exc:
             logger.exception(
-                "Mastodon posting failed during %s: %s "
-                "(root_posted=%s completed_reply_count=%d)",
+                "Mastodon posting failed during %s: %s (root_posted=%s completed_reply_count=%d)",
                 stage,
                 exc,
                 root_status is not None,
@@ -251,12 +241,7 @@ class PosterMastodon(SocialPoster):
 
     @staticmethod
     def _main_caption_limit(tag_suffix: str) -> int:
-        return (
-            MASTODON_CHARACTER_LIMIT
-            - len(tag_suffix)
-            - len(THREAD_SUFFIX)
-            - len(TRUNCATION_SUFFIX)
-        )
+        return MASTODON_CHARACTER_LIMIT - len(tag_suffix) - len(THREAD_SUFFIX) - len(TRUNCATION_SUFFIX)
 
     def _split_reply_chunks(self, text: str) -> list[str]:
         chunks = []
@@ -293,16 +278,8 @@ class PosterMastodon(SocialPoster):
                 raise
             return tmp.name
 
-    def _upload_media(
-        self,
-        session: Mastodon,
-        post: Post,
-        image_url: str | None = None,
-        index: int = 1,
-    ) -> str:
-        image_url = image_url or (
-            post.selected_image_urls[0] if post.selected_image_urls else None
-        )
+    def _upload_media(self, session: Mastodon, post: Post, image_url: str | None = None, index: int = 1) -> str:
+        image_url = image_url or (post.selected_image_urls[0] if post.selected_image_urls else None)
         if not image_url:
             raise ValueError("Mastodon posts require an image URL.")
 
@@ -316,9 +293,7 @@ class PosterMastodon(SocialPoster):
             image_path = self._download_image(image_url)
             logger.info("Finish downloading image: image_path=%s", image_path)
 
-            media_description = (
-                f"{post.alt_text or 'Photo of an adoptable pet'} (photo {index})"
-            )
+            media_description = f"{post.alt_text or 'Photo of an adoptable pet'} (photo {index})"
             logger.info(
                 "Mastodon media upload input: image_path=%s description=%s",
                 image_path,
@@ -356,8 +331,7 @@ class PosterMastodon(SocialPoster):
             pet.pet_id,
         )
         text = (
-            f"Meet {pet.name}! This adorable {pet.breed} {pet.species} "
-            f"is looking for a forever home in {pet.location}."
+            f"Meet {pet.name}! This adorable {pet.breed} {pet.species} is looking for a forever home in {pet.location}."
         )
         logger.info("Mastodon base post text: %s", text)
 
@@ -379,10 +353,7 @@ class PosterMastodon(SocialPoster):
             text=text,
             image_urls=photos,
             link=pet.adoption_url,
-            alt_text=(
-                f"Photo of {pet.name}, a {pet.breed} {pet.species} "
-                "available for adoption"
-            ),
+            alt_text=(f"Photo of {pet.name}, a {pet.breed} {pet.species} available for adoption"),
             tags=[
                 "adoptdontshop",
                 "rescue",

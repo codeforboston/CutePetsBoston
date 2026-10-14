@@ -74,9 +74,7 @@ def create_collectors(debug=False):
 
 def create_sources(debug=False):
     if debug:
-        cat_fixture_path = (
-            Path(__file__).parent / "tests" / "fixtures" / "sample_cats.json"
-        )
+        cat_fixture_path = Path(__file__).parent / "tests" / "fixtures" / "sample_cats.json"
         with cat_fixture_path.open() as fixture_file:
             cat_animals = json.load(fixture_file)
         return [
@@ -154,14 +152,8 @@ def publish_posts(pet, posters):
 
 def pick_pet(pets, database_path: str | Path = "database.json"):
     data = read_database(database_path)
-    posted_pet_ids = {
-        posted_pet["pet_id"] for posted_pet in data.get("posted_pets", [])
-    }
-    eligible = [
-        pet
-        for pet in pets
-        if pet.image_urls and pet.adoption_url and pet.pet_id not in posted_pet_ids
-    ]
+    posted_pet_ids = {posted_pet["pet_id"] for posted_pet in data.get("posted_pets", [])}
+    eligible = [pet for pet in pets if pet.image_urls and pet.adoption_url and pet.pet_id not in posted_pet_ids]
     if not eligible:
         raise ValueError("No eligible pet found")
 
@@ -190,29 +182,19 @@ def record_publish_results(pet, results, database_path: str | Path = "database.j
         )
 
     cutoff = datetime.now(timezone.utc) - timedelta(weeks=12)
-    data["posted_pets"] = [
-        item
-        for item in posted_pets
-        if datetime.fromisoformat(item["posted_at"]) >= cutoff
-    ]
-    data["posts"] = [
-        item for item in posts if datetime.fromisoformat(item["posted_at"]) >= cutoff
-    ]
+    data["posted_pets"] = [item for item in posted_pets if datetime.fromisoformat(item["posted_at"]) >= cutoff]
+    data["posts"] = [item for item in posts if datetime.fromisoformat(item["posted_at"]) >= cutoff]
     write_database(database_path, data)
 
 
-def collect_metrics(
-    collectors, database_path: str | Path = "database.json", window_days=14
-):
+def collect_metrics(collectors, database_path: str | Path = "database.json", window_days=14):
     try:
         data = read_database(database_path)
         posts = data.get("posts", [])
         if not posts:
             return
 
-        collectors_by_platform = {
-            collector.platform_name: collector for collector in collectors
-        }
+        collectors_by_platform = {collector.platform_name: collector for collector in collectors}
         cutoff = datetime.now(timezone.utc) - timedelta(days=window_days)
         updated = False
 
@@ -225,9 +207,7 @@ def collect_metrics(
                 if collector is None:
                     continue
 
-                metrics = collector.fetch_metrics(
-                    entry["post_id"], entry.get("post_url")
-                )
+                metrics = collector.fetch_metrics(entry["post_id"], entry.get("post_url"))
                 if metrics is None:
                     continue
 
@@ -262,9 +242,7 @@ def _slack_run_header(status):
     event = os.environ.get("GITHUB_EVENT_NAME")
     repo = os.environ.get("GITHUB_REPOSITORY")
     run_id = os.environ.get("GITHUB_RUN_ID")
-    run_link = (
-        f"https://github.com/{repo}/actions/runs/{run_id}" if repo and run_id else None
-    )
+    run_link = f"https://github.com/{repo}/actions/runs/{run_id}" if repo and run_id else None
 
     header = f"CutePetsBoston [{app_env}] {status} in *{workflow}*"
     if event:

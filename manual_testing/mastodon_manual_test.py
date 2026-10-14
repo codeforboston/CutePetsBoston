@@ -77,9 +77,7 @@ def post_within_500_chars_limit_without_adoption_link():
         "Quahog",
         "Meow. Post within 500 limit without adoption link",
         None,
-        [
-            "https://static.wikia.nocookie.net/villains/images/7/76/Pouncey.webp/revision/latest?cb=20220403224856"
-        ],
+        ["https://static.wikia.nocookie.net/villains/images/7/76/Pouncey.webp/revision/latest?cb=20220403224856"],
         None,
         "Male",
         None,
@@ -96,9 +94,7 @@ def post_about_800_chars_with_adoption_link():
         "Quahog",
         "OH YEAH!" * 100,
         None,
-        [
-            "https://static.wikia.nocookie.net/familyguy/images/8/8b/Koolaid.jpg/revision/latest?cb=20090128174245"
-        ],
+        ["https://static.wikia.nocookie.net/familyguy/images/8/8b/Koolaid.jpg/revision/latest?cb=20090128174245"],
         None,
         "Unknown",
         None,

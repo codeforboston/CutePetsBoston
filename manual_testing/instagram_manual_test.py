@@ -30,9 +30,7 @@ testing_cases = [sample_pet]
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Manually exercise the Instagram poster against a real account."
-    )
+    parser = argparse.ArgumentParser(description="Manually exercise the Instagram poster against a real account.")
     parser.add_argument(
         "--dry-run",
         action="store_true",
@@ -66,16 +64,11 @@ def main():
         if args.dry_run:
             continue
 
-        print(
-            "\nPublishing (this polls Instagram until the image finishes "
-            "processing, up to 60s)..."
-        )
+        print("\nPublishing (this polls Instagram until the image finishes processing, up to 60s)...")
         result = poster.publish(post)
 
         if result.success:
-            print(
-                f"\nPosted successfully! Media ID: {result.post_id}, URL: {result.post_url}"
-            )
+            print(f"\nPosted successfully! Media ID: {result.post_id}, URL: {result.post_url}")
         else:
             print(f"\nPost failed: {result.error_message}")
             sys.exit(1)

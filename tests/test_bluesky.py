@@ -21,9 +21,7 @@ class TestBuildTextAndFacets:
         assert len(facets) == 1
         enc = text.encode("utf-8")
         f = facets[0]
-        assert enc[f["index"]["byteStart"] : f["index"]["byteEnd"]] == url.encode(
-            "utf-8"
-        )
+        assert enc[f["index"]["byteStart"] : f["index"]["byteEnd"]] == url.encode("utf-8")
         assert f["features"][0]["$type"] == "app.bsky.richtext.facet#link"
         assert f["features"][0]["uri"] == url
 
@@ -55,11 +53,7 @@ class TestBuildTextAndFacets:
         assert url in text
         assert text.endswith(f"\n\n{tags_section}")
         assert len(text) <= 300
-        link_facets = [
-            f
-            for f in facets
-            if f["features"][0]["$type"] == "app.bsky.richtext.facet#link"
-        ]
+        link_facets = [f for f in facets if f["features"][0]["$type"] == "app.bsky.richtext.facet#link"]
         assert len(link_facets) == 1
         assert link_facets[0]["features"][0]["uri"] == url
 
@@ -81,11 +75,7 @@ class TestBuildTextAndFacets:
         assert "Learn more and ado " not in text
         assert text.endswith(f"\n\n{tags_section}")
         assert len(text) <= 300
-        link_facets = [
-            f
-            for f in facets
-            if f["features"][0]["$type"] == "app.bsky.richtext.facet#link"
-        ]
+        link_facets = [f for f in facets if f["features"][0]["$type"] == "app.bsky.richtext.facet#link"]
         assert len(link_facets) == 1
         assert link_facets[0]["features"][0]["uri"] == url
 
@@ -98,9 +88,7 @@ class TestBuildTextAndFacets:
 
         encoded = text.encode("utf-8")
 
-        for facet, tag_name in zip(
-            facets, ["AdoptDontShop", "Boston", "DogsOfBluesky"]
-        ):
+        for facet, tag_name in zip(facets, ["AdoptDontShop", "Boston", "DogsOfBluesky"]):
             start = facet["index"]["byteStart"]
             end = facet["index"]["byteEnd"]
             assert encoded[start:end] == f"#{tag_name}".encode("utf-8")

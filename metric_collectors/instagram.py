@@ -11,22 +11,15 @@ from social_posters.instagram import GRAPH_API_BASE
 
 class CollectorInstagram(MetricCollector):
     def __init__(self, access_token=None):
-        self.access_token = access_token or os.environ.get(
-            "INSTAGRAM_PAGE_ACCESS_TOKEN"
-        )
+        self.access_token = access_token or os.environ.get("INSTAGRAM_PAGE_ACCESS_TOKEN")
 
     @property
     def platform_name(self) -> str:
         return "Instagram"
 
-    def fetch_metrics(
-        self, post_id: str, post_url: str | None = None
-    ) -> PostMetrics | None:
+    def fetch_metrics(self, post_id: str, post_url: str | None = None) -> PostMetrics | None:
         if not self.access_token:
-            print(
-                f"Instagram metric collection failed for {post_id}: "
-                "access token missing"
-            )
+            print(f"Instagram metric collection failed for {post_id}: access token missing")
             return None
 
         try:

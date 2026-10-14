@@ -136,8 +136,7 @@ class SourceRescueGroups(PetSource):
         """
         if not self._api_key:
             raise ValueError(
-                "RescueGroups API key not configured. "
-                "Set CUTEPETSBOSTON_RESCUEGROUPS_API_KEY environment variable."
+                "RescueGroups API key not configured. Set CUTEPETSBOSTON_RESCUEGROUPS_API_KEY environment variable."
             )
 
         url = (
@@ -182,14 +181,10 @@ class SourceRescueGroups(PetSource):
         logger.debug("API Response: \n%s", data_log)
 
         orgs_by_id = {
-            item["id"]: item.get("attributes", {})
-            for item in body.get("included", [])
-            if item.get("type") == "orgs"
+            item["id"]: item.get("attributes", {}) for item in body.get("included", []) if item.get("type") == "orgs"
         }
         species_by_id = {
-            item["id"]: item.get("attributes", {})
-            for item in body.get("included", [])
-            if item.get("type") == "species"
+            item["id"]: item.get("attributes", {}) for item in body.get("included", []) if item.get("type") == "species"
         }
         pictures_by_id = {
             item["id"]: item.get("attributes", {})
@@ -222,23 +217,14 @@ class SourceRescueGroups(PetSource):
             name = self._clean_name(attrs.get("name", "Unknown"))
 
             # Determine species from the included species relationship
-            species_id = (
-                animal.get("relationships", {})
-                .get("species", {})
-                .get("data", [{}])[0]
-                .get("id")
-            )
+            species_id = animal.get("relationships", {}).get("species", {}).get("data", [{}])[0].get("id")
             if not species_id:
-                logger.warning(
-                    f"Skipping animal {animal_id} with no species relationship"
-                )
+                logger.warning(f"Skipping animal {animal_id} with no species relationship")
                 return None
             plural = species_by_id.get(species_id, {}).get("plural")
             normalized_plural = plural.lower() if isinstance(plural, str) else ""
             if normalized_plural not in self.species:
-                logger.info(
-                    f"Skipping animal {animal_id} with unconfigured species: {plural!r}"
-                )
+                logger.info(f"Skipping animal {animal_id} with unconfigured species: {plural!r}")
                 return None
             species = SPECIES_SINGULAR[normalized_plural]
 
@@ -249,12 +235,7 @@ class SourceRescueGroups(PetSource):
             description = self._clean_description(attrs.get("descriptionText", ""))
 
             # Get adoption_url
-            org_id = (
-                animal.get("relationships", {})
-                .get("orgs", {})
-                .get("data", [{}])[0]
-                .get("id")
-            )
+            org_id = animal.get("relationships", {}).get("orgs", {}).get("data", [{}])[0].get("id")
             org_attrs = orgs_by_id.get(org_id, {}) if org_id else {}
             url_candidates = (
                 attrs.get("adoptionUrl"),
@@ -265,9 +246,7 @@ class SourceRescueGroups(PetSource):
                 (
                     u
                     for u in url_candidates
-                    if u
-                    and u.strip().rstrip("/")
-                    not in ("http:", "https:", "http://", "https://")
+                    if u and u.strip().rstrip("/") not in ("http:", "https:", "http://", "https://")
                 ),
                 None,
             )
@@ -278,10 +257,7 @@ class SourceRescueGroups(PetSource):
 
             # For shelters we have a template for, rebuild a deep link to this
             # specific pet; otherwise keep the org landing page from above.
-            adoption_url = (
-                reconstruct_adoption_url(url_candidates, animal_id, rescue_id)
-                or adoption_url
-            )
+            adoption_url = reconstruct_adoption_url(url_candidates, animal_id, rescue_id) or adoption_url
 
             # Get best available image
             image_urls = self._get_image_urls(animal, pictures_by_id or {})
@@ -339,9 +315,7 @@ class SourceRescueGroups(PetSource):
         text = re.sub(r"\s+", " ", text)
 
         # Remove promotional headers
-        text = re.sub(
-            r"\*\*Home for the Holidays.*?\*\*", "", text, flags=re.IGNORECASE
-        )
+        text = re.sub(r"\*\*Home for the Holidays.*?\*\*", "", text, flags=re.IGNORECASE)
 
         return text
 
@@ -354,9 +328,7 @@ class SourceRescueGroups(PetSource):
         return None
 
     def _get_image_urls(self, animal: dict, pictures_by_id: dict) -> list[str]:
-        relationships = (
-            animal.get("relationships", {}).get("pictures", {}).get("data", [])
-        )
+        relationships = animal.get("relationships", {}).get("pictures", {}).get("data", [])
         pictures = []
         for item in relationships:
             attributes = pictures_by_id.get(item.get("id"))
@@ -366,9 +338,5 @@ class SourceRescueGroups(PetSource):
                 pictures.append(PictureAttributes.model_validate(attributes))
             except ValidationError as exc:
                 logger.debug("Invalid picture for animal %s: %s", animal.get("id"), exc)
-        pictures.sort(
-            key=lambda picture: (
-                picture.order if picture.order is not None else float("inf")
-            )
-        )
+        pictures.sort(key=lambda picture: picture.order if picture.order is not None else float("inf"))
         return select_image_urls([picture.large_url for picture in pictures])

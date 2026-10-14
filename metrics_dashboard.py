@@ -24,9 +24,7 @@ def empty_dashboard_html(message):
     """
 
 
-def dashboard(
-    html_file_path="dashboard.html", database_path: str | Path = "database.json"
-):
+def dashboard(html_file_path="dashboard.html", database_path: str | Path = "database.json"):
     # 1. Fetch data
     data = read_database(database_path)
     posts = data.get("posts", [])
@@ -48,9 +46,7 @@ def dashboard(
     df_metrics = pd.merge(df_pets, df_posts, on="pet_id", how="left")
 
     # Posts with no recorded metrics yet leave the metric columns absent
-    missing = [
-        col for col in ("likes", "reposts", "comments") if col not in df_metrics.columns
-    ]
+    missing = [col for col in ("likes", "reposts", "comments") if col not in df_metrics.columns]
     df_metrics = df_metrics.reindex(columns=[*df_metrics.columns, *missing])
 
     if not df_metrics["likes"].notna().any():
@@ -60,17 +56,11 @@ def dashboard(
 
     # 2. Get unique platforms including 'All Platforms'
     platforms_html = ["All Platforms"] + sorted(
-        [
-            str(p)
-            for p in df_metrics["platform"].dropna().unique()
-            if p != "All Platforms"
-        ]
+        [str(p) for p in df_metrics["platform"].dropna().unique() if p != "All Platforms"]
     )
 
     # 3. Build options HTML for the dropdown
-    dropdown_options = "".join(
-        [f'<option value="{p}">{p}</option>' for p in platforms_html]
-    )
+    dropdown_options = "".join([f'<option value="{p}">{p}</option>' for p in platforms_html])
 
     # 4. Generate HTML blocks for each platform and metric
     sections_html = ""
@@ -90,12 +80,7 @@ def dashboard(
                 .reset_index()
             )
 
-            agg_temp = (
-                temp[["pet_id", "name", col]]
-                .groupby(["pet_id", "name"])[col]
-                .agg(["max", "sum"])
-                .reset_index()
-            )
+            agg_temp = temp[["pet_id", "name", col]].groupby(["pet_id", "name"])[col].agg(["max", "sum"]).reset_index()
 
             temp1 = agg_temp.sort_values("max", ascending=False).head(10)
             temp2 = agg_temp.sort_values("sum", ascending=False).head(10)
@@ -171,7 +156,4 @@ def dashboard(
     with open(html_file_path, "w", encoding="utf-8") as f:
         f.write(html_content)
 
-    print(
-        "Successfully generated dashboard.html with all platforms, max/sum stats,"
-        " and metrics!"
-    )
+    print("Successfully generated dashboard.html with all platforms, max/sum stats, and metrics!")

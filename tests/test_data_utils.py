@@ -118,17 +118,13 @@ class TestDataUtils:
 
     def test_rescuegroups_to_adoptable_pet_with_promotions(self):
         """Test converting data with promotional text in name."""
-        sample_data = {
-            "attributes": {"name": "Doli ***Home for the Holidays 1/2 price!"}
-        }
+        sample_data = {"attributes": {"name": "Doli ***Home for the Holidays 1/2 price!"}}
         pet = rescuegroups_to_adoptable_pet(sample_data)
         assert pet.name == "Doli"
 
     def test_rescuegroups_to_adoptable_pet_with_asterisks(self):
         """Test converting data with asterisks in name."""
-        sample_data = {
-            "attributes": {"name": "Cylana *Home for the holidays 1/2 price!"}
-        }
+        sample_data = {"attributes": {"name": "Cylana *Home for the holidays 1/2 price!"}}
         pet = rescuegroups_to_adoptable_pet(sample_data)
         assert pet.name == "Cylana"
 

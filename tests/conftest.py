@@ -15,9 +15,7 @@ def data_helper():
 
 def _pet(name, species="dog", breed="unknown", location="Unknown", **kwargs):
     """Shortcut to create an AdoptablePet with required fields for tests."""
-    return AdoptablePet(
-        name=name, species=species, breed=breed, location=location, **kwargs
-    )
+    return AdoptablePet(name=name, species=species, breed=breed, location=location, **kwargs)
 
 
 @pytest.fixture
@@ -32,11 +30,7 @@ def sample_posts():
     return [
         Post(text="Simple post"),
         Post(text="Post with image", image_urls=["https://example.com/image.jpg"]),
-        Post(
-            text="Complete post",
-            image_urls=["https://example.com/image.jpg"],
-            link="https://example.com/link",
-        ),
+        Post(text="Complete post", image_urls=["https://example.com/image.jpg"], link="https://example.com/link"),
     ]
 
 

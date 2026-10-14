@@ -103,11 +103,7 @@ pet_strategy = st.builds(
 
 def reconstruct_text(main_caption: str, replies: list[str]) -> str:
     main_without_tags = main_caption.split("\n\n#")[0]
-    main_without_suffix = (
-        main_without_tags.replace("...", "")
-        .replace("\n\nMore details below ⬇️", "")
-        .strip()
-    )
+    main_without_suffix = main_without_tags.replace("...", "").replace("\n\nMore details below ⬇️", "").strip()
 
     return " ".join([main_without_suffix] + replies).strip()
 
@@ -273,11 +269,7 @@ class TestMastodonCaption:
         main_caption, replies = self.poster._format_caption_thread(post)
 
         main_without_tags = main_caption.split("\n\n#")[0]
-        main_without_suffix = (
-            main_without_tags.replace("...", "")
-            .replace("\n\nMore details below ⬇️", "")
-            .strip()
-        )
+        main_without_suffix = main_without_tags.replace("...", "").replace("\n\nMore details below ⬇️", "").strip()
 
         reconstructed = main_without_suffix + "".join(replies)
 
@@ -418,9 +410,7 @@ class TestMastodonPublish:
         poster.authenticate = Mock(return_value=authenticate_result)
         caplog.set_level(logging.INFO, logger="social_posters.mastodon")
 
-        result = poster.publish(
-            Post(text="Meet Poppy!", image_urls=[image_url] if image_url else [])
-        )
+        result = poster.publish(Post(text="Meet Poppy!", image_urls=[image_url] if image_url else []))
 
         assert not result.success
         assert result.error_message == expected_error
@@ -439,14 +429,10 @@ class TestMastodonPublish:
         ]
         poster = build_publish_poster(session=session)
         poster._download_image = Mock(return_value=str(image_path))
-        poster._format_caption_thread = Mock(
-            return_value=("Main caption", ["First reply", "Second reply"])
-        )
+        poster._format_caption_thread = Mock(return_value=("Main caption", ["First reply", "Second reply"]))
         caplog.set_level(logging.INFO, logger="social_posters.mastodon")
 
-        result = poster.publish(
-            Post(text="Original text", image_urls=["https://example.com/pet.jpg"])
-        )
+        result = poster.publish(Post(text="Original text", image_urls=["https://example.com/pet.jpg"]))
 
         assert result.success
         assert result.post_id == "root-1"
@@ -456,10 +442,7 @@ class TestMastodonPublish:
         assert "'id': 'root-1'" in caplog.text
         assert "'id': 'reply-1'" in caplog.text
         assert "'id': 'reply-2'" in caplog.text
-        assert (
-            "Mastodon finished posting thread: root_id=root-1 reply_count=2"
-            in caplog.text
-        )
+        assert "Mastodon finished posting thread: root_id=root-1 reply_count=2" in caplog.text
         assert session.status_post.call_args_list == [
             call("Main caption", media_ids=["media-1"]),
             call("First reply", in_reply_to_id="root-1"),
@@ -479,14 +462,10 @@ class TestMastodonPublish:
         ]
         poster = build_publish_poster(session=session)
         poster._download_image = Mock(return_value=str(image_path))
-        poster._format_caption_thread = Mock(
-            return_value=("Main caption", ["First reply", "Second reply"])
-        )
+        poster._format_caption_thread = Mock(return_value=("Main caption", ["First reply", "Second reply"]))
         caplog.set_level(logging.INFO, logger="social_posters.mastodon")
 
-        result = poster.publish(
-            Post(text="Original text", image_urls=["https://example.com/pet.jpg"])
-        )
+        result = poster.publish(Post(text="Original text", image_urls=["https://example.com/pet.jpg"]))
 
         assert not result.success
         assert result.error_message == "second reply failed"

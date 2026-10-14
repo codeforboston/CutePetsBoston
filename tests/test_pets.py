@@ -3,17 +3,9 @@ from typing import Iterable
 from abstractions import AdoptablePet, Post
 
 
-def _pet(
-    name: str,
-    species: str = "dog",
-    breed: str = "unknown",
-    location: str = "Unknown",
-    **kwargs,
-) -> AdoptablePet:
+def _pet(name: str, species: str = "dog", breed: str = "unknown", location: str = "Unknown", **kwargs) -> AdoptablePet:
     """Shortcut to create an AdoptablePet with required fields for tests."""
-    return AdoptablePet(
-        name=name, species=species, breed=breed, location=location, **kwargs
-    )
+    return AdoptablePet(name=name, species=species, breed=breed, location=location, **kwargs)
 
 
 # Try to import pytest, but don't fail if it's not available
@@ -73,9 +65,7 @@ class TestPost:
 
     def test_post_creation_with_image(self):
         """Test creating a Post with text and image."""
-        post = Post(
-            text="Check out this cute pet!", image_urls=["https://example.com/pet.jpg"]
-        )
+        post = Post(text="Check out this cute pet!", image_urls=["https://example.com/pet.jpg"])
         assert post.text == "Check out this cute pet!"
         assert post.image_urls == ["https://example.com/pet.jpg"]
         assert post.link is None
@@ -213,8 +203,7 @@ class TestIntegration:
 
         for pet in fetched_pets:
             post = Post(
-                text=f"Meet {pet.name}! This adorable pet is looking for a home.",
-                link="https://example.com/adopt",
+                text=f"Meet {pet.name}! This adorable pet is looking for a home.", link="https://example.com/adopt"
             )
             social_sink.post(post)
 
@@ -240,11 +229,7 @@ def sample_posts():
     return [
         Post(text="Simple post"),
         Post(text="Post with image", image_urls=["https://example.com/image.jpg"]),
-        Post(
-            text="Complete post",
-            image_urls=["https://example.com/image.jpg"],
-            link="https://example.com/link",
-        ),
+        Post(text="Complete post", image_urls=["https://example.com/image.jpg"], link="https://example.com/link"),
     ]
 
 

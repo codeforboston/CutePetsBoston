@@ -134,12 +134,8 @@ class TestErrorHandling:
         # Test with unusual names
         unusual_pets = [
             AdoptablePet(name="", species="dog", breed="unknown", location="Unknown"),
-            AdoptablePet(
-                name="   ", species="dog", breed="unknown", location="Unknown"
-            ),
-            AdoptablePet(
-                name="A" * 100, species="dog", breed="unknown", location="Unknown"
-            ),
+            AdoptablePet(name="   ", species="dog", breed="unknown", location="Unknown"),
+            AdoptablePet(name="A" * 100, species="dog", breed="unknown", location="Unknown"),
         ]
 
         pet_source = MockPetSource(unusual_pets)
@@ -157,10 +153,7 @@ class TestScalability:
         """Test handling a large number of pets."""
         # Create many pets
         many_pets = [
-            AdoptablePet(
-                name=f"Pet{i}", species="dog", breed="unknown", location="Unknown"
-            )
-            for i in range(1000)
+            AdoptablePet(name=f"Pet{i}", species="dog", breed="unknown", location="Unknown") for i in range(1000)
         ]
         pet_source = MockPetSource(many_pets)
 

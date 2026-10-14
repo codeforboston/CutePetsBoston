@@ -10,18 +10,14 @@ from abstractions import MetricCollector, PostMetrics
 
 class CollectorMastodon(MetricCollector):
     def __init__(self, client=None):
-        api_base_url = os.environ.get(
-            "MASTODON_API_BASE_URL", "https://mastodon.social"
-        )
+        api_base_url = os.environ.get("MASTODON_API_BASE_URL", "https://mastodon.social")
         self._client = client or Mastodon(api_base_url=api_base_url)
 
     @property
     def platform_name(self) -> str:
         return "Mastodon"
 
-    def fetch_metrics(
-        self, post_id: str, post_url: str | None = None
-    ) -> PostMetrics | None:
+    def fetch_metrics(self, post_id: str, post_url: str | None = None) -> PostMetrics | None:
         try:
             status = self._client.status(post_id)
             return PostMetrics(
