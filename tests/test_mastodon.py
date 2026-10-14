@@ -1,15 +1,16 @@
 import logging
 from unittest.mock import Mock, call
 
-from abstractions import AdoptablePet, Post
-from hypothesis import given, strategies as st, assume
 import pytest
+from hypothesis import assume, given
+from hypothesis import strategies as st
+
+from abstractions import AdoptablePet, Post
 from social_posters.mastodon import (
-    PosterMastodon,
     MASTODON_CHARACTER_LIMIT,
     MAX_REPLIES,
+    PosterMastodon,
 )
-
 
 tag_strategy = st.lists(
     st.one_of(st.text(min_size=0, max_size=20), st.none()),
@@ -102,12 +103,7 @@ pet_strategy = st.builds(
 
 def reconstruct_text(main_caption: str, replies: list[str]) -> str:
     main_without_tags = main_caption.split("\n\n#")[0]
-    main_without_suffix = (
-        main_without_tags
-        .replace("...", "")
-        .replace("\n\nMore details below ⬇️", "")
-        .strip()
-    )
+    main_without_suffix = main_without_tags.replace("...", "").replace("\n\nMore details below ⬇️", "").strip()
 
     return " ".join([main_without_suffix] + replies).strip()
 
@@ -147,7 +143,7 @@ class TestMastodonCaptionProperties:
     @given(text=text_strategy, tags=long_tag_strategy)
     def test_splitting_with_tags_too_long(self, text, tags):
         post = Post(text=text, tags=tags)
-        
+
         with pytest.raises(ValueError):
             self.poster._format_caption_thread(post)
 
@@ -186,15 +182,15 @@ class TestMastodonCaptionProperties:
         assert len(main_caption) <= MASTODON_CHARACTER_LIMIT
         assert all(len(reply) <= MASTODON_CHARACTER_LIMIT for reply in replies)
         assert len(replies) <= MAX_REPLIES
-    
+
     @given(
-            text=caption_text,
-            limit=st.integers(min_value=1, max_value=10),
-           )
+        text=caption_text,
+        limit=st.integers(min_value=1, max_value=10),
+    )
     def test_safe_truncate_correctly(self, text, limit):
         fst, snd = self.poster._safe_truncate(text, limit)
 
-        assert len(fst) <= limit 
+        assert len(fst) <= limit
 
         if len(text) <= limit:
             assert fst == text
@@ -204,17 +200,15 @@ class TestMastodonCaptionProperties:
             assert snd == snd.strip()
 
     @given(
-            text=st.text(),
-            limit=st.integers(min_value=1, max_value=10),
-            )
+        text=st.text(),
+        limit=st.integers(min_value=1, max_value=10),
+    )
     def test_safe_truncate_nothing(self, text, limit):
         assume(len(text) <= limit)
         fst, snd = self.poster._safe_truncate(text, limit)
 
-
         assert fst == text
         assert snd == ""
-
 
 
 class TestMastodonCaption:
@@ -275,12 +269,7 @@ class TestMastodonCaption:
         main_caption, replies = self.poster._format_caption_thread(post)
 
         main_without_tags = main_caption.split("\n\n#")[0]
-        main_without_suffix = (
-            main_without_tags
-            .replace("...", "")
-            .replace("\n\nMore details below ⬇️", "")
-            .strip()
-        )
+        main_without_suffix = main_without_tags.replace("...", "").replace("\n\nMore details below ⬇️", "").strip()
 
         reconstructed = main_without_suffix + "".join(replies)
 
@@ -327,7 +316,8 @@ class TestMastodonCaption:
         assert all(len(reply) <= MASTODON_CHARACTER_LIMIT for reply in replies)
 
     def test_empty_tags_are_ignored(self):
-        post = Post(text="Meet Poppy!", tags=["AdoptDontShop", "", None, "Boston"])
+        # Deliberately exercise malformed runtime input outside the declared type.
+        post = Post(text="Meet Poppy!", tags=["AdoptDontShop", "", None, "Boston"])  # pyright: ignore[reportArgumentType]
 
         main_caption, replies = self.poster._format_caption_thread(post)
 
@@ -439,14 +429,10 @@ class TestMastodonPublish:
         ]
         poster = build_publish_poster(session=session)
         poster._download_image = Mock(return_value=str(image_path))
-        poster._format_caption_thread = Mock(
-            return_value=("Main caption", ["First reply", "Second reply"])
-        )
+        poster._format_caption_thread = Mock(return_value=("Main caption", ["First reply", "Second reply"]))
         caplog.set_level(logging.INFO, logger="social_posters.mastodon")
 
-        result = poster.publish(
-            Post(text="Original text", image_urls=["https://example.com/pet.jpg"])
-        )
+        result = poster.publish(Post(text="Original text", image_urls=["https://example.com/pet.jpg"]))
 
         assert result.success
         assert result.post_id == "root-1"
@@ -456,10 +442,7 @@ class TestMastodonPublish:
         assert "'id': 'root-1'" in caplog.text
         assert "'id': 'reply-1'" in caplog.text
         assert "'id': 'reply-2'" in caplog.text
-        assert (
-            "Mastodon finished posting thread: root_id=root-1 reply_count=2"
-            in caplog.text
-        )
+        assert "Mastodon finished posting thread: root_id=root-1 reply_count=2" in caplog.text
         assert session.status_post.call_args_list == [
             call("Main caption", media_ids=["media-1"]),
             call("First reply", in_reply_to_id="root-1"),
@@ -479,14 +462,10 @@ class TestMastodonPublish:
         ]
         poster = build_publish_poster(session=session)
         poster._download_image = Mock(return_value=str(image_path))
-        poster._format_caption_thread = Mock(
-            return_value=("Main caption", ["First reply", "Second reply"])
-        )
+        poster._format_caption_thread = Mock(return_value=("Main caption", ["First reply", "Second reply"]))
         caplog.set_level(logging.INFO, logger="social_posters.mastodon")
 
-        result = poster.publish(
-            Post(text="Original text", image_urls=["https://example.com/pet.jpg"])
-        )
+        result = poster.publish(Post(text="Original text", image_urls=["https://example.com/pet.jpg"]))
 
         assert not result.success
         assert result.error_message == "second reply failed"

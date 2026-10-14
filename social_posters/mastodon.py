@@ -10,8 +10,7 @@ from urllib.parse import urlparse
 import requests
 from mastodon import Mastodon
 
-from abstractions import AdoptablePet, Post, PostResult, SocialPoster
-from abstractions import CITY_NAME, CITY_STATE
+from abstractions import CITY_NAME, CITY_STATE, AdoptablePet, Post, PostResult, SocialPoster
 
 THREAD_SUFFIX = "\n\nMore details below ⬇️"
 MASTODON_CHARACTER_LIMIT = 500
@@ -47,16 +46,12 @@ class PosterMastodon(SocialPoster):
             self._session.account_verify_credentials()
             self._auth_error = None
         except Exception as exc:
-            logger.exception(
-                "Mastodon authentication failed"
-            )
+            logger.exception("Mastodon authentication failed")
             self._session = None
             self._auth_error = f"{type(exc).__name__}: {exc}"
             return False
         else:
-            logger.info(
-                "Mastodon authentication succeeded"
-            )
+            logger.info("Mastodon authentication succeeded")
         return True
 
     def publish(self, post: Post) -> PostResult:
@@ -106,7 +101,7 @@ class PosterMastodon(SocialPoster):
             logger.info("Mastodon publish result: %s", pprint.pformat(result))
             return result
         logger.info("Mastodon authentication successful")
-        
+
         root_status: dict | None = None
         completed_reply_count = 0
         stage = "preparing publish"
@@ -134,7 +129,7 @@ class PosterMastodon(SocialPoster):
             )
             logger.info("Mastodon main caption: %s", main_caption_formatted)
             logger.info("Mastodon replies: %s", replies_formatted)
-            
+
             stage = "posting thread"
             logger.info("Mastodon start posting thread")
             logger.info(
@@ -180,8 +175,7 @@ class PosterMastodon(SocialPoster):
 
         except Exception as exc:
             logger.exception(
-                "Mastodon posting failed during %s: %s "
-                "(root_posted=%s completed_reply_count=%d)",
+                "Mastodon posting failed during %s: %s (root_posted=%s completed_reply_count=%d)",
                 stage,
                 exc,
                 root_status is not None,
@@ -203,7 +197,7 @@ class PosterMastodon(SocialPoster):
     ) -> Iterator[tuple[str, int | None, dict]]:
         status = session.status_post(
             main_caption,
-            media_ids=media_ids,
+            media_ids=[media_id for media_id in media_ids],
         )
         yield "root", None, status
 
@@ -231,12 +225,7 @@ class PosterMastodon(SocialPoster):
         main_text, overflow = self._safe_truncate(caption_text, main_limit)
         replies = self._split_reply_chunks(overflow)
 
-        main_caption = (
-            f"{main_text}"
-            f"{TRUNCATION_SUFFIX}"
-            f"{THREAD_SUFFIX}"
-            f"{tag_suffix}"
-        )
+        main_caption = f"{main_text}{TRUNCATION_SUFFIX}{THREAD_SUFFIX}{tag_suffix}"
 
         return main_caption, replies
 
@@ -252,12 +241,7 @@ class PosterMastodon(SocialPoster):
 
     @staticmethod
     def _main_caption_limit(tag_suffix: str) -> int:
-        return (
-            MASTODON_CHARACTER_LIMIT
-            - len(tag_suffix)
-            - len(THREAD_SUFFIX)
-            - len(TRUNCATION_SUFFIX)
-        )
+        return MASTODON_CHARACTER_LIMIT - len(tag_suffix) - len(THREAD_SUFFIX) - len(TRUNCATION_SUFFIX)
 
     def _split_reply_chunks(self, text: str) -> list[str]:
         chunks = []
@@ -294,9 +278,7 @@ class PosterMastodon(SocialPoster):
                 raise
             return tmp.name
 
-    def _upload_media(
-        self, session: Mastodon, post: Post, image_url: str | None = None, index: int = 1
-    ) -> str:
+    def _upload_media(self, session: Mastodon, post: Post, image_url: str | None = None, index: int = 1) -> str:
         image_url = image_url or (post.selected_image_urls[0] if post.selected_image_urls else None)
         if not image_url:
             raise ValueError("Mastodon posts require an image URL.")
@@ -349,8 +331,7 @@ class PosterMastodon(SocialPoster):
             pet.pet_id,
         )
         text = (
-            f"Meet {pet.name}! This adorable {pet.breed} {pet.species} "
-            f"is looking for a forever home in {pet.location}."
+            f"Meet {pet.name}! This adorable {pet.breed} {pet.species} is looking for a forever home in {pet.location}."
         )
         logger.info("Mastodon base post text: %s", text)
 
@@ -372,10 +353,7 @@ class PosterMastodon(SocialPoster):
             text=text,
             image_urls=photos,
             link=pet.adoption_url,
-            alt_text=(
-                f"Photo of {pet.name}, a {pet.breed} {pet.species} "
-                "available for adoption"
-            ),
+            alt_text=(f"Photo of {pet.name}, a {pet.breed} {pet.species} available for adoption"),
             tags=[
                 "adoptdontshop",
                 "rescue",

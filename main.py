@@ -1,29 +1,28 @@
 import argparse
-from dataclasses import asdict
-from datetime import datetime, timedelta, timezone
 import json
 import logging
 import os
-from pathlib import Path
 import pprint
 import random
 import sys
 import traceback
+from dataclasses import asdict
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import requests
 
 import redirects
 from adoption_sources import SourceManual, SourceRescueGroups
 from database import read_database, write_database
-from metrics_dashboard import dashboard
 from metric_collectors.bluesky import CollectorBluesky
 from metric_collectors.instagram import CollectorInstagram
 from metric_collectors.mastodon import CollectorMastodon
+from metrics_dashboard import dashboard
 from social_posters.bluesky import PosterBluesky
 from social_posters.debug import PosterDebug
 from social_posters.instagram import PosterInstagram
 from social_posters.mastodon import PosterMastodon
-
 
 file_handler = logging.FileHandler("cutepets.log")
 file_handler.setLevel(logging.DEBUG)
@@ -43,8 +42,8 @@ logger = logging.getLogger(__name__)
 def main():
     logger.info("Log started")
     parser = argparse.ArgumentParser()
-    parser.add_argument("--debugsources", action="store_true") # this defaults to False
-    parser.add_argument("--debugposters", action="store_true") # this defaults to False
+    parser.add_argument("--debugsources", action="store_true")  # this defaults to False
+    parser.add_argument("--debugposters", action="store_true")  # this defaults to False
 
     args = parser.parse_args()
 
@@ -90,7 +89,7 @@ def run(
     sources,
     posters,
     collectors=None,
-    database_path="database.json",
+    database_path: str | Path = "database.json",
     redirects_path=None,
 ):
     pets = []
@@ -151,33 +150,23 @@ def publish_posts(pet, posters):
     return results, published_results
 
 
-def pick_pet(pets, database_path="database.json"):
+def pick_pet(pets, database_path: str | Path = "database.json"):
     data = read_database(database_path)
-    posted_pet_ids = {
-        posted_pet["pet_id"] for posted_pet in data.get("posted_pets", [])
-    }
-    eligible = [
-        pet
-        for pet in pets
-        if pet.image_urls
-        and pet.adoption_url
-        and pet.pet_id not in posted_pet_ids
-    ]
+    posted_pet_ids = {posted_pet["pet_id"] for posted_pet in data.get("posted_pets", [])}
+    eligible = [pet for pet in pets if pet.image_urls and pet.adoption_url and pet.pet_id not in posted_pet_ids]
     if not eligible:
         raise ValueError("No eligible pet found")
 
     return random.choice(eligible)
 
 
-def record_publish_results(pet, results, database_path="database.json"):
+def record_publish_results(pet, results, database_path: str | Path = "database.json"):
     data = read_database(database_path)
     posted_pets = data.setdefault("posted_pets", [])
     posts = data.setdefault("posts", [])
     posted_at = datetime.now(timezone.utc).isoformat()
 
-    posted_pets.append(
-        {"name": pet.name, "pet_id": pet.pet_id, "posted_at": posted_at}
-    )
+    posted_pets.append({"name": pet.name, "pet_id": pet.pet_id, "posted_at": posted_at})
     for poster, result in results:
         if not result.success:
             continue
@@ -193,29 +182,19 @@ def record_publish_results(pet, results, database_path="database.json"):
         )
 
     cutoff = datetime.now(timezone.utc) - timedelta(weeks=12)
-    data["posted_pets"] = [
-        item
-        for item in posted_pets
-        if datetime.fromisoformat(item["posted_at"]) >= cutoff
-    ]
-    data["posts"] = [
-        item
-        for item in posts
-        if datetime.fromisoformat(item["posted_at"]) >= cutoff
-    ]
+    data["posted_pets"] = [item for item in posted_pets if datetime.fromisoformat(item["posted_at"]) >= cutoff]
+    data["posts"] = [item for item in posts if datetime.fromisoformat(item["posted_at"]) >= cutoff]
     write_database(database_path, data)
 
 
-def collect_metrics(collectors, database_path="database.json", window_days=14):
+def collect_metrics(collectors, database_path: str | Path = "database.json", window_days=14):
     try:
         data = read_database(database_path)
         posts = data.get("posts", [])
         if not posts:
             return
 
-        collectors_by_platform = {
-            collector.platform_name: collector for collector in collectors
-        }
+        collectors_by_platform = {collector.platform_name: collector for collector in collectors}
         cutoff = datetime.now(timezone.utc) - timedelta(days=window_days)
         updated = False
 
@@ -228,9 +207,7 @@ def collect_metrics(collectors, database_path="database.json", window_days=14):
                 if collector is None:
                     continue
 
-                metrics = collector.fetch_metrics(
-                    entry["post_id"], entry.get("post_url")
-                )
+                metrics = collector.fetch_metrics(entry["post_id"], entry.get("post_url"))
                 if metrics is None:
                     continue
 
@@ -265,11 +242,7 @@ def _slack_run_header(status):
     event = os.environ.get("GITHUB_EVENT_NAME")
     repo = os.environ.get("GITHUB_REPOSITORY")
     run_id = os.environ.get("GITHUB_RUN_ID")
-    run_link = (
-        f"https://github.com/{repo}/actions/runs/{run_id}"
-        if repo and run_id
-        else None
-    )
+    run_link = f"https://github.com/{repo}/actions/runs/{run_id}" if repo and run_id else None
 
     header = f"CutePetsBoston [{app_env}] {status} in *{workflow}*"
     if event:
@@ -294,10 +267,7 @@ def _post_slack_message(text):
 
 def notify_slack_of_exception(traceback_text):
     logger.info(traceback_text)
-    text = (
-        f"{_slack_run_header('run failed')}\n"
-        f"```{traceback_text.strip()[-MAX_TRACEBACK_CHARS:]}```"
-    )
+    text = f"{_slack_run_header('run failed')}\n```{traceback_text.strip()[-MAX_TRACEBACK_CHARS:]}```"
     _post_slack_message(text)
 
 

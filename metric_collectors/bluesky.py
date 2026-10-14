@@ -6,7 +6,6 @@ import requests
 
 from abstractions import MetricCollector, PostMetrics
 
-
 POST_THREAD_URL = "https://public.api.bsky.app/xrpc/app.bsky.feed.getPostThread"
 
 
@@ -15,9 +14,7 @@ class CollectorBluesky(MetricCollector):
     def platform_name(self) -> str:
         return "Bluesky"
 
-    def fetch_metrics(
-        self, post_id: str, post_url: str | None = None
-    ) -> PostMetrics | None:
+    def fetch_metrics(self, post_id: str, post_url: str | None = None) -> PostMetrics | None:
         if not post_url:
             print(f"Bluesky metric collection failed for {post_id}: post URL missing")
             return None
