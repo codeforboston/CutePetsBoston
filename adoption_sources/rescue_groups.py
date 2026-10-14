@@ -25,14 +25,14 @@ logger = logging.getLogger(__name__)
 
 # Some rescues publish entries like "More Dogs Soon!" to point users at their
 # website; those should never be posted. Add new names here as we encounter them.
-PLACEHOLDER_NAMES: tuple[str, ...] = ("more dogs soon!", "more cats soon!")
+PLACEHOLDER_NAMES: tuple[str, ...] = ("more dogs soon!", "more cats soon!", "more rabbits soon!")
 
 # Values used by the rest of the application.
-SPECIES_SINGULAR = {"dogs": "dog", "cats": "cat"}
+SPECIES_SINGULAR = {"dogs": "dog", "cats": "cat", "rabbits": "rabbit"}
 
 # RescueGroups filter criteria are case-sensitive and use title-cased values
 # in the API's documented multi-species search example.
-FILTER_SPECIES_SINGULAR = {"dogs": "Dog", "cats": "Cat"}
+FILTER_SPECIES_SINGULAR = {"dogs": "Dog", "cats": "Cat", "rabbits": "Rabbit"}
 
 # The RescueGroups API occasionally times out or returns a transient 5xx. A
 # single hiccup shouldn't fail the whole run, so retry a few times with
