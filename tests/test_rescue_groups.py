@@ -186,8 +186,7 @@ def _mojibake(text: str, encoding: str = "cp1252") -> str:
 LEGIT_DESCRIPTION_LINES = (
     "Meet Goober! 🐶 He’s a 2-year-old Lab mix and he weighs 52 lbs.",
     "Adoption hours are 1:00PM – 6:00PM, Tuesday–Sunday; the fee is $150.",
-    "His foster, José, calls him “the best boy” — crate-trained, "
-    "house-trained… and 100% food-motivated.",
+    "His foster, José, calls him “the best boy” — crate-trained, house-trained… and 100% food-motivated.",
     "• Neutered: yes • Good with kids: yes • Cats: a slow introduction, "
     "and keep the house at 70°F or cooler, please 😊",
     "Questions? Email adopt@example.org, or apply at "
@@ -197,9 +196,7 @@ LEGIT_DESCRIPTION_LINES = (
 )
 LEGIT_DESCRIPTION = "\n".join(LEGIT_DESCRIPTION_LINES)
 EXPECTED_DESCRIPTION = " ".join(LEGIT_DESCRIPTION_LINES)
-EXPECTED_FULLY_FIXED_DESCRIPTION = EXPECTED_DESCRIPTION.translate(
-    str.maketrans({"’": "'", "“": '"', "”": '"'})
-)
+EXPECTED_FULLY_FIXED_DESCRIPTION = EXPECTED_DESCRIPTION.translate(str.maketrans({"’": "'", "“": '"', "”": '"'}))
 
 
 class DescriptionMojibakeRepairTests(unittest.TestCase):
@@ -221,15 +218,13 @@ class DescriptionMojibakeRepairTests(unittest.TestCase):
     def test_repairs_a_corrupted_paragraph_beside_clean_text(self):
         """Shelters paste a mangled paragraph into otherwise clean text."""
         clean = "Meet Goober! 🐶 His foster José says he’s “the best boy”."
-        corrupted = _mojibake(
-            "Adoption hours: 1:00PM – 6:00PM. Doña Müller answers. 😊"
-        )
+        corrupted = _mojibake("Adoption hours: 1:00PM – 6:00PM. Doña Müller answers. 😊")
 
         cleaned = self.source._clean_description(f"{clean}\n{corrupted}")
 
         self.assertEqual(
             cleaned,
-            "Meet Goober! 🐶 His foster José says he's \"the best boy\". "
+            'Meet Goober! 🐶 His foster José says he\'s "the best boy". '
             "Adoption hours: 1:00PM – 6:00PM. Doña Müller answers. 😊",
         )
 
@@ -250,9 +245,7 @@ class DescriptionMojibakeRepairTests(unittest.TestCase):
         description = "Adoption hours: 1:00PM â\x80\x93 6:00PM"
         animal = _make_animal(descriptionText=description)
 
-        with self.assertLogs(
-            "adoption_sources.rescue_groups", level="INFO"
-        ) as captured:
+        with self.assertLogs("adoption_sources.rescue_groups", level="INFO") as captured:
             pet = self.source._parse_animal(
                 animal,
                 {"org1": _make_org(url="https://example.com/adopt")},
@@ -274,17 +267,12 @@ class DescriptionMojibakeRepairTests(unittest.TestCase):
         description = "voilÃ le travail"
 
         with self.assertLogs("adoption_sources.rescue_groups", level="INFO"):
-            repaired = self.source._clean_description(
-                description, animal_id="multi-step"
-            )
+            repaired = self.source._clean_description(description, animal_id="multi-step")
 
         self.assertEqual(repaired, "voilà le travail")
 
     def test_repairs_mixed_encoding_within_one_paragraph(self):
-        description = (
-            "Clean José 🐶. "
-            + _mojibake("Adoption hours: 1:00PM – 6:00PM. Doña answers.")
-        )
+        description = "Clean José 🐶. " + _mojibake("Adoption hours: 1:00PM – 6:00PM. Doña answers.")
 
         with self.assertLogs("adoption_sources.rescue_groups", level="INFO"):
             cleaned = self.source._clean_description(description)
@@ -295,9 +283,7 @@ class DescriptionMojibakeRepairTests(unittest.TestCase):
         )
 
     @patch("adoption_sources.rescue_groups.fix_and_explain")
-    def test_accepts_non_round_trip_repairs_and_logs_the_complete_result(
-        self, mock_fix
-    ):
+    def test_accepts_non_round_trip_repairs_and_logs_the_complete_result(self, mock_fix):
         original = "ambiguous input"
         result = SimpleNamespace(
             text="guessed output",
@@ -309,12 +295,8 @@ class DescriptionMojibakeRepairTests(unittest.TestCase):
         )
         mock_fix.return_value = result
 
-        with self.assertLogs(
-            "adoption_sources.rescue_groups", level="INFO"
-        ) as captured:
-            repaired = self.source._repair_mojibake(
-                original, "description", "test-animal"
-            )
+        with self.assertLogs("adoption_sources.rescue_groups", level="INFO") as captured:
+            repaired = self.source._repair_mojibake(original, "description", "test-animal")
 
         self.assertEqual(repaired, "guessed output")
         self.assertIs(captured.records[0].args[3], result)
@@ -322,9 +304,7 @@ class DescriptionMojibakeRepairTests(unittest.TestCase):
 
     def test_applies_ftfy_general_text_fixes(self):
         with self.assertLogs("adoption_sources.rescue_groups", level="INFO"):
-            repaired = self.source._repair_mojibake(
-                "Ｆido’s ﬁne\x00", "name", "12345"
-            )
+            repaired = self.source._repair_mojibake("Ｆido’s ﬁne\x00", "name", "12345")
 
         self.assertEqual(repaired, "Fido's fine")
 
@@ -354,8 +334,7 @@ class DennisMojibakeMastodonRegressionTests(unittest.TestCase):
                 "sex": "Male",
                 "sizeGroup": "Medium",
                 "pictureThumbnailUrl": (
-                    "https://cdn.rescuegroups.org/1975/pictures/"
-                    "animals/22658/22658169/103556832.jpg?width=100"
+                    "https://cdn.rescuegroups.org/1975/pictures/animals/22658/22658169/103556832.jpg?width=100"
                 ),
                 "descriptionText": (
                     "MEET DENNIS!- I am in a foster home, please call the "
@@ -396,9 +375,7 @@ class DennisMojibakeMastodonRegressionTests(unittest.TestCase):
             },
             "relationships": {
                 "breeds": {"data": [{"id": "35", "type": "breeds"}]},
-                "locations": {
-                    "data": [{"id": "1000001975", "type": "locations"}]
-                },
+                "locations": {"data": [{"id": "1000001975", "type": "locations"}]},
                 "orgs": {"data": [{"id": "1975", "type": "orgs"}]},
                 "species": {"data": [{"id": "3", "type": "species"}]},
             },
@@ -417,9 +394,7 @@ class DennisMojibakeMastodonRegressionTests(unittest.TestCase):
         self.assertIn("1:00PM â\x80\x93 6:00PM", raw_description)
 
         source = SourceRescueGroups(api_key="dummy")
-        with self.assertLogs(
-            "adoption_sources.rescue_groups", level="INFO"
-        ) as captured_logs:
+        with self.assertLogs("adoption_sources.rescue_groups", level="INFO") as captured_logs:
             pet = source._parse_animal(raw_animal, orgs_by_id, species_by_id)
 
         self.assertIsNotNone(pet)
@@ -470,14 +445,10 @@ class DennisMojibakeMastodonRegressionTests(unittest.TestCase):
         self.assertTrue(result.success)
         self.assertEqual(result.post_id, "status-1")
         poster._upload_media.assert_called_once()
-        self.assertEqual(
-            poster._upload_media.call_args.args[:2], (session, post)
-        )
+        self.assertEqual(poster._upload_media.call_args.args[:2], (session, post))
         self.assertGreaterEqual(session.status_post.call_count, 1)
 
-        mastodon_payloads = [
-            call.args[0] for call in session.status_post.call_args_list
-        ]
+        mastodon_payloads = [call.args[0] for call in session.status_post.call_args_list]
         all_text_sent_to_mastodon = "\n".join(mastodon_payloads)
         self.assertIn("He's diabetic", all_text_sent_to_mastodon)
         self.assertIn("–", all_text_sent_to_mastodon)
@@ -506,7 +477,7 @@ class DescriptionTextFixingTests(unittest.TestCase):
         ),
         "smart punctuation": (
             "He’s “the best boy” — really… 100% good.",
-            "He's \"the best boy\" — really… 100% good.",
+            'He\'s "the best boy" — really… 100% good.',
         ),
         "percent-encoded url": (
             "Apply at https://example.com/adopt/jos%C3%A9?ref=a%E2%80%93b",
@@ -528,9 +499,7 @@ class DescriptionTextFixingTests(unittest.TestCase):
     def test_applies_only_relevant_fixes_to_clean_descriptions(self):
         for label, (description, expected) in self.DESCRIPTION_EXPECTATIONS.items():
             with self.subTest(label):
-                self.assertEqual(
-                    self.source._clean_description(description), expected
-                )
+                self.assertEqual(self.source._clean_description(description), expected)
 
     def test_fully_fixes_the_realistic_description_and_logs_changes(self):
         with self.assertLogs("adoption_sources.rescue_groups", level="INFO"):
@@ -624,9 +593,7 @@ class PetFieldMojibakeRepairTests(unittest.TestCase):
         self._assert_all_fields_repaired(pets[0])
 
     def test_logs_each_repaired_field_by_name(self):
-        with self.assertLogs(
-            "adoption_sources.rescue_groups", level="INFO"
-        ) as captured:
+        with self.assertLogs("adoption_sources.rescue_groups", level="INFO") as captured:
             pet = self.source._parse_animal(
                 self._animal(corrupt=True),
                 self._orgs(corrupt=True),
@@ -637,10 +604,7 @@ class PetFieldMojibakeRepairTests(unittest.TestCase):
         self.assertEqual(
             sorted(record.args[:3] for record in captured.records),
             sorted(
-                [
-                    (field, "animal", "12345")
-                    for field in ("name", "breed", "description")
-                ]
+                [(field, "animal", "12345") for field in ("name", "breed", "description")]
                 + [("location", "organization", "org1")]
             ),
         )
@@ -651,9 +615,7 @@ class PetFieldMojibakeRepairTests(unittest.TestCase):
             self.assertIn(repr(result), record.getMessage())
 
     def test_applies_general_fixes_to_clean_fields(self):
-        with self.assertLogs(
-            "adoption_sources.rescue_groups", level="INFO"
-        ) as captured:
+        with self.assertLogs("adoption_sources.rescue_groups", level="INFO") as captured:
             pet = self.source._parse_animal(
                 self._animal(corrupt=False),
                 self._orgs(corrupt=False),
@@ -662,11 +624,14 @@ class PetFieldMojibakeRepairTests(unittest.TestCase):
 
         self._assert_all_fields_repaired(pet)
         self.assertEqual(len(captured.records), 1)
-        self.assertEqual(captured.records[0].args[:3], (
-            "description",
-            "animal",
-            "12345",
-        ))
+        self.assertEqual(
+            captured.records[0].args[:3],
+            (
+                "description",
+                "animal",
+                "12345",
+            ),
+        )
 
     def test_repairs_name_before_stripping_the_promotional_suffix(self):
         """``Ã…`` is ambiguous on its own — ftfy only fixes it when the rest of
@@ -674,9 +639,7 @@ class PetFieldMojibakeRepairTests(unittest.TestCase):
         this name comes back as ``Ã…sa`` if the repair moves after the split.
         """
         self.assertEqual(
-            self.source._clean_name(
-                _mojibake("Åsa ***Ångström's littermate, adopt together!")
-            ),
+            self.source._clean_name(_mojibake("Åsa ***Ångström's littermate, adopt together!")),
             "Åsa",
         )
 
@@ -686,18 +649,14 @@ class PetFieldMojibakeRepairTests(unittest.TestCase):
             'Lucky — the "office dog"',
         )
         self.assertEqual(
-            self.source._repair_mojibake(
-                _mojibake("Chihuahua – Short Coat"), "breed", "12345"
-            ),
+            self.source._repair_mojibake(_mojibake("Chihuahua – Short Coat"), "breed", "12345"),
             "Chihuahua – Short Coat",
         )
 
     def test_empty_and_missing_values_pass_through(self):
         for value in ("", None):
             with self.subTest(value=value):
-                self.assertEqual(
-                    self.source._repair_mojibake(value, "breed", "12345"), value
-                )
+                self.assertEqual(self.source._repair_mojibake(value, "breed", "12345"), value)
 
     def test_known_limitation_a_ring_needs_corroborating_mojibake(self):
         """Documented limitation, not desired behavior.
@@ -706,9 +665,7 @@ class PetFieldMojibakeRepairTests(unittest.TestCase):
         so ftfy leaves it alone unless the string carries other mojibake to
         corroborate it. Scandinavian names are where this bites.
         """
-        self.assertEqual(
-            self.source._clean_name(_mojibake("Åsa", "cp1252")), "Ã…sa"
-        )
+        self.assertEqual(self.source._clean_name(_mojibake("Åsa", "cp1252")), "Ã…sa")
         # Latin-1 corruption of the same name has no such ambiguity.
         self.assertEqual(self.source._clean_name(_mojibake("Åsa", "latin-1")), "Åsa")
         # Neither does cp1252 corruption with a second mojibake sequence.

@@ -237,9 +237,7 @@ class SourceRescueGroups(PetSource):
             )
 
             # Clean up description (use text version, not HTML)
-            description = self._clean_description(
-                attrs.get("descriptionText", ""), animal_id=animal_id
-            )
+            description = self._clean_description(attrs.get("descriptionText", ""), animal_id=animal_id)
 
             # Get adoption_url
             org_id = animal.get("relationships", {}).get("orgs", {}).get("data", [{}])[0].get("id")
@@ -345,9 +343,7 @@ class SourceRescueGroups(PetSource):
         cleaned = re.split(r"\s*[\*\-\|]+\s*", name)[0]
         return cleaned.strip()
 
-    def _clean_description(
-        self, description: str, animal_id: str = "unknown"
-    ) -> str:
+    def _clean_description(self, description: str, animal_id: str = "unknown") -> str:
         """Clean up description text."""
         if not description:
             return ""
@@ -358,10 +354,7 @@ class SourceRescueGroups(PetSource):
         # A description may combine paragraphs copied from systems with
         # different encodings. Treat natural line boundaries independently so
         # ftfy can assess each paragraph on its own.
-        text = "".join(
-            self._repair_mojibake(line, "description", animal_id)
-            for line in text.splitlines(keepends=True)
-        )
+        text = "".join(self._repair_mojibake(line, "description", animal_id) for line in text.splitlines(keepends=True))
 
         # Remove &nbsp; and normalize whitespace
         text = text.replace("&nbsp;", " ")
