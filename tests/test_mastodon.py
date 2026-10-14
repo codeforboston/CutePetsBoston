@@ -286,9 +286,7 @@ class TestMastodonCaption:
         assert remaining == "Two words"
 
     def test_safe_truncate_prefers_last_sentence_boundary_before_limit(self):
-        kept, remaining = self.poster._safe_truncate(
-            "First. Second. Third sentence continues here", 20
-        )
+        kept, remaining = self.poster._safe_truncate("First. Second. Third sentence continues here", 20)
 
         assert kept == "First. Second."
         assert remaining == "Third sentence continues here"
@@ -402,11 +400,9 @@ class TestMastodonPublish:
         assert result.success
         assert result.post_id == "status-1"
         assert "'id': 'status-1'" in caplog.text
-        assert (
-            session.status_post.call_args_list == [
-                call("Single caption", media_ids=["media-1"]),
-            ]
-        )
+        assert session.status_post.call_args_list == [
+            call("Single caption", media_ids=["media-1"]),
+        ]
         assert not image_path.exists()
 
     def test_status_post_failure_logs_publish_result(self, caplog, tmp_path):

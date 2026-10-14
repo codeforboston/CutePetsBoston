@@ -184,12 +184,7 @@ class PosterMastodon(SocialPoster):
 
     @staticmethod
     def _main_caption_limit(link_suffix: str, tag_suffix: str) -> int:
-        return (
-            MASTODON_CHARACTER_LIMIT
-            - len(link_suffix)
-            - len(tag_suffix)
-            - len(TRUNCATION_SUFFIX)
-        )
+        return MASTODON_CHARACTER_LIMIT - len(link_suffix) - len(tag_suffix) - len(TRUNCATION_SUFFIX)
 
     def _download_image(self, image_url: str) -> str:
         parsed_url = urlparse(image_url)
