@@ -12,6 +12,7 @@ configparser==3.8.1
 decorator
 EasyProcess==1.1
 emoji==1.7.0
+ftfy==6.3.1
 future==1.0.0
 googleapis-common-protos==1.72.0
 grpcio==1.78.0
