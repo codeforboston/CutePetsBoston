@@ -1,6 +1,5 @@
 """Tests for the redirect slug minting and append-only mapping (RFC 0001)."""
 
-import json
 import os
 import subprocess
 import sys
@@ -25,7 +24,7 @@ from redirects import (
 )
 
 
-def _pet(pet_id="12345", adoption_url="https://example.com/adopt/pet"):
+def _pet(pet_id: str | None = "12345", adoption_url="https://example.com/adopt/pet"):
     return AdoptablePet(
         name="Poppy",
         species="dog",
@@ -71,7 +70,10 @@ class MintSlugTests(unittest.TestCase):
         slugs = {
             subprocess.run(
                 [sys.executable, "-c", "import redirects; print(redirects.mint_slug('pet/42 x'))"],
-                capture_output=True, text=True, check=True, cwd=repo_root,
+                capture_output=True,
+                text=True,
+                check=True,
+                cwd=repo_root,
                 env={**os.environ, "PYTHONHASHSEED": seed},
             ).stdout.strip()
             for seed in ("0", "1", "random")
@@ -90,9 +92,7 @@ class MintSlugTests(unittest.TestCase):
 
 class RedirectUrlTests(unittest.TestCase):
     def test_url_matches_interstitial_contract(self):
-        self.assertEqual(
-            redirect_url_for("42"), f"{SITE_URL}/r/?id=42"
-        )
+        self.assertEqual(redirect_url_for("42"), f"{SITE_URL}/r/?id=42")
 
 
 class RegisterRedirectTests(unittest.TestCase):
@@ -103,9 +103,7 @@ class RegisterRedirectTests(unittest.TestCase):
 
     def test_existing_slug_with_same_url_is_idempotent(self):
         original = {"42": "https://example.com/a"}
-        mapping, changed = register_redirect(
-            dict(original), "42", "https://example.com/a"
-        )
+        mapping, changed = register_redirect(dict(original), "42", "https://example.com/a")
         self.assertFalse(changed)
         self.assertEqual(mapping, original)
 
@@ -116,9 +114,7 @@ class RegisterRedirectTests(unittest.TestCase):
 
     def test_existing_slug_is_never_overwritten(self):
         original = {"42": "https://example.com/old"}
-        mapping, changed = register_redirect(
-            dict(original), "42", "https://example.com/new"
-        )
+        mapping, changed = register_redirect(dict(original), "42", "https://example.com/new")
         self.assertFalse(changed)
         self.assertEqual(mapping["42"], "https://example.com/old")
 
@@ -222,11 +218,7 @@ class IsSafeTargetTests(unittest.TestCase):
         self.assertTrue(is_safe_target("http://example.com/a"))
 
     def test_reconstructed_deep_link_with_fragment_is_allowed(self):
-        self.assertTrue(
-            is_safe_target(
-                "https://sterlingshelter.org/pet-finder/#action_0=pet&animalID_0=1"
-            )
-        )
+        self.assertTrue(is_safe_target("https://sterlingshelter.org/pet-finder/#action_0=pet&animalID_0=1"))
 
     def test_dangerous_and_relative_values_are_rejected(self):
         for value in (

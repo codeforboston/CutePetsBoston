@@ -267,10 +267,7 @@ def _post_slack_message(text):
 
 def notify_slack_of_exception(traceback_text):
     logger.info(traceback_text)
-    text = (
-        f"{_slack_run_header('run failed')}\n"
-        f"```{traceback_text.strip()[-MAX_TRACEBACK_CHARS:]}```"
-    )
+    text = f"{_slack_run_header('run failed')}\n```{traceback_text.strip()[-MAX_TRACEBACK_CHARS:]}```"
     _post_slack_message(text)
 
 

@@ -172,7 +172,7 @@ class RedirectRunTests(unittest.TestCase):
             self.last_adoption_url = pet.adoption_url
             return Post(text=f"Meet {pet.name}", image_urls=pet.image_urls)
 
-    def _pet(self, pet_id="pet-redirect"):
+    def _pet(self, pet_id: str | None = "pet-redirect"):
         return AdoptablePet(
             name="Poppy",
             species="dog",
@@ -234,8 +234,10 @@ class RedirectRunTests(unittest.TestCase):
         with TemporaryDirectory() as temporary_directory:
             default_path = Path(temporary_directory) / "redirects.json"
             database_path = Path(temporary_directory) / "database.json"
-            with mock.patch.dict("os.environ", {"REDIRECTS_ENABLED": "true"}), \
-                 mock.patch("redirects.DEFAULT_REDIRECTS_PATH", str(default_path)):
+            with (
+                mock.patch.dict("os.environ", {"REDIRECTS_ENABLED": "true"}),
+                mock.patch("redirects.DEFAULT_REDIRECTS_PATH", str(default_path)),
+            ):
                 run(
                     [FakeSource([pet])],
                     [poster],
