@@ -1,16 +1,3 @@
-"""Mastodon posting has two quirks worth keeping in mind.
-
-Mastodon treats every reply in a caption thread as an individual status, so
-the root post and each "comment" have distinct IDs and pages. Fetching a whole
-pet post therefore requires associating the separate reply statuses with their
-root, but their different IDs make that relationship possible to reconstruct.
-
-Text also gets one final, non-blocking mojibake sanity check immediately before
-each status is published. All repairs should already have happened upstream;
-if suspicious encoding remains, we log it for investigation and still post the
-status.
-"""
-
 from __future__ import annotations
 
 import logging
@@ -21,7 +8,6 @@ import tempfile
 from urllib.parse import urlparse
 
 import requests
-from ftfy.badness import is_bad
 from mastodon import Mastodon
 
 from abstractions import CITY_NAME, CITY_STATE, AdoptablePet, Post, PostResult, SocialPoster
@@ -167,21 +153,6 @@ class PosterMastodon(SocialPoster):
 
         finally:
             self._session = None
-
-    @staticmethod
-    def _log_suspicious_text(
-        text: str,
-        post_kind: str,
-        reply_number: int | None,
-    ) -> None:
-        """Warn about likely encoding damage without preventing publication."""
-        if is_bad(text):
-            logger.warning(
-                "Suspicious text at Mastodon status_post boundary: kind=%s reply_number=%s text=%s",
-                post_kind,
-                reply_number,
-                pprint.pformat(text),
-            )
 
     def _format_caption(self, post: Post) -> str:
         caption_text = post.text.strip()
