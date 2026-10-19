@@ -114,9 +114,7 @@ def test_prunes_old_pets_and_posts_independently(tmp_path):
     database_path.write_text(
         json.dumps(
             {
-                "posted_pets": [
-                    {"name": "Old pet", "pet_id": "old-pet", "posted_at": old_timestamp}
-                ],
+                "posted_pets": [{"name": "Old pet", "pet_id": "old-pet", "posted_at": old_timestamp}],
                 "posts": [
                     {
                         "pet_id": "different-old-pet",

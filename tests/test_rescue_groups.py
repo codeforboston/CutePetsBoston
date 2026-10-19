@@ -9,7 +9,7 @@ from adoption_sources.rescue_groups import (
     SourceRescueGroups,
     _build_species_filters,
 )
-from social_posters.mastodon import PosterMastodon
+from social_posters.mastodon import MASTODON_CHARACTER_LIMIT, PosterMastodon
 
 
 def _make_animal(adoption_url=None, species_id="8", **extra_attrs):
@@ -80,6 +80,7 @@ class AdoptionUrlTests(unittest.TestCase):
 
         pet = self.source._parse_animal(animal, orgs, self.species_by_id)
 
+        assert pet is not None
         self.assertEqual(pet.adoption_url, "https://pet.example.com/buddy")
 
     def test_falls_back_to_org_adoption_url_when_pet_has_none(self):
@@ -88,6 +89,7 @@ class AdoptionUrlTests(unittest.TestCase):
 
         pet = self.source._parse_animal(animal, orgs, self.species_by_id)
 
+        assert pet is not None
         self.assertEqual(pet.adoption_url, "https://org.example.com/adopt")
 
     def test_falls_back_to_org_url_when_neither_pet_nor_org_has_adoption_url(self):
@@ -96,6 +98,7 @@ class AdoptionUrlTests(unittest.TestCase):
 
         pet = self.source._parse_animal(animal, orgs, self.species_by_id)
 
+        assert pet is not None
         self.assertEqual(pet.adoption_url, "https://org.example.com")
 
 
@@ -110,6 +113,7 @@ class SpeciesParsingTests(unittest.TestCase):
 
         pet = self.source._parse_animal(animal, self.orgs, species_by_id)
 
+        assert pet is not None
         self.assertEqual(pet.species, "dog")
 
     def test_cat_species_from_included(self):
@@ -118,6 +122,7 @@ class SpeciesParsingTests(unittest.TestCase):
 
         pet = self.source._parse_animal(animal, self.orgs, species_by_id)
 
+        assert pet is not None
         self.assertEqual(pet.species, "cat")
 
     def test_skips_unconfigured_species(self):
@@ -211,6 +216,7 @@ class RealCaptureParsingTests(unittest.TestCase):
         for raw in raw_animals:
             pet = source._parse_animal(raw, {}, species_by_id)
             self.assertIsNotNone(pet, f"failed to parse animal {raw['id']}")
+            assert pet is not None
             self.assertEqual(pet.species, "dog")
             self.assertTrue(pet.name)
             self.assertTrue(pet.breed)
@@ -277,8 +283,7 @@ def test_preserves_inline_words_and_separates_blocks_and_lists():
         "<script>tracking code</script><style>hidden styling</style><!-- comment -->"
     )
     assert parse_description(descriptionHtml=markup) == (
-        "Meet Rex! He is housetrained.\n\nGood with dogs\nCrate trained\n\n"
-        "Apply today: adopt Rex."
+        "Meet Rex! He is housetrained.\n\nGood with dogs\nCrate trained\n\nApply today: adopt Rex."
     )
 
 
@@ -291,7 +296,7 @@ def test_html_entities_are_displayed_as_text_not_parsed_as_tags():
     assert parse_description(descriptionHtml="<p>Rex &lt;3 walks &amp; treats.</p>") == "Rex <3 walks & treats."
 
 
-def test_rex_spacing_reaches_mastodon_status_requests():
+def test_rex_spacing_reaches_single_mastodon_status():
     response = Mock()
     response.json.return_value = {
         "data": [_make_animal(name="Rex", descriptionHtml=REX_HTML, descriptionText=REX_TEXT)],
@@ -308,12 +313,22 @@ def test_rex_spacing_reaches_mastodon_status_requests():
     poster = PosterMastodon()
     post = poster.format_post(pet)
     assert EXPECTED_REX in post.text
-    root, replies = poster._format_caption_thread(post)
     client = Mock()
-    client.status_post.side_effect = [{"id": str(i)} for i in range(1 + len(replies))]
-    list(poster._post_thread(client, root, replies, ["media-id"]))
-    payloads = [call.args[0] for call in client.status_post.call_args_list]
-    sent = "\n".join(payloads)
+    client.status_post.return_value = {"id": "status-1"}
+    poster._session = client
+    with (
+        patch.object(poster, "_is_available", True),
+        patch.object(poster, "authenticate", return_value=True),
+        patch.object(poster, "_upload_media", return_value="media-id"),
+    ):
+        result = poster.publish(post)
+
+    assert result.success
+    assert result.post_id == "status-1"
+    client.status_post.assert_called_once()
+    sent = client.status_post.call_args.args[0]
+    assert client.status_post.call_args.kwargs == {"media_ids": ["media-id"]}
+    assert len(sent) <= MASTODON_CHARACTER_LIMIT
     assert "VT\n\nGood with dogs:" in sent
     assert "intros\nGood with cats:" in sent
     assert "House Trained: Working on it\n\nRex is" in sent
@@ -322,6 +337,7 @@ def test_rex_spacing_reaches_mastodon_status_requests():
     assert "itRex" not in sent
     assert "<br" not in sent
     assert "<p>" not in sent
+
 
 if __name__ == "__main__":
     unittest.main()
