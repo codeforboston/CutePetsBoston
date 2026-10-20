@@ -38,7 +38,7 @@ def test_accepts_a_structural_status_client() -> None:
         ({"favourites_count": 0, "reblogs_count": None}, (0, None, None)),
     ],
 )
-def test_default_client_reads_sdk_status(
+def test_default_client_adapts_sdk_status(
     counts: StatusCounts, expected: tuple[int | None, int | None, int | None]
 ) -> None:
     with patch("metric_collectors.mastodon.Mastodon") as sdk_factory:
