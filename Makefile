@@ -2,6 +2,7 @@
 
 install:
 	uv sync --locked
+	git config core.hooksPath .githooks
 
 lint:
 	uv run --locked ruff check .
