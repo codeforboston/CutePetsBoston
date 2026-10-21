@@ -49,7 +49,16 @@ From the repository root, install the locked development environment:
 make install
 ```
 
-If Make is unavailable (for example, in Windows PowerShell), run `uv sync --locked` directly.
+If Make is unavailable (for example, in Windows PowerShell), run:
+
+```sh
+uv sync --locked --dev
+git config core.hooksPath .githooks
+```
+
+The `--dev` flag explicitly includes development tools such as Ruff, Pyright, and pytest.
+Run Git directly: it does not need the Python environment managed by `uv run`.
+The pre-commit hook calls `make format`, which runs Ruff through `uv run`.
 
 uv manages `.venv` and uses Python 3.14 from `.python-version`. No environment activation is needed.
 The Make targets use `--locked` to reject stale lockfiles.

@@ -1,7 +1,7 @@
 .PHONY: install lint format test
 
 install:
-	uv sync --locked
+	uv sync --locked --dev
 	git config core.hooksPath .githooks
 
 lint:
