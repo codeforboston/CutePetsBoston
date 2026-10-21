@@ -22,7 +22,7 @@ An Instagram account is the public profile people follow. A Meta developer app i
 
 | Env | Account Handle | Email | Account Contact |
 | --- | --- | --- | --- |
-| Production | [@cutepetsboston](https://www.instagram.com/cutepetsboston/) | [cutepetsboston@codeforboston.org](mailto:cutepetsboston@codeforboston.org) | Harlan Weber |
+| Production | [@cutepetsboston](https://www.instagram.com/cutepetsboston/) | [cfb-cutepetsboston@codeforboston.org](mailto:cfb-cutepetsboston@codeforboston.org) | Harlan Weber |
 | Test | [@cutepetsboston2026_test](https://www.instagram.com/cutepetsboston2026_test/) | [cutepetsboston@codeforboston.org](mailto:cutepetsboston@codeforboston.org) | Zachary Lowen |
 
 Meta administration relies on real people's credentials. The personal Facebook profile used to administer the developer app should represent the actual person managing it. Meta's [authentic identity policy](https://about.fb.com/news/2023/09/you-can-now-have-multiple-personal-profiles-on-facebook/) requires a main Facebook profile to use the name the person goes by in everyday life. Team members should use their own authorized profiles and receive app or business roles rather than share someone's personal Facebook login.
