@@ -104,24 +104,12 @@ class TestFormatPost:
     def test_species_tag_comes_from_pet_species(self):
         dog = AdoptablePet(name="Rex", species="dog", breed="Lab", location="Boston, MA")
         cat = AdoptablePet(name="Mia", species="cat", breed="Tabby", location="Boston, MA")
+        rabbit = AdoptablePet(name="Bugs", species="rabbit", breed="Mixed", location="Boston, MA")
+        guinea_pig = AdoptablePet(name="Pip", species="guinea pig", breed="Mixed", location="Boston, MA")
+        bird = AdoptablePet(name="Tweety", species="bird", breed="Mixed", location="Boston, MA")
 
         assert "DogsOfBluesky" in self.poster.format_post(dog).tags
         assert "CatsOfBluesky" in self.poster.format_post(cat).tags
-
-def test_rabbit_gets_rabbit_tag():
-    poster = PosterBluesky.__new__(PosterBluesky)
-    pet = AdoptablePet(name="Bugs", species="rabbit", breed="Mixed", location="Boston, MA")
-    post = poster.format_post(pet)
-    assert "RabbitsOfBluesky" in post.tags
-
-def test_guinea_pig_gets_guinea_pig_tag():
-    poster = PosterBluesky.__new__(PosterBluesky)
-    pet = AdoptablePet(name="Pip", species="guinea pig", breed="Mixed", location="Boston, MA")
-    post = poster.format_post(pet)
-    assert "GuineaPigsOfBluesky" in post.tags
-
-def test_bird_gets_bird_tag():
-    poster = PosterBluesky.__new__(PosterBluesky)
-    pet = AdoptablePet(name="Tweety", species="bird", breed="Mixed", location="Boston, MA")
-    post = poster.format_post(pet)
-    assert "BirdsOfBluesky" in post.tags
+        assert "BirdsOfBluesky" in self.poster.format_post(bird).tags
+        assert "RabbitsOfBluesky" in self.poster.format_post(rabbit).tags
+        assert "GuineaPigsOfBluesky" in self.poster.format_post(guinea_pig).tags
