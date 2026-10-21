@@ -15,6 +15,25 @@ Team notes:
 - [Meta account ecosystem](docs/meta-account-ecosystem.md): account setup, the developer portal, access tokens, and GitHub secrets.
 - [Instagram debugging](docs/instagram-debugging.md): connection checks, test posts, logs, and troubleshooting.
 
+## Development
+
+Use Python 3.14, matching CI, and install the development dependencies:
+
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements-dev.txt
+```
+
+The Makefile uses `.venv/bin/python` when available, otherwise `python3`.
+Override it with `make PYTHON=/path/to/python lint` if needed.
+
+- `make lint`: run Ruff lint checks, check formatting, and run Pyright.
+- `make format`: sort imports and format Python files with Ruff.
+- `make test`: run the pytest suite. The live API test is skipped unless
+  `CUTEPETSBOSTON_RESCUEGROUPS_API_KEY` is set.
+
+Pyright starts in basic mode. Ruff and Pyright exclude vendored code.
+
 ## Set up your environment variables
 
 Required:

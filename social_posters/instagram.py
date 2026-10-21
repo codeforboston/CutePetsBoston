@@ -5,11 +5,10 @@ import requests
 
 from abstractions import Post, PostResult, SocialPoster
 
-
 GRAPH_API_VERSION = "v26.0"
 GRAPH_API_BASE = f"https://graph.instagram.com/{GRAPH_API_VERSION}"
 
-# Images typically finish container processing in seconds; 
+# Images typically finish container processing in seconds;
 # video would need Meta's suggested ~1-minute cadence
 CONTAINER_POLL_INTERVAL_SECONDS = 5
 CONTAINER_POLL_TIMEOUT_SECONDS = 60
@@ -33,7 +32,9 @@ class PosterInstagram(SocialPoster):
 
     def authenticate(self) -> bool:
         if not self._is_available:
-            print("Instagram: credentials not set (INSTAGRAM_BUSINESS_ACCOUNT_ID or INSTAGRAM_PAGE_ACCESS_TOKEN missing)")
+            print(
+                "Instagram: credentials not set (INSTAGRAM_BUSINESS_ACCOUNT_ID or INSTAGRAM_PAGE_ACCESS_TOKEN missing)"
+            )
             return False
         try:
             response = requests.get(
@@ -48,7 +49,8 @@ class PosterInstagram(SocialPoster):
             return True
         except requests.exceptions.HTTPError as exc:
             body = exc.response.text if exc.response is not None else "no response body"
-            print(f"Instagram auth failed (HTTP {exc.response.status_code}): {body}")
+            status_code = exc.response.status_code if exc.response is not None else "unknown"
+            print(f"Instagram auth failed (HTTP {status_code}): {body}")
             self._authenticated = False
             return False
         except Exception as exc:
@@ -83,9 +85,7 @@ class PosterInstagram(SocialPoster):
                     except Exception as exc:
                         print(f"Instagram image {index} skipped: {exc}")
                 if len(children) >= 2:
-                    container_id = self._create_carousel_container(
-                        [child_id for _, child_id, _ in children], post
-                    )
+                    container_id = self._create_carousel_container([child_id for _, child_id, _ in children], post)
                 elif children:
                     image_url, _, index = children[0]
                     container_id = self._create_media_container(post, image_url, index)
@@ -94,9 +94,7 @@ class PosterInstagram(SocialPoster):
             self._wait_for_container_ready(container_id)
 
             media_id = self._publish_media(container_id)
-            post_url = (
-                f"https://www.instagram.com/{self.username}/" if self.username else None
-            )
+            post_url = f"https://www.instagram.com/{self.username}/" if self.username else None
             return PostResult(
                 success=True,
                 post_id=media_id,
@@ -104,7 +102,8 @@ class PosterInstagram(SocialPoster):
             )
         except requests.exceptions.HTTPError as exc:
             body = exc.response.text if exc.response is not None else "no response body"
-            error = f"Instagram publish failed (HTTP {exc.response.status_code}): {body}"
+            status_code = exc.response.status_code if exc.response is not None else "unknown"
+            error = f"Instagram publish failed (HTTP {status_code}): {body}"
             print(error)
             return PostResult(success=False, error_message=error)
         except Exception as exc:
@@ -112,9 +111,7 @@ class PosterInstagram(SocialPoster):
             print(error)
             return PostResult(success=False, error_message=error)
 
-    def _create_media_container(
-        self, post: Post, image_url: str | None = None, index: int = 1
-    ) -> str:
+    def _create_media_container(self, post: Post, image_url: str | None = None, index: int = 1) -> str:
         """Create a media container and return its ID."""
         caption = self._format_caption(post)
         response = requests.post(
@@ -178,9 +175,7 @@ class PosterInstagram(SocialPoster):
             if status == "FINISHED":
                 return
             if status in ("ERROR", "EXPIRED"):
-                raise RuntimeError(
-                    f"Instagram media container {container_id} failed with status {status}"
-                )
+                raise RuntimeError(f"Instagram media container {container_id} failed with status {status}")
             if time.monotonic() >= deadline:
                 raise RuntimeError(
                     f"Instagram media container {container_id} did not finish "

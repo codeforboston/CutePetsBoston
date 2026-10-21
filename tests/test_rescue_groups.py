@@ -77,6 +77,7 @@ class AdoptionUrlTests(unittest.TestCase):
 
         pet = self.source._parse_animal(animal, orgs, self.species_by_id)
 
+        assert pet is not None
         self.assertEqual(pet.adoption_url, "https://pet.example.com/buddy")
 
     def test_falls_back_to_org_adoption_url_when_pet_has_none(self):
@@ -85,6 +86,7 @@ class AdoptionUrlTests(unittest.TestCase):
 
         pet = self.source._parse_animal(animal, orgs, self.species_by_id)
 
+        assert pet is not None
         self.assertEqual(pet.adoption_url, "https://org.example.com/adopt")
 
     def test_falls_back_to_org_url_when_neither_pet_nor_org_has_adoption_url(self):
@@ -93,6 +95,7 @@ class AdoptionUrlTests(unittest.TestCase):
 
         pet = self.source._parse_animal(animal, orgs, self.species_by_id)
 
+        assert pet is not None
         self.assertEqual(pet.adoption_url, "https://org.example.com")
 
 
@@ -107,6 +110,7 @@ class SpeciesParsingTests(unittest.TestCase):
 
         pet = self.source._parse_animal(animal, self.orgs, species_by_id)
 
+        assert pet is not None
         self.assertEqual(pet.species, "dog")
 
     def test_cat_species_from_included(self):
@@ -115,6 +119,7 @@ class SpeciesParsingTests(unittest.TestCase):
 
         pet = self.source._parse_animal(animal, self.orgs, species_by_id)
 
+        assert pet is not None
         self.assertEqual(pet.species, "cat")
 
     def test_skips_unconfigured_species(self):
@@ -208,6 +213,7 @@ class RealCaptureParsingTests(unittest.TestCase):
         for raw in raw_animals:
             pet = source._parse_animal(raw, {}, species_by_id)
             self.assertIsNotNone(pet, f"failed to parse animal {raw['id']}")
+            assert pet is not None
             self.assertEqual(pet.species, "dog")
             self.assertTrue(pet.name)
             self.assertTrue(pet.breed)
