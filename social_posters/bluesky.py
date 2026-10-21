@@ -197,12 +197,16 @@ class PosterBluesky(SocialPoster):
     @staticmethod
     def _cat_breed_tags(breed: str | None) -> list[str]:
         """Turn each named cat breed into a hashtag, omitting coat notes and mix labels."""
-        tags = []
+        tags: list[str] = []
         for part in (breed or "").split("/"):
-            name = re.sub(r"\([^)]*\)", "", part).strip()
+            name = re.sub(r"\([^)]*\)", "", part)
             name = re.sub(r"\b(?:mixed|mix)\b", "", name, flags=re.IGNORECASE).strip()
             tag = "".join(character for character in name if character.isalnum())
-            if tag and tag.lower() not in {"unknown", "unspecified", "other"} and tag not in tags:
+            if (
+                tag
+                and tag.casefold() not in {"unknown", "unspecified", "other"}
+                and tag.casefold() not in {existing.casefold() for existing in tags}
+            ):
                 tags.append(tag)
         return tags or ["purr"]
 

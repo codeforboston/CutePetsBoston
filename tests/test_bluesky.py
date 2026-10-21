@@ -159,6 +159,7 @@ class TestFormatPost:
             ("Siamese / Mixed", ["Siamese"]),
             ("Domestic Short Hair (medium coat)", ["DomesticShortHair"]),
             ("Siamese / Persian / Mixed", ["Siamese", "Persian"]),
+            ("Siamese / siamese / Mixed (short coat)", ["Siamese"]),
             (None, ["purr"]),
             ("", ["purr"]),
             ("   ", ["purr"]),
