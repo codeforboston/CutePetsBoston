@@ -1,6 +1,6 @@
 import os
 
-#  Import environment variables and fallback to defaults for Boston if not found. 
+#  Import environment variables and fallback to defaults for Boston if not found.
 CITY_NAME = os.environ.get("CITY_NAME", "Boston")
 CITY_STATE = os.environ.get("CITY_STATE", "MA")
 CITY_HASHTAGS = [CITY_NAME]
