@@ -1,18 +1,17 @@
-PYTHON ?= $(if $(wildcard .venv/bin/python),.venv/bin/python,python3)
-
 .PHONY: install lint format test
 
 install:
-	$(PYTHON) -m pip install -r requirements-dev.txt
+	uv sync --locked --dev
+	git config core.hooksPath .githooks
 
 lint:
-	$(PYTHON) -m ruff check .
-	$(PYTHON) -m ruff format --check .
-	$(PYTHON) -m pyright --pythonpath "$$($(PYTHON) -c 'import sys; print(sys.executable)')"
+	uv run --locked ruff check .
+	uv run --locked ruff format --check .
+	uv run --locked pyright
 
 format:
-	$(PYTHON) -m ruff check --select I --fix .
-	$(PYTHON) -m ruff format .
+	uv run --locked ruff check --select I --fix .
+	uv run --locked ruff format .
 
 test:
-	$(PYTHON) -m pytest
+	uv run --locked pytest
