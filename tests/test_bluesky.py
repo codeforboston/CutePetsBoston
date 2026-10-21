@@ -1,3 +1,5 @@
+import pytest
+
 from abstractions import AdoptablePet, Post
 from social_posters.bluesky import PosterBluesky
 
@@ -106,3 +108,42 @@ class TestFormatPost:
 
         assert "DogsOfBluesky" in self.poster.format_post(dog).tags
         assert "CatsOfBluesky" in self.poster.format_post(cat).tags
+
+    @pytest.mark.parametrize(
+        ("breed", "expected"),
+        [
+            ("Siamese / Mixed", ["Siamese"]),
+            ("Domestic Short Hair (medium coat)", ["DomesticShortHair"]),
+            ("Siamese / Persian / Mixed", ["Siamese", "Persian"]),
+            (None, ["purr"]),
+            ("", ["purr"]),
+            ("   ", ["purr"]),
+            ("Mixed", ["purr"]),
+            ("Unknown", ["purr"]),
+        ],
+    )
+    def test_cat_breed_tags(self, breed, expected):
+        assert self.poster._cat_breed_tags(breed) == expected
+
+    def test_cat_breed_tag_is_published_as_a_facet_within_text_budget(self):
+        cat = AdoptablePet(
+            name="Mia",
+            species="cat",
+            breed="Siamese / Mixed",
+            location="Boston, MA",
+            description="A friendly cat. " * 30,
+            adoption_url="https://example.com/adopt/mia",
+        )
+        text, facets = self.poster._build_text_and_facets(self.poster.format_post(cat))
+        assert text.endswith("#CatsOfBluesky #Siamese")
+        assert cat.adoption_url in text
+        assert len(text) <= 300
+        assert any(facet["features"][0].get("tag") == "Siamese" for facet in facets)
+
+    def test_dog_hashtags_do_not_include_cat_breed_or_fallback(self):
+        dog = AdoptablePet(name="Rex", species="dog", breed="Lab", location="Boston, MA")
+        assert [tag for tag in self.poster.format_post(dog).tags if tag] == [
+            "AdoptDontShop",
+            "Boston",
+            "DogsOfBluesky",
+        ]

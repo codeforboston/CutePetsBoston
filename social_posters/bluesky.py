@@ -2,6 +2,7 @@ import logging
 import mimetypes
 import os
 import pprint
+import re
 from datetime import datetime, timezone
 from urllib.parse import urlparse
 
@@ -181,6 +182,8 @@ class PosterBluesky(SocialPoster):
 
         species_tag = f"{pet.species.capitalize()}sOfBluesky"
         tags = ["AdoptDontShop", *CITY_HASHTAGS, city, species_tag]
+        if pet.species.lower() == "cat":
+            tags.extend(self._cat_breed_tags(pet.breed))
 
         photos = pet.image_urls
         return Post(
@@ -190,6 +193,18 @@ class PosterBluesky(SocialPoster):
             alt_text=f"Photo of {name}, a {pet.breed} available for adoption",
             tags=tags,
         )
+
+    @staticmethod
+    def _cat_breed_tags(breed: str | None) -> list[str]:
+        """Turn each named cat breed into a hashtag, omitting coat notes and mix labels."""
+        tags = []
+        for part in (breed or "").split("/"):
+            name = re.sub(r"\([^)]*\)", "", part).strip()
+            name = re.sub(r"\b(?:mixed|mix)\b", "", name, flags=re.IGNORECASE).strip()
+            tag = "".join(character for character in name if character.isalnum())
+            if tag and tag.lower() not in {"unknown", "unspecified", "other"} and tag not in tags:
+                tags.append(tag)
+        return tags or ["purr"]
 
     def _build_text_and_facets(self, post: Post) -> tuple[str, list]:
         body = post.text
