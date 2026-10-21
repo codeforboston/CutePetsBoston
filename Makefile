@@ -4,6 +4,7 @@ PYTHON ?= $(if $(wildcard .venv/bin/python),.venv/bin/python,python3)
 
 install:
 	$(PYTHON) -m pip install -r requirements-dev.txt
+	git config core.hooksPath .githooks
 
 lint:
 	$(PYTHON) -m ruff check .

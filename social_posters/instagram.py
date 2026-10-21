@@ -15,7 +15,7 @@ CONTAINER_POLL_TIMEOUT_SECONDS = 60
 
 
 class PosterInstagram(SocialPoster):
-    def __init__(self):
+    def __init__(self) -> None:
         self.account_id = os.environ.get("INSTAGRAM_BUSINESS_ACCOUNT_ID")
         self.access_token = os.environ.get("INSTAGRAM_PAGE_ACCESS_TOKEN")
         self._is_available = bool(self.account_id and self.access_token)
