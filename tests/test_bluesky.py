@@ -181,6 +181,7 @@ class TestFormatPost:
         )
         text, facets = self.poster._build_text_and_facets(self.poster.format_post(cat))
         assert text.endswith("#CatsOfBluesky #Siamese")
+        assert cat.adoption_url is not None
         assert cat.adoption_url in text
         assert len(text) <= 300
         assert any(facet["features"][0].get("tag") == "Siamese" for facet in facets)
