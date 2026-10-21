@@ -214,6 +214,18 @@ class PosterBluesky(SocialPoster):
 
         tag_strings = [f"#{tag}" for tag in (post.tags) if tag]
         tags_section = " ".join(tag_strings)
+        if len(body) + (len(separator) + len(tags_section) if tags_section else 0) > limit:
+            # Keep the pet-specific tags before cutting any of its description.
+            tag_strings = [tag for tag in tag_strings if tag.casefold() not in {"#adoptdontshop", "#boston"}]
+            tags_section = " ".join(tag_strings)
+
+        # Even an unusually long breed tag must leave room for the adoption URL.
+        # Remove trailing tags only when the tags and URL cannot fit together.
+        link_length = len(post.link) if post.link and post.link in body else 0
+        while tag_strings and len(separator) + len(tags_section) + link_length > limit:
+            tag_strings.pop()
+            tags_section = " ".join(tag_strings)
+
         # Truncate body so the full text (body + separators + tags) fits in limit chars.
         max_body = limit - (len(separator) + len(tags_section) if tags_section else 0)
         # When the link URL is embedded in the body and would be truncated,

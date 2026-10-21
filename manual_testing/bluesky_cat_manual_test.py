@@ -27,16 +27,35 @@ from social_posters.bluesky import PosterBluesky
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--publish", action="store_true", help="Publish one real Bluesky post")
+    parser.add_argument("--source-json", type=Path, help="Read the live response saved by rescuegroups_api_probe.py")
     args = parser.parse_args()
 
     poster = PosterBluesky()
     if args.publish and not (poster.username and poster.password):
         raise SystemExit("Set BLUESKY_HANDLE and BLUESKY_PASSWORD for the intended account first.")
 
+    source = SourceRescueGroups(species=("cats",))
+    if args.source_json:
+        body = json.loads(args.source_json.read_text(encoding="utf-8"))
+        included = body.get("included", [])
+        related = {
+            kind: {entry["id"]: entry.get("attributes", {}) for entry in included if entry.get("type") == kind}
+            for kind in ("orgs", "species", "pictures")
+        }
+        fetched = (
+            source._parse_animal(animal, related["orgs"], related["species"], related["pictures"])
+            for animal in body["data"]
+        )
+    else:
+        fetched = source.fetch_pets()
     pets = [
         pet
-        for pet in SourceRescueGroups(species=("cats",)).fetch_pets()
-        if pet.species == "cat" and pet.image_urls and pet.adoption_url
+        for pet in fetched
+        if pet is not None
+        and pet.species == "cat"
+        and pet.image_urls
+        and pet.adoption_url
+        and not source._is_placeholder_name(pet.name)
     ]
     if not pets:
         raise SystemExit("No currently available cats with photos and adoption links found.")
