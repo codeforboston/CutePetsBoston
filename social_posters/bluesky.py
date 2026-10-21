@@ -179,7 +179,8 @@ class PosterBluesky(SocialPoster):
         if pet.adoption_url:
             text += f"\n\nLearn more and adopt me: {pet.adoption_url}"
 
-        species_tag = f"{pet.species.capitalize()}sOfBluesky"
+        species_tag = f"{"".join(word.capitalize() for word in pet.species.split())}sOfBluesky"
+
         tags = ["AdoptDontShop", *CITY_HASHTAGS, city, species_tag]
 
         photos = pet.image_urls
