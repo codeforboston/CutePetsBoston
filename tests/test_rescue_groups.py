@@ -12,6 +12,7 @@ from adoption_sources.rescue_groups import (
     SourceRescueGroups,
     _build_species_filters,
 )
+from social_posters.instagram import PosterInstagram
 from social_posters.mastodon import PosterMastodon
 
 
@@ -323,6 +324,45 @@ class DescriptionMojibakeRepairTests(unittest.TestCase):
             repaired = self.source._repair_mojibake("Ｆido’s ﬁne\x00", "name", "12345")
 
         self.assertEqual(repaired, "Fido's fine")
+
+
+class HtmlEntityInstagramRegressionTests(unittest.TestCase):
+    """Reproduce #178's visible &nbsp; symptom using synthetic API data.
+
+    The original API payload is unavailable, so include ordinary entities and
+    repeated escaping that could leave an entity visible in the caption.
+    """
+
+    def test_description_entities_are_cleaned_before_instagram_request(self):
+        source = SourceRescueGroups(api_key="dummy")
+        poster = PosterInstagram()
+        response = MagicMock()
+        response.json.return_value = {"id": "container-id"}
+
+        for entity in ("&nbsp;", "&#160;", "&#xA0;", "&amp;nbsp;", "&amp;amp;nbsp;"):
+            with self.subTest(entity=entity):
+                animal = _make_animal(
+                    name="Polly Pockets",
+                    adoption_url="https://example.com/adopt/polly",
+                    descriptionText=f"2 years old, 50 lbs\n{entity}\nShe is good with people and dogs.",
+                )
+                pet = source._parse_animal(animal, {"org1": _make_org()}, _make_species_by_id())
+
+                assert pet is not None
+                expected_description = "2 years old, 50 lbs She is good with people and dogs."
+                self.assertEqual(pet.description, expected_description)
+
+                post = poster.format_post(pet)
+                with patch("social_posters.instagram.requests.post", return_value=response) as request_post:
+                    self.assertEqual(poster._create_media_container(post), "container-id")
+
+                request_post.assert_called_once()
+                caption = request_post.call_args.kwargs["data"]["caption"]
+                self.assertIn(f"\n\n{expected_description}\n\n", caption)
+                self.assertIn("Adopt Polly Pockets: https://example.com/adopt/polly", caption)
+                self.assertNotIn(entity, caption)
+                self.assertNotIn("&nbsp;", caption)
+                self.assertNotIn("\u00a0", caption)
 
 
 class DennisMojibakeMastodonRegressionTests(unittest.TestCase):
