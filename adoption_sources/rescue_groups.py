@@ -6,17 +6,18 @@ API Documentation: https://api.rescuegroups.org/v5/public/docs
 
 import html
 import logging
-import pprint
 import os
+import pprint
 import re
 from collections.abc import Sequence
 from typing import Iterator
 
 import requests
+from pydantic import BaseModel, ValidationError
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from abstractions import AdoptablePet, PetSource
+from abstractions import AdoptablePet, PetSource, select_image_urls
 from adoption_sources.pet_links import reconstruct_adoption_url
 from config import CITY_NAME, CITY_STATE, PET_SPECIES, POSTAL_CODE, RESCUEGROUPS_LIMIT
 
@@ -38,6 +39,22 @@ FILTER_SPECIES_SINGULAR = {"dogs": "Dog", "cats": "Cat"}
 # exponential backoff (0s, 2s, 4s, 8s between attempts).
 RETRY_TOTAL = 4
 RETRY_BACKOFF_FACTOR = 1
+
+
+class PictureVariant(BaseModel):
+    url: str
+    filesize: int | None = None
+    resolutionX: int | None = None
+    resolutionY: int | None = None
+
+
+class PictureAttributes(BaseModel):
+    order: int | None = None
+    large: str | PictureVariant | None = None
+
+    @property
+    def large_url(self) -> str | None:
+        return self.large.url if isinstance(self.large, PictureVariant) else self.large
 
 
 def _session_with_retries() -> requests.Session:
@@ -119,13 +136,12 @@ class SourceRescueGroups(PetSource):
         """
         if not self._api_key:
             raise ValueError(
-                "RescueGroups API key not configured. "
-                "Set CUTEPETSBOSTON_RESCUEGROUPS_API_KEY environment variable."
+                "RescueGroups API key not configured. Set CUTEPETSBOSTON_RESCUEGROUPS_API_KEY environment variable."
             )
 
         url = (
             f"{self.BASE_URL}/available/haspic"
-            f"?include=orgs,breeds,locations,species"
+            f"?include=orgs,breeds,locations,species,pictures"
             f"&sort=random"
             f"&limit={self.limit}"
         )
@@ -162,22 +178,22 @@ class SourceRescueGroups(PetSource):
         logger.info(f"Received {len(data)} pets from RescueGroups")
 
         data_log = pprint.pformat(data)
-        logger.debug('API Response: \n%s', data_log)
-
+        logger.debug("API Response: \n%s", data_log)
 
         orgs_by_id = {
-            item["id"]: item.get("attributes", {})
-            for item in body.get("included", [])
-            if item.get("type") == "orgs"
+            item["id"]: item.get("attributes", {}) for item in body.get("included", []) if item.get("type") == "orgs"
         }
         species_by_id = {
+            item["id"]: item.get("attributes", {}) for item in body.get("included", []) if item.get("type") == "species"
+        }
+        pictures_by_id = {
             item["id"]: item.get("attributes", {})
             for item in body.get("included", [])
-            if item.get("type") == "species"
+            if item.get("type") == "pictures"
         }
 
         for animal in data:
-            pet = self._parse_animal(animal, orgs_by_id, species_by_id)
+            pet = self._parse_animal(animal, orgs_by_id, species_by_id, pictures_by_id)
             if not pet:
                 continue
             if self._is_placeholder_name(pet.name):
@@ -190,6 +206,7 @@ class SourceRescueGroups(PetSource):
         animal: dict,
         orgs_by_id: dict,
         species_by_id: dict,
+        pictures_by_id: dict | None = None,
     ) -> AdoptablePet | None:
         """Parse a single animal record from the API response."""
         try:
@@ -200,12 +217,7 @@ class SourceRescueGroups(PetSource):
             name = self._clean_name(attrs.get("name", "Unknown"))
 
             # Determine species from the included species relationship
-            species_id = (
-                animal.get("relationships", {})
-                .get("species", {})
-                .get("data", [{}])[0]
-                .get("id")
-            )
+            species_id = animal.get("relationships", {}).get("species", {}).get("data", [{}])[0].get("id")
             if not species_id:
                 logger.warning(f"Skipping animal {animal_id} with no species relationship")
                 return None
@@ -223,12 +235,7 @@ class SourceRescueGroups(PetSource):
             description = self._clean_description(attrs.get("descriptionText", ""))
 
             # Get adoption_url
-            org_id = (
-                animal.get("relationships", {})
-                .get("orgs", {})
-                .get("data", [{}])[0]
-                .get("id")
-            )
+            org_id = animal.get("relationships", {}).get("orgs", {}).get("data", [{}])[0].get("id")
             org_attrs = orgs_by_id.get(org_id, {}) if org_id else {}
             url_candidates = (
                 attrs.get("adoptionUrl"),
@@ -236,9 +243,12 @@ class SourceRescueGroups(PetSource):
                 org_attrs.get("url"),
             )
             adoption_url = next(
-                (u for u in url_candidates
-                 if u and u.strip().rstrip("/") not in ("http:", "https:", "http://", "https://")),
-                None
+                (
+                    u
+                    for u in url_candidates
+                    if u and u.strip().rstrip("/") not in ("http:", "https:", "http://", "https://")
+                ),
+                None,
             )
 
             # Shelter's own animal id (e.g. MSPCA's "A468573"); some orgs' deep
@@ -247,17 +257,16 @@ class SourceRescueGroups(PetSource):
 
             # For shelters we have a template for, rebuild a deep link to this
             # specific pet; otherwise keep the org landing page from above.
-            adoption_url = (
-                reconstruct_adoption_url(url_candidates, animal_id, rescue_id)
-                or adoption_url
-            )
+            adoption_url = reconstruct_adoption_url(url_candidates, animal_id, rescue_id) or adoption_url
 
             # Get best available image
-            image_url = self._get_image_url(attrs)
+            image_urls = self._get_image_urls(animal, pictures_by_id or {})
+            if not image_urls:
+                thumbnail = self._get_image_url(attrs)
+                image_urls = select_image_urls([thumbnail] if thumbnail else [])
 
             # Location of the adoption org
             location = f"{org_attrs.get('city')}, {org_attrs.get('state')}"
-
 
             return AdoptablePet(
                 name=name,
@@ -266,7 +275,7 @@ class SourceRescueGroups(PetSource):
                 location=location,
                 description=description,
                 adoption_url=adoption_url,
-                image_url=image_url,
+                image_urls=image_urls,
                 age_string=attrs.get("ageString"),
                 sex=attrs.get("sex"),
                 size_group=attrs.get("sizeGroup"),
@@ -306,9 +315,7 @@ class SourceRescueGroups(PetSource):
         text = re.sub(r"\s+", " ", text)
 
         # Remove promotional headers
-        text = re.sub(
-            r"\*\*Home for the Holidays.*?\*\*", "", text, flags=re.IGNORECASE
-        )
+        text = re.sub(r"\*\*Home for the Holidays.*?\*\*", "", text, flags=re.IGNORECASE)
 
         return text
 
@@ -319,3 +326,17 @@ class SourceRescueGroups(PetSource):
             # Request a larger image instead of the 100px thumbnail
             return re.sub(r"\?width=\d+", "?width=800", thumbnail)
         return None
+
+    def _get_image_urls(self, animal: dict, pictures_by_id: dict) -> list[str]:
+        relationships = animal.get("relationships", {}).get("pictures", {}).get("data", [])
+        pictures = []
+        for item in relationships:
+            attributes = pictures_by_id.get(item.get("id"))
+            if attributes is None:
+                continue
+            try:
+                pictures.append(PictureAttributes.model_validate(attributes))
+            except ValidationError as exc:
+                logger.debug("Invalid picture for animal %s: %s", animal.get("id"), exc)
+        pictures.sort(key=lambda picture: picture.order if picture.order is not None else float("inf"))
+        return select_image_urls([picture.large_url for picture in pictures])

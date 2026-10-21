@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from functools import cached_property
 from typing import Iterable
 
 from config import CITY_NAME, CITY_STATE
-
 
 # =============================================================================
 # Pet Ingestor Interface
@@ -20,12 +20,15 @@ class AdoptablePet:
     location: str
     description: str = ""
     adoption_url: str | None = None
-    image_url: str | None = None
+    image_urls: list[str] = field(default_factory=list)
     age_string: str | None = None
     sex: str | None = None
     size_group: str | None = None
     pet_id: str | None = None
     rescue_id: str | None = None  # shelter's own animal id (RescueGroups "rescueId")
+
+    def __post_init__(self) -> None:
+        self.image_urls = select_image_urls(self.image_urls)
 
 
 class PetSource(ABC):
@@ -53,10 +56,23 @@ class Post:
     """Represents a social media post about an adoptable pet."""
 
     text: str
-    image_url: str | None = None
+    image_urls: list[str] = field(default_factory=list)
     link: str | None = None
     alt_text: str | None = None  # For image accessibility
     tags: list[str] = field(default_factory=list)
+
+    @cached_property
+    def selected_image_urls(self) -> list[str]:
+        """Return up to four distinct photo URLs in their original order."""
+        return select_image_urls(self.image_urls)
+
+
+MAX_POST_IMAGES = 4
+
+
+def select_image_urls(image_urls: list[str]) -> list[str]:
+    """Return up to four distinct photo URLs in their original order."""
+    return list(dict.fromkeys(url for url in image_urls if url))[:MAX_POST_IMAGES]
 
 
 @dataclass
@@ -116,7 +132,9 @@ class SocialPoster(ABC):
 
         Override this method to customize post formatting for specific platforms.
         """
-        text = f"Meet {pet.name}! This adorable {pet.breed} {pet.species} is looking for a forever home in {pet.location}."
+        text = (
+            f"Meet {pet.name}! This adorable {pet.breed} {pet.species} is looking for a forever home in {pet.location}."
+        )
         if pet.description:
             text += f"\n\n{pet.description}"
         if pet.adoption_url:
@@ -128,7 +146,7 @@ class SocialPoster(ABC):
 
         return Post(
             text=text,
-            image_url=pet.image_url,
+            image_urls=pet.image_urls,
             link=pet.adoption_url,
             alt_text=f"Photo of {pet.name}, a {pet.breed} {pet.species} available for adoption",
             tags=[
@@ -166,8 +184,6 @@ class MetricCollector(ABC):
         ...
 
     @abstractmethod
-    def fetch_metrics(
-        self, post_id: str, post_url: str | None = None
-    ) -> PostMetrics | None:
+    def fetch_metrics(self, post_id: str, post_url: str | None = None) -> PostMetrics | None:
         """Return a metric snapshot, or None when the post cannot be read."""
         ...
