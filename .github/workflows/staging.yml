@@ -1,0 +1,131 @@
+name: Staging Account Post
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Every 4 hours
+    - cron: "0 */4 * * *"
+
+# Default for jobs that do not set their own. Job-level permissions REPLACE
+# these wholesale rather than merging with them -- see both jobs below.
+permissions:
+  actions: read
+  contents: read
+
+# Limits to executing one workflow in a concurrency group at any time
+# Will queue 1 PENDING workflow run. New incoming runs cancel & replace the pending run
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  queue: single
+
+jobs:
+  # Posts a pet. Read-only token on purpose: this job pip-installs deps and
+  # feeds untrusted RescueGroups API responses to python, so it must not be
+  # able to write to the repo. Persisting the mapping is publish-redirects'
+  # job, below.
+  run-cute-pets:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read # gh run list, to find the previous database artifact
+      contents: read
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+        with:
+          # Scheduled runs always execute on the default branch, so check out
+          # the staging branch's code explicitly.
+          ref: staging
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install --break-system-packages -r requirements.txt
+
+      - name: Get Previous Run ID
+        continue-on-error: true
+        id: get_id
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Fetches the ID of this branch's last completed run for the current workflow
+          PREVIOUS_RUN_ID=$(gh run list \
+          --branch "${{ github.ref_name }}" \
+          --workflow "${{ github.workflow }}" \
+          --status success \
+          --limit 1 \
+          --json databaseId \
+          --jq '.[0].databaseId')
+          echo "previous_run_id=$PREVIOUS_RUN_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Download previous database artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: database.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ steps.get_id.outputs.previous_run_id }}
+        continue-on-error: true
+
+      - name: Call RescueGroups API
+        env:
+          CUTEPETSBOSTON_RESCUEGROUPS_API_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
+          INSTAGRAM_BUSINESS_ACCOUNT_ID: ${{ secrets.INSTAGRAM_TEST_BUSINESS_ACCOUNT_ID }}
+          INSTAGRAM_PAGE_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_TEST_PAGE_ACCESS_TOKEN }}
+          BLUESKY_HANDLE: ${{ secrets.BLUESKY_TEST_HANDLE }}
+          BLUESKY_PASSWORD: ${{ secrets.BLUESKY_TEST_PASSWORD }}
+          MASTODON_TOKEN: ${{ secrets.MASTODON_TEST_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          APP_ENV: staging
+          REDIRECTS_ENABLED: true
+        run: python ./main.py
+
+      - name: Upload database artifact
+        uses: actions/upload-artifact@v7
+        with:
+          path: database.json
+          retention-days: 14
+          archive: false
+
+      - name: Upload analytics page artifact
+        if: ${{ !cancelled() && hashFiles('dashboard.html') != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          path: dashboard.html
+          retention-days: 14
+          archive: false
+
+      - name: Upload redirect mapping
+        # Handed to publish-redirects, which merges it into the authoritative
+        # copy on gh-pages. Absent when nothing was minted, which that job
+        # treats as a no-op.
+        if: ${{ !cancelled() && hashFiles('redirects.json') != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          path: redirects.json
+          retention-days: 14
+          archive: false
+
+      - name: Upload API Log artifact
+        if: '!cancelled()' #This ensures this step runs even if the previous steps failed only if manually cancelled it doesnt run
+        uses: actions/upload-artifact@v7
+        with:
+          path: cutepets.log
+          retention-days: 90
+          archive: false
+
+  # Separate job so the elevated token never coexists with the posting steps.
+  # Shares the pages-publish concurrency group with deploy-pages.yml, so the
+  # two can no longer deploy Pages at the same time.
+  publish-redirects:
+    needs: run-cute-pets
+    if: '!cancelled()' # still record the mapping if a later step failed after posting
+    permissions:
+      contents: write # push the mapping to gh-pages
+      pages: write # deploy Pages
+      id-token: write # OIDC for actions/deploy-pages
+    uses: ./.github/workflows/publish-pages.yml
+    with:
+      mapping_artifact: redirects.json
+      analytics_artifact: dashboard.html
