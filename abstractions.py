@@ -1,10 +1,9 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from functools import cached_property
-from typing import Iterable
+from typing import Iterable, Protocol
 
 from config import CITY_NAME, CITY_STATE
-
 
 # =============================================================================
 # Pet Ingestor Interface
@@ -32,18 +31,22 @@ class AdoptablePet:
         self.image_urls = select_image_urls(self.image_urls)
 
 
-class PetSource(ABC):
-    """Interface for fetching pets from various adoption APIs."""
+class PetProvider(Protocol):
+    """The pet-source capability required by orchestration."""
+
+    @abstractmethod
+    def fetch_pets(self) -> Iterable[AdoptablePet]:
+        """Fetch available pets from the source."""
+        ...
+
+
+class PetSource(PetProvider, ABC):
+    """A pet provider with an identifying source name."""
 
     @property
     @abstractmethod
     def source_name(self) -> str:
         """Return the name of the pet source."""
-        ...
-
-    @abstractmethod
-    def fetch_pets(self) -> Iterable[AdoptablePet]:
-        """Fetch available pets from the source."""
         ...
 
 
@@ -86,19 +89,34 @@ class PostResult:
     error_message: str | None = None
 
 
-class SocialPoster(ABC):
-    """
-    Abstract base class for social media platform implementations.
-
-    Concrete implementations should inherit from this class and implement
-    the abstract methods for their specific platform (e.g., Bluesky, Instagram).
-    """
-
+class NamedPlatform(Protocol):
     @property
     @abstractmethod
     def platform_name(self) -> str:
-        """Return the name of the social media platform."""
+        """Return the platform name used in persisted post records."""
         ...
+
+
+class PostPublisher(NamedPlatform, Protocol):
+    """The formatting and publishing capabilities required by orchestration."""
+
+    @abstractmethod
+    def format_post(self, pet: AdoptablePet) -> Post:
+        """Create a platform-specific post from a pet."""
+        ...
+
+    @abstractmethod
+    def publish(self, post: Post) -> PostResult:
+        """Publish a post and return its success or failure result."""
+        ...
+
+
+class SocialPoster(PostPublisher, ABC):
+    """A publisher with authentication hooks and default post formatting.
+
+    Concrete platform implementations inherit the capability contract from
+    PostPublisher and implement its abstract methods along with authenticate.
+    """
 
     @abstractmethod
     def authenticate(self) -> bool:
@@ -107,19 +125,6 @@ class SocialPoster(ABC):
 
         Returns:
             True if authentication was successful, False otherwise.
-        """
-        ...
-
-    @abstractmethod
-    def publish(self, post: Post) -> PostResult:
-        """
-        Publish a post to the platform.
-
-        Args:
-            post: The post to publish.
-
-        Returns:
-            PostResult indicating success/failure and relevant details.
         """
         ...
 
@@ -133,7 +138,9 @@ class SocialPoster(ABC):
 
         Override this method to customize post formatting for specific platforms.
         """
-        text = f"Meet {pet.name}! This adorable {pet.breed} {pet.species} is looking for a forever home in {pet.location}."
+        text = (
+            f"Meet {pet.name}! This adorable {pet.breed} {pet.species} is looking for a forever home in {pet.location}."
+        )
         if pet.description:
             text += f"\n\n{pet.description}"
         if pet.adoption_url:
@@ -173,18 +180,14 @@ class PostMetrics:
     comments: int | None = None
 
 
-class MetricCollector(ABC):
-    """Interface for collecting engagement metrics from a social platform."""
-
-    @property
-    @abstractmethod
-    def platform_name(self) -> str:
-        """Return the platform name used in persisted post records."""
-        ...
+class MetricsProvider(NamedPlatform, Protocol):
+    """The metric-collection capability required by orchestration."""
 
     @abstractmethod
-    def fetch_metrics(
-        self, post_id: str, post_url: str | None = None
-    ) -> PostMetrics | None:
+    def fetch_metrics(self, post_id: str, post_url: str | None = None) -> PostMetrics | None:
         """Return a metric snapshot, or None when the post cannot be read."""
         ...
+
+
+class MetricCollector(MetricsProvider, ABC):
+    """Base class enforcing the shared metric-provider contract."""

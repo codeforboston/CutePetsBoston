@@ -1,0 +1,91 @@
+[project]
+name = "cutepetsboston"
+version = "0.1.0"
+requires-python = ">=3.14,<3.15"
+dependencies = [
+    "anyio==4.12.1",
+    "api-display-purposes==0.0.3",
+    "attrs==25.4.0",
+    "beautifulsoup4==4.14.3",
+    "blurhash==1.1.5",
+    "certifi==2026.4.22",
+    "chardet==3.0.4",
+    "charset-normalizer==3.4.7",
+    "clarifai==2.6.2",
+    "click==8.3.3",
+    "configparser==3.8.1",
+    "decorator==5.2.1",
+    "EasyProcess==1.1",
+    "emoji==1.7.0",
+    "future==1.0.0",
+    "googleapis-common-protos==1.72.0",
+    "grpcio==1.78.0",
+    "h11==0.16.0",
+    "httpcore==1.0.9",
+    "httpx==0.28.1",
+    "idna==2.10",
+    "iniconfig==2.3.0",
+    "instapy==0.6.16",
+    "jsonschema==2.6.0",
+    "Mastodon.py==2.2.1",
+    "MeaningCloud-python==2.0.0",
+    "outcome==1.3.0.post0",
+    "packaging==26.2",
+    "pandas",
+    "plotly",
+    "pluggy==1.6.0",
+    "plyer==2.1.0",
+    "protobuf==3.20.3",
+    "pydantic>=2,<3",
+    "Pygments==2.20.0",
+    "pyproject_hooks==1.2.0",
+    "PySocks==1.7.1",
+    "python-dateutil==2.9.0.post0",
+    "requests==2.33.1",
+    "setuptools==82.0.0",
+    "six==1.17.0",
+    "sortedcontainers==2.4.0",
+    "typing_extensions==4.15.0",
+    "urllib3==2.6.3",
+    "wheel==0.47.0",
+]
+
+[dependency-groups]
+dev = [
+    "hypothesis==6.152.7",
+    "pandas-stubs==3.0.5.260914",
+    "pip-tools==7.5.3",
+    "pyright==1.1.414",
+    "pytest",
+    "ruff==0.16.9",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+target-version = "py314"
+line-length = 120
+extend-exclude = ["vendor", ".serena"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+include = [
+    "abstractions.py",
+    "adoption_sources",
+    "config.py",
+    "database.py",
+    "main.py",
+    "metric_collectors",
+    "metrics_dashboard.py",
+    "social_posters",
+    "tests",
+    "manual_testing",
+]
+exclude = ["vendor", ".venv", ".serena", "**/__pycache__"]
+pythonVersion = "3.14"
+typeCheckingMode = "basic"
