@@ -1,0 +1,24 @@
+#!/bin/sh
+# Pre-commit hook: run `make format` if the environment supports it.
+# Never blocks the commit -- skips gracefully if make is missing or the
+# format target fails (e.g. no Python/ruff set up).
+
+if ! command -v make >/dev/null 2>&1; then
+  exit 0
+fi
+
+# Remember which files are staged so we can re-add them after formatting
+# (only those -- we don't want to stage unrelated unstaged changes).
+staged=$(git diff --cached --name-only --diff-filter=ACMR -- .)
+
+if ! out=$(make format 2>&1); then
+  echo "pre-commit: 'make format' failed; skipping (is your env set up? run 'make install')."
+  echo "$out"
+  exit 0
+fi
+
+for f in $staged; do
+  [ -f "$f" ] && git add -- "$f"
+done
+
+exit 0
