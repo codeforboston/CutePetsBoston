@@ -114,18 +114,3 @@ jobs:
           path: cutepets.log
           retention-days: 90
           archive: false
-
-  # Separate job so the elevated token never coexists with the posting steps.
-  # Shares the pages-publish concurrency group with deploy-pages.yml, so the
-  # two can no longer deploy Pages at the same time.
-  publish-redirects:
-    needs: run-cute-pets
-    if: '!cancelled()' # still record the mapping if a later step failed after posting
-    permissions:
-      contents: write # push the mapping to gh-pages
-      pages: write # deploy Pages
-      id-token: write # OIDC for actions/deploy-pages
-    uses: ./.github/workflows/publish-pages.yml
-    with:
-      mapping_artifact: redirects.json
-      analytics_artifact: dashboard.html
