@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 # Some rescues publish entries like "More Dogs Soon!" to point users at their
 # website; those should never be posted. Add new names here as we encounter them.
-PLACEHOLDER_NAMES: tuple[str, ...] = ("more dogs soon!", "more cats soon!")
+FORBIDDEN_NAME_WORDS: list[str] = ["more", "dogs", "soon", "cats"]
 
 # Values used by the rest of the application.
 SPECIES_SINGULAR = {"dogs": "dog", "cats": "cat"}
@@ -215,6 +215,16 @@ class SourceRescueGroups(PetSource):
 
             # Extract and clean the name
             name = self._clean_name(attrs.get("name", "Unknown"))
+
+            # If name contains any promotional words, skip this record
+            if any(word in name.lower() for word in FORBIDDEN_NAME_WORDS):
+                logger.info(f"Skipping promotional record: {name!r}")
+                return None
+
+            # Skip animals with 3 or more words in their name
+            if len(name.split()) >= 3:
+                logger.info(f"Skipping animal with too many words in name: {name!r}")
+                return None
 
             # Determine species from the included species relationship
             species_id = animal.get("relationships", {}).get("species", {}).get("data", [{}])[0].get("id")
