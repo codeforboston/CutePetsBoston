@@ -25,7 +25,13 @@ logger = logging.getLogger(__name__)
 
 # Some rescues publish entries like "More Dogs Soon!" to point users at their
 # website; those should never be posted. Add new names here as we encounter them.
-FORBIDDEN_NAME_WORDS: list[str] = ["more", "dogs", "soon", "cats"]
+FORBIDDEN_NAME_ROOTS: list[str] = ("more", "dog", "soon", "cat", "need", "adopt", "pupp", "kitten", "urgent")
+
+
+# Function to check if a name contains any forbidden roots.
+def is_forbidden_name(name: str) -> bool:
+    return any(word.lower().startswith(root) for root in FORBIDDEN_NAME_ROOTS for word in name.split())
+
 
 # Values used by the rest of the application.
 SPECIES_SINGULAR = {"dogs": "dog", "cats": "cat"}
@@ -196,9 +202,6 @@ class SourceRescueGroups(PetSource):
             pet = self._parse_animal(animal, orgs_by_id, species_by_id, pictures_by_id)
             if not pet:
                 continue
-            if self._is_placeholder_name(pet.name):
-                logger.info(f"Skipping placeholder record: {pet.name!r}")
-                continue
             yield pet
 
     def _parse_animal(
@@ -217,7 +220,7 @@ class SourceRescueGroups(PetSource):
             name = self._clean_name(attrs.get("name", "Unknown"))
 
             # If name contains any promotional words, skip this record
-            if any(word in name.lower() for word in FORBIDDEN_NAME_WORDS):
+            if is_forbidden_name(name):
                 logger.info(f"Skipping promotional record: {name!r}")
                 return None
 
@@ -295,9 +298,6 @@ class SourceRescueGroups(PetSource):
         except Exception as e:
             logger.warning(f"Failed to parse animal {animal.get('id', 'unknown')}: {e}")
             return None
-
-    def _is_placeholder_name(self, name: str) -> bool:
-        return name.lower() in PLACEHOLDER_NAMES
 
     def _clean_name(self, name: str) -> str:
         """
