@@ -35,6 +35,7 @@ jobs:
           # Scheduled runs always execute on the default branch, so check out
           # the staging branch's code explicitly.
           ref: staging
+
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
@@ -47,7 +48,6 @@ jobs:
 
       - name: Install dependencies
         run: uv sync --locked --no-dev
-
 
       - name: Get Previous Run ID
         continue-on-error: true
