@@ -4,7 +4,6 @@ RescueGroups.org API implementation of the PetSource interface.
 API Documentation: https://api.rescuegroups.org/v5/public/docs
 """
 
-import html
 import logging
 import os
 import pprint
@@ -301,23 +300,6 @@ class SourceRescueGroups(PetSource):
         # Split on common delimiters and take the first part
         cleaned = re.split(r"\s*[\*\-\|]+\s*", name)[0]
         return cleaned.strip()
-
-    def _clean_description(self, description: str) -> str:
-        """Clean up description text."""
-        if not description:
-            return ""
-
-        # Decode HTML entities
-        text = html.unescape(description)
-
-        # Remove &nbsp; and normalize whitespace
-        text = text.replace("&nbsp;", " ")
-        text = re.sub(r"\s+", " ", text)
-
-        # Remove promotional headers
-        text = re.sub(r"\*\*Home for the Holidays.*?\*\*", "", text, flags=re.IGNORECASE)
-
-        return text
 
     def _get_image_url(self, attrs: dict) -> str | None:
         """Get the best available image URL."""

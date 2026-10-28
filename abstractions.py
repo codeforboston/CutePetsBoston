@@ -1,3 +1,5 @@
+import html
+import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from functools import cached_property
@@ -48,6 +50,23 @@ class PetSource(PetProvider, ABC):
     def source_name(self) -> str:
         """Return the name of the pet source."""
         ...
+
+    def _clean_description(self, description: str) -> str:
+        """Clean up description text."""
+        if not description:
+            return ""
+
+        # Decode HTML entities
+        text = html.unescape(description)
+
+        # Remove &nbsp; and normalize whitespace
+        text = text.replace("&nbsp;", " ")
+        text = re.sub(r"\s+", " ", text)
+
+        # Remove promotional headers
+        text = re.sub(r"\*\*Home for the Holidays.*?\*\*", "", text, flags=re.IGNORECASE)
+
+        return text
 
 
 # =============================================================================
