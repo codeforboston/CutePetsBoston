@@ -44,7 +44,7 @@ Earlier project instructions described Facebook Login and Page access tokens. Th
 
 `social_posters/instagram.py` sends the token as a Bearer authorization header. It checks the account's ID and username, creates photo or carousel containers, waits for processing, and publishes them. `metric_collectors/instagram.py` uses the same token to read media like and comment counts.
 
-**TODO**: No token refresh automation is present in the checked repository. Someone needs to renew the credentials, unless the team has a separate process outside this repo.
+The **Refresh Instagram Tokens** workflow renews both account tokens weekly once its GitHub App credentials are configured. See [automatic renewal](#automatic-token-renewal) below for setup and recovery.
 
 ## Creating an Instagram account
 
@@ -107,7 +107,7 @@ For an existing app, use its Instagram Login setup to authorize the intended acc
 
 For a custom OAuth flow, Meta documents authorization, code exchange, and long-lived tokens in [Instagram business login](https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/business-login/). Long-lived Instagram tokens generally last 60 days; eligible unexpired tokens can be refreshed after they are at least 24 hours old. Use Meta's current [refresh endpoint documentation](https://developers.facebook.com/docs/instagram-platform/reference/refresh_access_token/) to confirm eligibility and parameters before implementing a renewal process. Record the actual expiry returned by Meta; do not assume that a portal-generated token lasts indefinitely.
 
-Token maintenance procedure:
+For manual token maintenance or recovery:
 
 1. Record the token's actual expiry, owning app, authorized account, and permissions in the password manager record.
 2. Arrange a maintenance reminder comfortably before expiry, for example two weeks before, and agree who will handle it.
@@ -117,6 +117,35 @@ Token maintenance procedure:
 6. Verify a controlled test post and then the next scheduled production post. Record the new expiry and next maintenance date.
 
 Password changes, revoked app access, account changes, or security actions may invalidate credentials before their recorded expiry. A refresh schedule does not replace checking posting results.
+
+## Automatic token renewal
+
+`.github/workflows/refresh-instagram-tokens.yml` runs every Monday at **09:17 UTC** and supports manual dispatch from Actions > **Refresh Instagram Tokens** > Run workflow. Only the repository's default branch can run the refresh job. Runs are serialized; an active renewal is never cancelled by a newer run. This workflow validates credentials without publishing a post.
+
+`refresh_instagram_tokens.py` refreshes production and test independently using `GET https://graph.instagram.com/refresh_access_token` with `grant_type=ig_refresh_token`. Each returned token must have a positive integer `expires_in` and pass an `id,username` lookup for the configured Instagram account before it replaces the matching repository secret. Token lifetimes restart from refresh, generally for another 60 days. Weekly renewal leaves time to retry failures before expiry.
+
+### One-time GitHub setup
+
+1. A repository administrator creates a GitHub App with **Repository permissions > Secrets: Read and write**, no additional optional permissions, and no webhooks required. Install it on **only CutePetsBoston**. GitHub App credentials are separate from the Meta developer app; no Meta app secret is needed for refresh.
+2. Generate a private key for that GitHub App. Store the App ID as repository Actions secret `INSTAGRAM_TOKEN_REFRESH_APP_ID` and its complete PEM private key as `INSTAGRAM_TOKEN_REFRESH_APP_PRIVATE_KEY`. Keep the recovery record in the team's password manager.
+3. Confirm all four existing repository secrets in the table below are present. Tokens must be **long-lived Instagram Login tokens**, unexpired, and at least **24 hours old**. The legacy `PAGE` names do not mean Facebook Page tokens.
+4. Merge the workflow to the default branch, then dispatch it there. Confirm both accounts report **refreshed, validated, and saved** and an estimated UTC expiration in the run summary. Check the next scheduled posting result.
+
+The workflow creates a short-lived GitHub App installation token scoped to this repository with Secrets write permission, then uses `gh secret set` to encrypt and replace each Instagram secret. The ordinary `GITHUB_TOKEN` has only Contents read permission and cannot update these secrets. Installation credentials are supplied only to the token-creation action; the maintenance script receives its short-lived output. The action revokes that GitHub token at job completion.
+
+The replacement Instagram tokens are masked immediately and passed to `gh` through standard input. They are not written to artifacts, step outputs, or the summary. Avoid enabling HTTP debug logging or shell tracing. GitHub cannot reveal saved secret values: after automatic renewal, a password-manager copy of the previous token may be stale. Use reauthorization for recovery rather than assuming an old copy is current.
+
+### Failures and manual recovery
+
+- Review the run summary for each account. One account failing does not prevent the other from renewing; any account failure makes the workflow fail. Enable GitHub Actions failure notifications for maintainers responsible for renewal. Setup failures before the script starts appear in the failed action's log.
+- Network errors, HTTP 429, and HTTP 5xx receive three total attempts with short backoff. Secret writes also receive three attempts. Retry the workflow after an outage. Response bodies, credential-bearing URLs, and raw exception/CLI output are suppressed.
+- A failed refresh or account check does not overwrite the saved secret. A failed GitHub write is reported as failure; if a response was lost, the write may already have succeeded. A subsequent run reads the currently saved secret. Do not repeatedly rerun immediately after success: Meta can reject tokens refreshed less than 24 hours ago.
+- For HTTP 400/401/403, check the token's age, expiration, authorization, app roles, and account ID in Meta. Expired or revoked tokens require reauthorizing the correct account through **Instagram Login**, obtaining a new long-lived token, and replacing the matching GitHub secret manually. Wait until it is eligible before retrying renewal.
+- If the account validation fails, correct the token/account-ID pair before rerunning. If GitHub secret writes fail, check the App installation, Secrets write permission, and the two App configuration secrets.
+
+Tokens only receive the new lifetime when refresh succeeds. Missed schedules and revoked access still need attention. GitHub may disable scheduled workflows in inactive public repositories; check that this workflow remains enabled and review its successful runs regularly. Scheduled workflows execute on the default branch; forks must configure their own credentials and enable scheduling.
+
+References: [Meta refresh endpoint](https://developers.facebook.com/docs/instagram-platform/reference/refresh_access_token/), [GitHub repository secret API permissions](https://docs.github.com/en/rest/actions/secrets#create-or-update-a-repository-secret), and [GitHub CLI secret updates](https://cli.github.com/manual/gh_secret_set).
 
 ## How credentials reach GitHub Actions
 
