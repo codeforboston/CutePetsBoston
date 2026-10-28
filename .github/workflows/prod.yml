@@ -19,13 +19,12 @@ concurrency:
   queue: single
 
 jobs:
-  # Posts a pet. Read-only token on purpose: this job installs deps with uv and
-  # feeds untrusted RescueGroups API responses to python, so it must not be
-  # able to write to the repo. Persisting the mapping is publish-redirects'
-  # job, below.
+  # Posts a pet to our prod accounts.
   run-cute-pets:
     runs-on: ubuntu-latest
     permissions:
+      # Read-only token on purpose:
+      # It must not be able to write to the repo.
       actions: read # gh run list, to find the previous database artifact
       contents: read
     steps:
