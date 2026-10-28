@@ -62,10 +62,23 @@ def test_invalid_input_cannot_replace_output(paths, bad_text, input_index):
     paths[1].write_text("{}")
     paths[input_index].write_text(bad_text)
     paths[2].write_text("previous output")
-    with pytest.raises(ValueError, match=str(paths[input_index])):
+    with pytest.raises(ValueError, match=str(paths[input_index])) as error:
         implementation.merge_files(*paths)
+    assert f"input text: {bad_text!r}" in str(error.value)
     assert paths[2].read_text() == "previous output"
     assert not paths[2].with_suffix(".json.tmp").exists()
+
+
+@pytest.mark.parametrize("slug, url", [(42, "https://example.com"), ("pet", 42), ("pet", None)])
+def test_validation_error_identifies_invalid_entry(slug, url):
+    with pytest.raises(ValueError) as error:
+        implementation.validate_mapping({slug: url})
+    assert f"slug {slug!r} -> URL {url!r}" in str(error.value)
+
+
+def test_load_mapping_accepts_positional_allow_empty(paths):
+    paths[0].write_text("")
+    assert implementation.load_mapping(paths[0], True) == {}
 
 
 @pytest.mark.parametrize("empty_text", ["", " \n"])

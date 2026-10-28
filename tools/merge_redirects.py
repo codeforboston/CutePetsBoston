@@ -11,14 +11,14 @@ from pathlib import Path
 
 def validate_mapping(data: object) -> dict[str, str]:
     if not isinstance(data, dict):
-        raise ValueError("expected a JSON object of slug -> URL strings")
+        raise ValueError(f"expected a JSON object of slug -> URL strings; got {type(data).__name__}: {data!r}")
     for slug, url in data.items():
         if not isinstance(slug, str) or not isinstance(url, str):
-            raise ValueError("redirect keys and values must be strings")
+            raise ValueError(f"redirect keys and values must be strings; got slug {slug!r} -> URL {url!r}")
     return data
 
 
-def load_mapping(path: Path, *, allow_empty: bool = False) -> dict[str, str]:
+def load_mapping(path: Path, allow_empty: bool = False) -> dict[str, str]:
     try:
         text = path.read_text(encoding="utf-8")
     except FileNotFoundError:
@@ -28,7 +28,7 @@ def load_mapping(path: Path, *, allow_empty: bool = False) -> dict[str, str]:
     try:
         return validate_mapping(json.loads(text))
     except (ValueError, UnicodeError) as exc:
-        raise ValueError(f"{path}: {exc}") from exc
+        raise ValueError(f"{path}: {exc}; input text: {text!r}") from exc
 
 
 def merge_files(minted_path: Path, existing_path: Path, output_path: Path) -> dict[str, str]:
