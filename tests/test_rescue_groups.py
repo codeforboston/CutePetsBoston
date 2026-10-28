@@ -3,10 +3,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from adoption_sources.rescue_groups import (
-    SourceRescueGroups,
-    _build_species_filters,
-)
+from adoption_sources.rescue_groups import SourceRescueGroups, _build_species_filters, _is_forbidden_name
 
 
 def _make_animal(adoption_url=None, species_id="8", **extra_attrs):
@@ -140,20 +137,25 @@ class SpeciesParsingTests(unittest.TestCase):
 
 
 class ForbiddenNameTests(unittest.TestCase):
-    def setUp(self):
-        self.source = SourceRescueGroups(api_key="dummy")
-
     def test_more_dogs_soon_is_forbidden(self):
-        self.assertTrue(self.source._is_forbidden_name("More Dogs Soon!"))
-        self.assertTrue(self.source._is_forbidden_name("MORE DOGS SOON!"))
+        self.assertTrue(_is_forbidden_name("More Dogs Soon!"))
+        self.assertTrue(_is_forbidden_name("MORE DOGS SOON!"))
 
     def test_more_cats_soon_is_forbidden(self):
-        self.assertTrue(self.source._is_forbidden_name("More Cats Soon!"))
-        self.assertTrue(self.source._is_forbidden_name("MORE CATS SOON!"))
+        self.assertTrue(_is_forbidden_name("More Cats Soon!"))
+        self.assertTrue(_is_forbidden_name("MORE CATS SOON!"))
+
+    def test_suffixes_are_forbidden(self):
+        self.assertTrue(_is_forbidden_name("Dogs!"))
+        self.assertTrue(_is_forbidden_name("Catnip!"))
+
+    def test_two_word_forbidden_name(self):
+        self.assertTrue(_is_forbidden_name("Adopt Now!"))
+        self.assertTrue(_is_forbidden_name("Visit Us!"))
 
     def test_real_pet_name_is_not_forbidden(self):
-        self.assertFalse(self.source._is_forbidden_name("Pippin"))
-        self.assertFalse(self.source._is_forbidden_name("Buddy"))
+        self.assertFalse(_is_forbidden_name("Pippin"))
+        self.assertFalse(_is_forbidden_name("Buddy"))
 
 
 class FetchPetsRequestTests(unittest.TestCase):
