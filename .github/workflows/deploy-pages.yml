@@ -8,6 +8,7 @@ on:
       - 'web/**'
       - '.github/workflows/deploy-pages.yml'
       - '.github/workflows/publish-pages.yml'
+      - 'tools/merge_redirects.py'
   workflow_dispatch:
 
 jobs:
