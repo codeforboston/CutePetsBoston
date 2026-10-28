@@ -38,11 +38,16 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.14"
-          cache: 'pip'
+          python-version-file: ".python-version"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v9.0.0
+        with:
+          enable-cache: true
 
       - name: Install dependencies
-        run: pip install --break-system-packages -r requirements.txt
+        run: uv sync --locked --no-dev
+
 
       - name: Get Previous Run ID
         continue-on-error: true
@@ -79,7 +84,7 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           APP_ENV: staging
           REDIRECTS_ENABLED: true
-        run: python ./main.py
+        run: uv run --locked --no-dev python ./main.py
 
       - name: Upload database artifact
         uses: actions/upload-artifact@v7
