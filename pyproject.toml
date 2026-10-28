@@ -82,6 +82,7 @@ include = [
     "main.py",
     "metric_collectors",
     "metrics_dashboard.py",
+    "refresh_instagram_tokens.py",
     "social_posters",
     "tests",
     "manual_testing",
