@@ -25,7 +25,26 @@ logger = logging.getLogger(__name__)
 
 # Some rescues publish entries like "More Dogs Soon!" to point users at their
 # website; those should never be posted. Add new names here as we encounter them.
-PLACEHOLDER_NAMES: tuple[str, ...] = ("more dogs soon!", "more cats soon!")
+FORBIDDEN_NAME_ROOTS: tuple[str, ...] = (
+    "more",
+    "visit",
+    "dog",
+    "soon",
+    "cat",
+    "need",
+    "adopt",
+    "pupp",
+    "kitten",
+    "urgent",
+    "for",
+    "the",
+)
+
+
+# Function to check if a name contains any forbidden roots.
+def _is_forbidden_name(name: str) -> bool:
+    return any(word.lower().startswith(root) for root in FORBIDDEN_NAME_ROOTS for word in name.split())
+
 
 # Values used by the rest of the application.
 SPECIES_SINGULAR = {"dogs": "dog", "cats": "cat"}
@@ -196,9 +215,6 @@ class SourceRescueGroups(PetSource):
             pet = self._parse_animal(animal, orgs_by_id, species_by_id, pictures_by_id)
             if not pet:
                 continue
-            if self._is_placeholder_name(pet.name):
-                logger.info(f"Skipping placeholder record: {pet.name!r}")
-                continue
             yield pet
 
     def _parse_animal(
@@ -215,6 +231,16 @@ class SourceRescueGroups(PetSource):
 
             # Extract and clean the name
             name = self._clean_name(attrs.get("name", "Unknown"))
+
+            # If name contains any promotional words, skip this record
+            if _is_forbidden_name(name):
+                logger.info(f"Skipping promotional record: {name!r}")
+                return None
+
+            # Skip animals with 3 or more words in their name
+            if len(name.split()) >= 3:
+                logger.info(f"Skipping animal with too many words in name: {name!r}")
+                return None
 
             # Determine species from the included species relationship
             species_id = animal.get("relationships", {}).get("species", {}).get("data", [{}])[0].get("id")
@@ -285,9 +311,6 @@ class SourceRescueGroups(PetSource):
         except Exception as e:
             logger.warning(f"Failed to parse animal {animal.get('id', 'unknown')}: {e}")
             return None
-
-    def _is_placeholder_name(self, name: str) -> bool:
-        return name.lower() in PLACEHOLDER_NAMES
 
     def _clean_name(self, name: str) -> str:
         """
