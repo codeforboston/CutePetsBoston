@@ -43,12 +43,15 @@ class SourceManual(PetSource):
     def _build_pet(self, animal: dict) -> AdoptablePet:
         attrs = animal.get("attributes", {})
         animal_id = animal.get("id", "")
+        # Clean up description (use text version, not HTML)
+        description = self._clean_description(attrs.get("descriptionText", ""))
+
         return AdoptablePet(
             name=attrs.get("name", "Unknown"),
             species=self.species,
             breed=self._determine_breed(attrs),
             location=self.location_label,
-            description=(attrs.get("descriptionText") or "").strip(),
+            description=description,
             adoption_url=self._adoption_url(attrs.get("slug")),
             image_urls=[attrs["pictureThumbnailUrl"]] if attrs.get("pictureThumbnailUrl") else [],
             pet_id=animal_id,
