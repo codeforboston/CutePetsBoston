@@ -139,21 +139,21 @@ class SpeciesParsingTests(unittest.TestCase):
         self.assertIsNone(pet)
 
 
-class PlaceholderNameTests(unittest.TestCase):
+class ForbiddenNameTests(unittest.TestCase):
     def setUp(self):
         self.source = SourceRescueGroups(api_key="dummy")
 
-    def test_more_dogs_soon_is_placeholder(self):
-        self.assertTrue(self.source._is_placeholder_name("More Dogs Soon!"))
-        self.assertTrue(self.source._is_placeholder_name("MORE DOGS SOON!"))
+    def test_more_dogs_soon_is_forbidden(self):
+        self.assertTrue(self.source._is_forbidden_name("More Dogs Soon!"))
+        self.assertTrue(self.source._is_forbidden_name("MORE DOGS SOON!"))
 
-    def test_more_cats_soon_is_placeholder(self):
-        self.assertTrue(self.source._is_placeholder_name("More Cats Soon!"))
-        self.assertTrue(self.source._is_placeholder_name("MORE CATS SOON!"))
+    def test_more_cats_soon_is_forbidden(self):
+        self.assertTrue(self.source._is_forbidden_name("More Cats Soon!"))
+        self.assertTrue(self.source._is_forbidden_name("MORE CATS SOON!"))
 
-    def test_real_pet_name_is_not_placeholder(self):
-        self.assertFalse(self.source._is_placeholder_name("Pippin"))
-        self.assertFalse(self.source._is_placeholder_name("Buddy"))
+    def test_real_pet_name_is_not_forbidden(self):
+        self.assertFalse(self.source._is_forbidden_name("Pippin"))
+        self.assertFalse(self.source._is_forbidden_name("Buddy"))
 
 
 class FetchPetsRequestTests(unittest.TestCase):
