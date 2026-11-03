@@ -44,7 +44,7 @@ class SourceManual(PetSource):
         attrs = animal.get("attributes", {})
         animal_id = animal.get("id", "")
         # Clean up description (use text version, not HTML)
-        description = self._clean_description(attrs.get("descriptionText", ""))
+        description = self._clean_description(attrs.get("descriptionText", "")).strip()
 
         return AdoptablePet(
             name=attrs.get("name", "Unknown"),
