@@ -130,6 +130,45 @@ def test_summarizes_the_description_as_a_first_sentence():
     assert cards[0]["blurb"] == "A calm, obedient girl."
 
 
+def test_blurb_skips_a_run_together_intake_form():
+    # Zeus's real RescueGroups listing: label/value pairs typed with no
+    # separators and no periods until deep in the narrative.
+    form_like_description = (
+        "Name: ZeusAge: 9Breed: lab mixCurrent size: 60lbsSize potential:60lbs&nbsp; "
+        "Leash trained: yes Crate Trained:yes "
+        "Story/background: Zeus was found living in a ditch near a busy highway. "
+        "He was microchipped we found his previous owners home to return him "
+        "(it was 30 miles from where he was found). Sadly he does not trust other dogs."
+    )
+
+    cards = build_pet_cards([make_pet(description=form_like_description)], [make_post()])
+
+    blurb = cards[0]["blurb"]
+    assert blurb.startswith("He was microchipped")
+    assert "Name:" not in blurb
+    assert len(blurb) <= BLURB_MAX_CHARS
+
+
+def test_blurb_truncates_an_all_form_description():
+    cards = build_pet_cards(
+        [
+            make_pet(
+                description=(
+                    "Name: ZooeyAge: 3Breed: lab mixCurrent size: 50lbsSize potential: 55lbs "
+                    "Leash trained: yes Crate Trained:yes Potty trained: working on it "
+                    "Kids:yesCars:yesCats:noChicken:yes Loves: the couch"
+                )
+            )
+        ],
+        [make_post()],
+    )
+
+    blurb = cards[0]["blurb"]
+    assert "Name:" in blurb  # nothing prose-like to prefer; truncate as today
+    assert len(blurb) <= BLURB_MAX_CHARS
+    assert blurb.endswith("\u2026")
+
+
 def test_truncates_a_description_with_no_sentence():
     long_description = " ".join(["word"] * 60)
     cards = build_pet_cards([make_pet(description=long_description)], [make_post()])

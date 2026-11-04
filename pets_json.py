@@ -38,11 +38,12 @@ FEED_SIZE = 8
 # and any other platform with a real URL is the fallback.
 PREFERRED_PLATFORM = "Mastodon"
 
-# Card blurbs are the description's first sentence, truncated here when
+# Card blurbs: the description's first prose sentence, truncated here when
 # even that sentence runs longer than a card.
 BLURB_MAX_CHARS = 140
 
-_FIRST_SENTENCE = re.compile(r"^(.+?[.!?])(?:\s|$)")
+# Split text into sentence-sized chunks; a final chunk may lack a terminator.
+_SENTENCE_BOUNDS = re.compile(r"(?<=[.!?])\s+")
 
 
 class PetCard(TypedDict):
@@ -147,15 +148,34 @@ def choose_post_url(pet_posts: list[PublishedPost]) -> str | None:
 
 
 def summarize_description(description: str) -> str:
-    """The card blurb: the pet description's first sentence, trimmed to fit."""
+    """The card blurb: the description's first *prose* sentence, trimmed to fit.
+
+    naively taking the "first sentence" disappoints on RescueGroups
+    intake-form descriptions ("Name: ZeusAge: 9Breed: ...") typed as a
+    run-together string of "Label: value" pairs with no punctuation until
+    deep in the narrative: the first sentence there is metadata, not a
+    story. When the opener reads like a form, we take the first normal
+    sentence instead, and fall back to plain truncation for descriptions
+    with no prose anywhere.
+    """
     text = " ".join(str(description).split())
     if not text:
         return ""
-    matched_sentence = _FIRST_SENTENCE.match(text)
-    blurb = matched_sentence.group(1) if matched_sentence else text
+
+    sentences = [chunk.strip() for chunk in _SENTENCE_BOUNDS.split(text) if chunk.strip()]
+    blurb = sentences[0] if sentences else text
+    if _reads_like_form(blurb):
+        prose = next((chunk for chunk in sentences[1:] if not _reads_like_form(chunk)), None)
+        if prose:
+            blurb = prose
     if len(blurb) <= BLURB_MAX_CHARS:
         return blurb
-    return text[: BLURB_MAX_CHARS - 1].rstrip() + "\u2026"
+    return blurb[: BLURB_MAX_CHARS - 1].rstrip() + "\u2026"
+
+
+def _reads_like_form(text: str) -> bool:
+    """True when 'text' is dominated by "Label: value" pairs, not sentences."""
+    return len(re.findall(r"\b[A-Za-z][A-Za-z/& ]{1,30}:", text)) >= 2
 
 
 def posted_datetime(posted_at: str) -> datetime:
