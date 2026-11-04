@@ -1,0 +1,56 @@
+name: Audit social replies
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/social-reply-engine-174]
+    paths: [.github/workflows/reply-audit.yml]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: social-reply-audit
+  cancel-in-progress: false
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@v9.0.0
+      - run: uv sync --locked --dev
+      - name: Check code and tests
+        run: |
+          make lint
+          make test
+      - name: Find production post history
+        id: previous
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          run_id=$(gh run list --repo "$GITHUB_REPOSITORY" --branch master --workflow prod.yml --status success --limit 1 --json databaseId --jq '.[0].databaseId')
+          test -n "$run_id" && test "$run_id" != null
+          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+      - uses: actions/download-artifact@v8
+        with:
+          name: database.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ steps.previous.outputs.run_id }}
+      - name: Read comments and preview only
+        env:
+          INSTAGRAM_BUSINESS_ACCOUNT_ID: ${{ secrets.INSTAGRAM_BUSINESS_ACCOUNT_ID }}
+          INSTAGRAM_PAGE_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_PAGE_ACCESS_TOKEN }}
+        run: uv run --locked python reply_inbox.py
+      - uses: actions/upload-artifact@v7
+        with:
+          name: reply-inbox
+          path: reply-inbox.json
+          retention-days: 7

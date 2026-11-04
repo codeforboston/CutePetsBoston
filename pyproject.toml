@@ -83,6 +83,8 @@ include = [
     "metric_collectors",
     "metrics_dashboard.py",
     "social_posters",
+    "social_replies",
+    "reply_inbox.py",
     "tests",
     "manual_testing",
 ]
