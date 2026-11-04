@@ -185,7 +185,8 @@ h2 {
   background: var(--cream);
 }
 
-/* Decorative illustration tiles, tilted like the mockup. */
+/* Decorative tiles, tilted like the mockup: each colored tile acts as the
+   border around one of the two most recent pets' photos. */
 .hero-art {
   flex: 1 1 420px;
   min-width: 0;
@@ -201,7 +202,18 @@ h2 {
   justify-content: center;
 }
 
-.art-tile-dog {
+/* The inset photo leaves the tile color showing as a border/mat frame. */
+.art-photo {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  width: calc(100% - 28px);
+  height: calc(100% - 28px);
+  object-fit: cover;
+  border-radius: 28px;
+}
+
+.art-tile-pink {
   left: 0;
   top: 30px;
   width: 56%;
@@ -210,7 +222,7 @@ h2 {
   transform: rotate(-4deg);
 }
 
-.art-tile-cat {
+.art-tile-blue {
   right: 0;
   top: 0;
   width: 52%;

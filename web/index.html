@@ -91,12 +91,16 @@
           </div>
         </div>
 
+        <!-- Photo mats for the two most recent pets (filled from pets.json;
+             the species mascots remain for photo-less or empty feeds). -->
         <div class="hero-art" aria-hidden="true">
-          <div class="art-tile art-tile-dog">
+          <div class="art-tile art-tile-pink">
             <svg class="art-mascot"><use href="#icon-dog" /></svg>
+            <img class="art-photo" alt="" />
           </div>
-          <div class="art-tile art-tile-cat">
+          <div class="art-tile art-tile-blue">
             <svg class="art-mascot"><use href="#icon-cat" /></svg>
+            <img class="art-photo" alt="" />
           </div>
           <div class="art-tile art-tile-slogan">Adopt<br />don't shop</div>
         </div>
@@ -310,6 +314,20 @@
         : '<p class="section-note">Nothing to show for this filter yet.</p>';
     };
 
+    // Up top, the colored hero tiles act as borders around the two most
+    // recent pets (pets.json is newest-first). A missing or dead photo just
+    // leaves its tile's mascot showing, same fallback the cards use.
+    const decorateHero = () => {
+      document.querySelectorAll(".hero-art .art-photo").forEach((img, position) => {
+        const pet = pets[position];
+        if (pet && pet.image_url) {
+          img.src = pet.image_url;
+        } else {
+          img.style.display = "none";
+        }
+      });
+    };
+
     const filterPills = Array.from(document.querySelectorAll(".filter-pill"));
     filterPills.forEach((pill) => {
       pill.addEventListener("click", () => {
@@ -328,6 +346,7 @@
         // Anything that is not a list of cards means no feed today.
         pets = Array.isArray(parsed) ? parsed : [];
         renderPets();
+        decorateHero();
       })
       .catch((err) => {
         pets = [];
