@@ -31,6 +31,7 @@ from metric_collectors.bluesky import CollectorBluesky
 from metric_collectors.instagram import CollectorInstagram
 from metric_collectors.mastodon import CollectorMastodon
 from metrics_dashboard import dashboard
+from pets_json import write_pets_json
 from social_posters.bluesky import PosterBluesky
 from social_posters.debug import PosterDebug
 from social_posters.instagram import PosterInstagram
@@ -132,6 +133,10 @@ def run(
                 pet.adoption_url = redirect_url
         results, published_results = publish_posts(pet, posters)
         record_publish_results(pet, published_results, database_path=database_path)
+
+    # Homepage feed (issue #190): rebuilt every run, whatever the env, by
+    # joining the freshly fetched pet pool to everything recorded so far.
+    write_pets_json(pets, database_path=database_path, warning_callback=notify_slack_of_warning)
 
     collect_metrics(collectors or [], database_path=database_path)
     dashboard(database_path=database_path)

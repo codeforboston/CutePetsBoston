@@ -37,4 +37,7 @@ class PosterDebug(SocialPoster):
             self.stream.write(output)
         else:
             logger.info(output)
-        return PostResult(success=True, post_id="debug")
+        # Record the adoption link (the redirect hop when minting is on) as
+        # the post_url, so a debug run's synthetic board post still joins
+        # its pet in the homepage feed built by pets_json.py.
+        return PostResult(success=True, post_id="debug", post_url=post.link)
