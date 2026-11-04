@@ -45,6 +45,8 @@ The state reserves a comment before the network request. A failed or uncertain
 send remains reserved for manual review rather than automatically retrying and
 possibly duplicating a reply. Invalid state fails loudly. Do not schedule real
 replies until durable state storage and the preview results have been reviewed.
+Senders sharing the state file also share a lock; a stale lock after a crash
+requires manual review before another sender can start.
 
 API references: [Bluesky replies](https://docs.bsky.app/docs/tutorials/creating-a-post#replies),
 [Mastodon contexts and replies](https://docs.joinmastodon.org/methods/statuses/),

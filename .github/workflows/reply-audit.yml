@@ -4,7 +4,10 @@ on:
   workflow_dispatch:
   push:
     branches: [codex/social-reply-engine-174]
-    paths: [.github/workflows/reply-audit.yml]
+    paths:
+      - .github/workflows/reply-audit.yml
+      - reply_inbox.py
+      - social_replies/**
 
 permissions:
   contents: read

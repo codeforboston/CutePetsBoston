@@ -3,9 +3,11 @@
 import argparse
 import json
 import os
+from contextlib import ExitStack, contextmanager
 from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import Iterator
 
 import requests
 
@@ -19,6 +21,18 @@ def save_json(path: Path, value: object) -> None:
     temporary = path.with_name(path.name + ".tmp")
     temporary.write_text(json.dumps(value, ensure_ascii=False, indent=2), encoding="utf-8")
     temporary.replace(path)
+
+
+@contextmanager
+def sending_lock(state_path: Path) -> Iterator[None]:
+    """Concurrent senders must share this lock as well as the state file."""
+    lock_path = state_path.with_name(state_path.name + ".lock")
+    descriptor = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    os.close(descriptor)
+    try:
+        yield
+    finally:
+        lock_path.unlink()
 
 
 def audit(
@@ -76,6 +90,12 @@ def audit(
                     status["stopped_early"] = True
                     break
         status["comments"] = sum(comment.platform == adapter.platform_name for comment in comments.values())
+        status["own_comments"] = sum(
+            comment.platform == adapter.platform_name and comment.is_own for comment in comments.values()
+        )
+        status["external_comments"] = (
+            status["comments"] - status["own_comments"] if status["checked_posts"] or not status["errors"] else None
+        )
     return list(comments.values()), coverage
 
 
@@ -128,6 +148,13 @@ def main() -> None:
     if args.days < 1 or args.posts_per_platform < 1:
         parser.error("Days and posts-per-platform must be positive")
     policy = ReplyPolicy(rate=args.rate, daily_cap=args.daily_cap)
+    with ExitStack() as stack:
+        if args.send:
+            stack.enter_context(sending_lock(args.state))
+        run(args, policy)
+
+
+def run(args: argparse.Namespace, policy: ReplyPolicy) -> None:
     # Broken state must fail loudly; resetting it could resend replies.
     state = json.loads(args.state.read_text(encoding="utf-8")) if args.state.exists() else {"processed": {}}
     if not isinstance(state, dict) or not isinstance(state.get("processed"), dict):
@@ -152,9 +179,11 @@ def main() -> None:
         with open(summary, "a", encoding="utf-8") as output:
             output.write("## Social reply audit (preview)\n\n")
             for platform, status in coverage.items():
+                count = status["external_comments"]
+                label = str(count) if count is not None else "unavailable"
                 output.write(
-                    f"- {platform}: {status['checked_posts']} posts checked, {status['comments']} comments, "
-                    f"{len(status['errors'])} read errors\n"
+                    f"- {platform}: {status['checked_posts']} posts checked, {label} audience comments, "
+                    f"{status['own_comments']} own comments, {len(status['errors'])} read errors\n"
                 )
             output.write(f"\n{len(proposals)} playful replies proposed. Download reply-inbox.json for the comments.\n")
     if args.send:

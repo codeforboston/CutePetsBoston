@@ -7,7 +7,7 @@ import requests
 
 from abstractions import PostResult
 from database import PublishedPost
-from reply_inbox import audit, main, send_proposals
+from reply_inbox import audit, main, send_proposals, sending_lock
 from social_replies.adapters import BlueskyReplies, InstagramReplies, MastodonReplies
 from social_replies.engine import ReplyPolicy, pick_replies
 from social_replies.models import Comment
@@ -133,6 +133,18 @@ def test_audit_reports_access_errors_instead_of_claiming_an_empty_inbox(tmp_path
     assert coverage["Instagram"]["checked_posts"] == 0
     assert coverage["Instagram"]["errors"][0]["http_status"] == 403
     assert coverage["Instagram"]["stopped_early"]
+    assert coverage["Instagram"]["external_comments"] is None
+
+
+def test_concurrent_senders_cannot_share_state_until_first_finishes(tmp_path):
+    path = tmp_path / "state.json"
+    with sending_lock(path):
+        with pytest.raises(FileExistsError):
+            with sending_lock(path):
+                pytest.fail("Second sender acquired the first sender's lock")
+    with sending_lock(path):
+        assert path.with_name("state.json.lock").exists()
+    assert not path.with_name("state.json.lock").exists()
 
 
 def test_bluesky_preserves_reply_references_and_detects_our_response():
@@ -198,3 +210,45 @@ def test_successful_send_is_saved(tmp_path):
     state = {"processed": {}}
     send_proposals([(comment(), "Woof!")], [adapter], state, tmp_path / "state.json")
     assert state["processed"][comment().key]["status"] == "sent"
+
+
+def test_bluesky_send_uses_both_thread_and_parent_references():
+    incoming = comment(context={"root_cid": "root-hash", "parent_cid": "comment-hash"})
+    with patch("social_replies.adapters.PosterBluesky") as poster, patch("requests.post") as post:
+        poster.return_value.authenticate.return_value = True
+        poster.return_value._access_token = "test-token"
+        poster.return_value._did = "did:plc:own"
+        post.return_value.json.return_value = {"uri": "at://sent"}
+        result = BlueskyReplies().reply(incoming, "Meow meow! 😸")
+    assert result.success
+    record = post.call_args.kwargs["json"]["record"]
+    assert record["reply"] == {
+        "root": {"uri": incoming.root_id, "cid": "root-hash"},
+        "parent": {"uri": incoming.comment_id, "cid": "comment-hash"},
+    }
+
+
+def test_instagram_send_targets_comment_replies_not_media(monkeypatch):
+    monkeypatch.setenv("INSTAGRAM_PAGE_ACCESS_TOKEN", "test-token")
+    with patch("requests.post") as post:
+        post.return_value.json.return_value = {"id": "sent"}
+        result = InstagramReplies().reply(comment(comment_id="incoming"), "Woof! 🐶")
+    assert result.success
+    assert post.call_args.args[0].endswith("/incoming/replies")
+    assert post.call_args.kwargs["data"] == {"message": "Woof! 🐶"}
+
+
+def test_mastodon_send_mentions_author_and_preserves_visibility(monkeypatch):
+    monkeypatch.setenv("MASTODON_TOKEN", "test-token")
+    incoming = comment(context={"visibility": "unlisted"})
+    with patch("requests.post") as post:
+        post.return_value.json.return_value = {"id": "sent"}
+        result = MastodonReplies().reply(incoming, "Blep. 😛")
+    assert result.success
+    args = post.call_args.kwargs
+    assert args["data"] == {
+        "status": "@human.example Blep. 😛",
+        "in_reply_to_id": incoming.comment_id,
+        "visibility": "unlisted",
+    }
+    assert args["headers"]["Idempotency-Key"] == incoming.key
