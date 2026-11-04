@@ -59,7 +59,7 @@ def exercise(adapter: ReplyAdapter, target: Comment, state_path: Path) -> dict:
 
 
 def mastodon_test() -> dict:
-    token = os.environ.get("MASTODON_TOKEN")
+    token = (os.environ.get("MASTODON_TOKEN") or "").strip()
     if not token:
         return {"status": "blocked", "reason": "No Mastodon test token"}
     adapter = MastodonReplies()
@@ -159,6 +159,19 @@ def main() -> None:
                 "status": "blocked" if code in (401, 403) else "failed",
                 "reason": f"HTTP {code}; inspect account access before retrying",
             }
+            if exc.response is not None:
+                try:
+                    error = exc.response.json().get("error", {})
+                    if isinstance(error, dict):
+                        results[name]["api_code"] = error.get("code")
+                        message = str(error.get("message", ""))
+                        for key in ("MASTODON_TOKEN", "INSTAGRAM_PAGE_ACCESS_TOKEN"):
+                            secret = os.environ.get(key)
+                            if secret:
+                                message = message.replace(secret, "[redacted]")
+                        results[name]["api_message"] = message[:300]
+                except ValueError:
+                    pass
         except (requests.RequestException, ValueError, AssertionError) as exc:
             results[name] = {"status": "failed", "reason": type(exc).__name__ + "; do not resend blindly"}
         save_json(Path("reply-live-test-results.json"), results)
