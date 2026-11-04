@@ -1,0 +1,46 @@
+name: Controlled reply engine test
+
+on:
+  push:
+    branches: [codex/test-replies-174]
+    paths: [.github/workflows/reply-live-test.yml]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: controlled-reply-test
+  cancel-in-progress: false
+
+jobs:
+  test-accounts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@v9.0.0
+      - run: uv sync --locked --dev
+      - name: Run automated checks
+        run: |
+          make lint
+          make test
+      - name: Controlled tests on test accounts
+        env:
+          MASTODON_TOKEN: ${{ secrets.MASTODON_TEST_TOKEN }}
+          INSTAGRAM_BUSINESS_ACCOUNT_ID: ${{ secrets.INSTAGRAM_TEST_BUSINESS_ACCOUNT_ID }}
+          INSTAGRAM_PAGE_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_TEST_PAGE_ACCESS_TOKEN }}
+        run: uv run --locked python manual_testing/reply_engine_live_test.py
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: reply-live-test-results
+          path: |
+            reply-live-test-results.json
+            *-live-state.json
+            mastodon-test-root.json
+          retention-days: 7
