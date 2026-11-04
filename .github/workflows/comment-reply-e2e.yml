@@ -1,0 +1,42 @@
+name: Controlled comment-to-reply test
+
+on:
+  push:
+    branches: [codex/test-comment-replies-174]
+    paths: [.github/workflows/comment-reply-e2e.yml]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: controlled-comment-reply-test
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@v9.0.0
+      - run: uv sync --locked --dev
+      - name: Automated checks
+        run: |
+          make lint
+          make test
+      - name: Two owned accounts on the test-account thread
+        env:
+          MASTODON_TOKEN: ${{ secrets.MASTODON_TEST_TOKEN }}
+          COMMENTER_MASTODON_TOKEN: ${{ secrets.MASTODON_TOKEN }}
+        run: uv run --locked python manual_testing/comment_reply_e2e.py
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: comment-reply-e2e
+          path: comment-reply-*.json
+          retention-days: 7
