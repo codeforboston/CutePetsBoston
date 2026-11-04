@@ -12,191 +12,327 @@
   <link rel="icon" href="favicon.ico" sizes="any" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <!-- Fonts: Fredoka for headings, Nunito for body, both matching the
+       design mockup, with system fallbacks while they load. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;800&display=swap"
+    rel="stylesheet"
+  />
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
+<body id="top">
+  <!-- Reusable mascot and wayfinding icons, referenced by <use> from the
+       hero decorations and the pet cards below. -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
     <defs>
-      <symbol id="icon-mastodon" viewBox="0 0 24 24">
-        <path d="M21.58 13.913c-.29 1.469-2.592 3.121-5.238 3.396-1.379.184-2.737.368-4.185.276-2.368-.092-4.236-.55-4.236-.55 0 .184.014.36.043.534.314 2.297 2.353 2.434 4.284 2.5 1.948.066 3.682-.477 3.682-.477l.08 1.687s-1.36.732-3.789.84c-1.337.072-2.999-.034-4.934-.534C2.99 20.5 2.27 16.125 2.159 11.688c-.033-1.319-.013-2.563-.013-3.604C2.146 3.55 5.224 2.22 5.224 2.22 6.871.479 9.514.367 12.05.348h.063c2.537.02 5.18.13 6.738.832 0 0 3.078 1.33 3.078 5.864 0 0 .04 3.345-.349 5.869M18.319 7.16c0-1.118-.296-2.005-.886-2.66-.61-.654-1.408-.99-2.4-.99-1.148 0-2.018.43-2.605 1.291l-.567.93-.567-.93c-.587-.861-1.457-1.291-2.605-1.291-.992 0-1.79.336-2.4.99-.59.655-.886 1.542-.886 2.66v5.466h2.182V7.323c0-1.118.476-1.682 1.43-1.682 1.052 0 1.578.661 1.578 1.972v2.856h2.169V7.613c0-1.31.526-1.972 1.578-1.972.954 0 1.43.564 1.43 1.682v4.303h2.182Z"/>
+      <symbol id="icon-dog" viewBox="0 0 120 120">
+        <ellipse cx="20" cy="62" rx="14" ry="30" fill="#8A4B2D" transform="rotate(12 20 62)" />
+        <ellipse cx="100" cy="62" rx="14" ry="30" fill="#8A4B2D" transform="rotate(-12 100 62)" />
+        <circle cx="60" cy="58" r="38" fill="#FFF6E5" />
+        <ellipse cx="60" cy="76" rx="20" ry="15" fill="#FFE2C2" />
+        <circle cx="46" cy="52" r="5" fill="#2B1B17" />
+        <circle cx="74" cy="52" r="5" fill="#2B1B17" />
+        <ellipse cx="60" cy="68" rx="7" ry="5" fill="#2B1B17" />
+        <path d="M60 73 v6 M60 79 q-7 6 -13 1 M60 79 q7 6 13 1" stroke="#2B1B17" stroke-width="2.5" fill="none" stroke-linecap="round" />
       </symbol>
-      <symbol id="icon-bluesky" viewBox="0 0 24 24">
-        <path d="M12 10.8c-1.087-2.114-4.046-6.053-6.798-7.995C2.566.944 1.561 1.266.902 1.565.139 1.908 0 3.08 0 3.768c0 .69.378 5.65.624 6.479.815 2.736 3.713 3.66 6.383 3.364.136-.02.275-.039.415-.056-.138.022-.276.04-.415.056-3.912.58-7.387 2.005-2.83 7.078 5.013 5.19 6.87-1.113 7.823-4.308.953 3.195 2.05 9.271 7.733 4.308 4.267-4.308 1.172-6.498-2.74-7.078a8.741 8.741 0 0 1-.415-.056c.14.017.279.036.415.056 2.67.297 5.568-.628 6.383-3.364.246-.828.624-5.79.624-6.478 0-.69-.139-1.861-.902-2.206-.659-.298-1.664-.62-4.3 1.24C16.046 4.748 13.087 8.687 12 10.8Z"/>
+      <symbol id="icon-cat" viewBox="0 0 120 120">
+        <polygon points="22,50 28,12 56,34" fill="#FFF6E5" />
+        <polygon points="98,50 92,12 64,34" fill="#FFF6E5" />
+        <polygon points="29,42 31,24 44,34" fill="#FFB3C1" />
+        <polygon points="91,42 89,24 76,34" fill="#FFB3C1" />
+        <circle cx="60" cy="66" r="40" fill="#FFF6E5" />
+        <ellipse cx="45" cy="62" rx="5" ry="8" fill="#2B1B17" />
+        <ellipse cx="75" cy="62" rx="5" ry="8" fill="#2B1B17" />
+        <path d="M54 76 h12 l-6 7z" fill="#F25C3B" />
+        <path d="M60 83 q-6 8 -14 4 M60 83 q6 8 14 4" stroke="#2B1B17" stroke-width="2.5" fill="none" stroke-linecap="round" />
       </symbol>
-      <symbol id="icon-instagram" viewBox="0 0 24 24">
-        <path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.897 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.897-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z"/>
+      <symbol id="icon-paw" viewBox="0 0 24 24" fill="currentColor">
+        <ellipse cx="6" cy="10" rx="2.2" ry="3" />
+        <ellipse cx="10.5" cy="6" rx="2.2" ry="3" />
+        <ellipse cx="15.5" cy="6" rx="2.2" ry="3" />
+        <ellipse cx="19.5" cy="10" rx="2.2" ry="3" />
+        <path d="M12.5 11c-3 0-6 3.2-6 6 0 2 1.6 3 3.4 3 1.2 0 1.8-.5 2.6-.5s1.4.5 2.6.5c1.8 0 3.4-1 3.4-3 0-2.8-3-6-6-6z" />
+      </symbol>
+      <symbol id="icon-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+        <path d="M12 22s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12z" />
+        <circle cx="12" cy="10" r="2.5" />
       </symbol>
     </defs>
   </svg>
 
   <header class="hero">
     <div class="container">
-      <h1>CutePetsBoston</h1>
-      <p class="headline">Finding forever homes, one cute pet at a time.</p>
-      <p class="subheader">CutePetsBoston is a volunteer-run social media bot that shares<br />adoptable pets daily from Boston-area shelters.</p>
-      <div class="follow">
-        <span class="follow-label">Follow us:</span>
-        <nav class="social-icons" aria-label="Follow CutePetsBoston">
-        <a class="social-icon" href="https://bsky.app/profile/cutepetsboston.bsky.social" target="_blank" rel="noopener" aria-label="Bluesky">
-          <svg aria-hidden="true" focusable="false"><use href="#icon-bluesky"/></svg>
+      <nav class="site-nav" aria-label="Main">
+        <a class="site-logo" href="#top">
+          <svg class="site-logo-paw" aria-hidden="true"><use href="#icon-paw" /></svg>
+          CutePetsBoston
         </a>
-        <a class="social-icon" href="https://mastodon.social/@cutepetsboston" target="_blank" rel="me noopener" aria-label="Mastodon">
-          <svg aria-hidden="true" focusable="false"><use href="#icon-mastodon"/></svg>
-        </a>
-        <a class="social-icon" href="https://www.instagram.com/cutepetsboston/" target="_blank" rel="noopener" aria-label="Instagram">
-          <svg aria-hidden="true" focusable="false"><use href="#icon-instagram"/></svg>
-        </a>
-        </nav>
+        <div class="site-nav-links">
+          <a href="#pets">Meet the pets</a>
+          <a href="#shelters">Shelters</a>
+          <a href="#follow">Follow</a>
+          <a href="#contribute">Contribute</a>
+        </div>
+      </nav>
+
+      <div class="hero-inner">
+        <div class="hero-copy">
+          <span class="hero-badge">A new adoptable pet, every day</span>
+          <h1>Finding forever homes, one cute pet at a time.</h1>
+          <p class="hero-summary">
+            CutePetsBoston is a volunteer-run social media bot that shares adoptable pets
+            daily from Boston-area shelters.
+          </p>
+          <div class="hero-buttons">
+            <a class="hero-button" href="#pets">Meet today's pets</a>
+            <a class="hero-button hero-button-cream" href="#follow">Follow along</a>
+          </div>
+        </div>
+
+        <div class="hero-art" aria-hidden="true">
+          <div class="art-tile art-tile-dog">
+            <svg class="art-mascot"><use href="#icon-dog" /></svg>
+          </div>
+          <div class="art-tile art-tile-cat">
+            <svg class="art-mascot"><use href="#icon-cat" /></svg>
+          </div>
+          <div class="art-tile art-tile-slogan">Adopt<br />don't shop</div>
+        </div>
       </div>
     </div>
   </header>
 
-  <main class="container">
-    <section id="shelters">
+  <main>
+    <!-- Fresh from the feed: pet cards fetched from pets.json (generated by
+         the pipeline, uploaded via the publish-pages workflow). -->
+    <section id="pets" class="container section-pets">
+      <div class="section-head">
+        <div class="section-intro">
+          <h2>Fresh from the feed</h2>
+          <p>The latest pets we've shared on social media. Tap a card to see the full post.</p>
+        </div>
+        <div class="pet-filters" role="group" aria-label="Filter pets by species">
+          <button class="filter-pill is-active" data-filter="all" type="button">All pets</button>
+          <button class="filter-pill" data-filter="dog" type="button">Dogs</button>
+          <button class="filter-pill" data-filter="cat" type="button">Cats</button>
+        </div>
+      </div>
+      <div id="pet-grid" class="pet-grid">
+        <p class="section-note">Loading recent posts&hellip;</p>
+      </div>
+    </section>
+
+    <section id="shelters" class="container section-shelters">
       <h2>Featured shelters</h2>
-      <p>
+      <p class="section-intro">
         Shelters we've confirmed featuring on the feed. Our broader pet pool comes
         from <a href="https://rescuegroups.org/" target="_blank" rel="noopener">RescueGroups.org</a>
         within 50 miles of Boston, so plenty of other rescues appear too.
       </p>
-      <div id="shelter-list" class="card-grid">
-        <p class="dashboard-note">Loading shelters&hellip;</p>
+      <div id="shelter-list" class="shelter-list">
+        <p class="section-note">Loading shelters&hellip;</p>
       </div>
     </section>
 
-    <section id="recent">
-      <h2>Recent posts</h2>
-      <p>Latest pets from our <a href="https://mastodon.social/@cutepetsboston" target="_blank" rel="noopener">Mastodon</a> feed:</p>
-      <div id="post-grid" class="post-grid">
-        <p class="dashboard-note">Loading recent posts&hellip;</p>
-      </div>
-    </section>
-
-    <section id="contribute">
-      <h2>How to contribute</h2>
-      <p>
-        CutePetsBoston is a <a href="https://www.codeforboston.org/" target="_blank" rel="noopener">Code for Boston</a>
-        project. Come hack on it with us.
-      </p>
-      <div class="action-links">
-        <a class="btn btn-primary" href="https://github.com/codeforboston/CutePetsBoston/fork" target="_blank" rel="noopener">Fork on GitHub</a>
-        <a class="btn" href="https://github.com/codeforboston/CutePetsBoston" target="_blank" rel="noopener">View repo</a>
-        <a class="btn" href="https://www.meetup.com/code-for-boston/" target="_blank" rel="noopener">Code for Boston Meetup</a>
-        <a class="btn" href="https://cfb-public.slack.com/archives/C0A742DF1SP" target="_blank" rel="noopener">#cute-pets-boston on Slack</a>
+    <section id="follow" class="container section-follow">
+      <h2>Get a new face in your feed daily</h2>
+      <div class="follow-cards">
+        <a class="follow-card" href="https://www.instagram.com/cutepetsboston/" target="_blank" rel="noopener">
+          <span class="follow-name">Instagram</span>
+          <span class="follow-handle">@cutepetsboston</span>
+        </a>
+        <a class="follow-card" href="https://bsky.app/profile/cutepetsboston.bsky.social" target="_blank" rel="noopener">
+          <span class="follow-name">Bluesky</span>
+          <span class="follow-handle">@cutepetsboston.bsky.social</span>
+        </a>
+        <a class="follow-card" href="https://mastodon.social/@cutepetsboston" target="_blank" rel="me noopener">
+          <span class="follow-name">Mastodon</span>
+          <span class="follow-handle">@cutepetsboston@mastodon.social</span>
+        </a>
       </div>
     </section>
   </main>
 
-  <footer>
-    <p>
-      Made with <span aria-label="love">&hearts;</span> by
-      <a href="https://www.codeforboston.org/" target="_blank" rel="noopener">Code for Boston</a>
-      volunteers.
-    </p>
-    <p>
-      <a href="https://stats.uptimerobot.com/5SyexhEIaG" target="_blank" rel="noopener">Service status &amp; uptime &rarr;</a>
-    </p>
-  </footer>
+  <section id="contribute" class="contribute">
+    <div class="container">
+      <div class="contribute-inner">
+        <div class="contribute-copy">
+          <h2>How to contribute</h2>
+          <p>
+            CutePetsBoston is a <a href="https://www.codeforboston.org/" target="_blank" rel="noopener">Code for Boston</a>
+            project. Come hack on it with us.
+          </p>
+        </div>
+        <div class="contribute-links">
+          <a class="contribute-link contribute-link-hot" href="https://github.com/codeforboston/CutePetsBoston/fork" target="_blank" rel="noopener">Fork on GitHub</a>
+          <a class="contribute-link" href="https://github.com/codeforboston/CutePetsBoston" target="_blank" rel="noopener">View repo</a>
+          <a class="contribute-link" href="https://www.meetup.com/code-for-boston/" target="_blank" rel="noopener">Code for Boston Meetup</a>
+          <a class="contribute-link" href="https://cfb-public.slack.com/archives/C0A742DF1SP" target="_blank" rel="noopener">#cute-pets-boston on Slack</a>
+        </div>
+      </div>
+
+      <footer class="site-footer">
+        <p>
+          Made with <span aria-label="love">&hearts;</span> by
+          <a href="https://www.codeforboston.org/" target="_blank" rel="noopener">Code for Boston</a>
+          volunteers.
+        </p>
+        <p>
+          <a href="https://stats.uptimerobot.com/5SyexhEIaG" target="_blank" rel="noopener">Service status &amp; uptime &rarr;</a>
+        </p>
+      </footer>
+    </div>
+  </section>
 
   <script>
-    // Escape HTML special chars before interpolating values from JSON or the
-    // Mastodon feed into the template literals below. JS has no built-in for
-    // this, so we map each unsafe char to its HTML entity.
+    // =====================================================================
+    // Data loading: both feeds are plain JSON files next to this page.
+    //  * shelters.json  -- committed; the featured-shelter pills
+    //  * pets.json      -- generated by the pipeline on every run and
+    //                      deployed alongside the site (see pets_json.py
+    //                      and the publish-pages workflow)
+    // =====================================================================
+
+    // Escape HTML special chars before interpolating values from JSON into
+    // the template literals below. JS has no built-in for this, so we map
+    // each unsafe char to its HTML entity.
     const escapeHtml = (s) =>
       String(s).replace(/[&<>"']/g, (c) => ({
         "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
       }[c]));
 
+    // ---- Featured shelters -------------------------------------------
+
+    const shelterList = document.getElementById("shelter-list");
+
+    const shelterPillHtml = (shelter) => `
+      <a class="shelter-pill" href="${escapeHtml(shelter.url)}" target="_blank" rel="noopener">
+        <span class="shelter-name">${escapeHtml(shelter.name)}</span>
+        <span class="shelter-location">${escapeHtml(shelter.location)}</span>
+      </a>`;
+
     fetch("shelters.json")
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error("shelters.json request failed: " + r.status);
+        return r.json();
+      })
       .then(({ shelters }) => {
-        const list = document.getElementById("shelter-list");
-        list.innerHTML = shelters
-          .map(
-            (s) => `
-              <a class="card" href="${escapeHtml(s.url)}" target="_blank" rel="noopener">
-                <h3>${escapeHtml(s.name)}</h3>
-                <div class="meta">${escapeHtml(s.location)}</div>
-                <span>Visit adoptions &rarr;</span>
-              </a>`
-          )
-          .join("");
+        shelterList.innerHTML = shelters.map(shelterPillHtml).join("");
       })
       .catch(() => {
-        document.getElementById("shelter-list").innerHTML =
-          '<p class="dashboard-note">Shelter list unavailable.</p>';
+        shelterList.innerHTML =
+          '<p class="section-note">Shelter list unavailable.</p>';
       });
 
-    const MEDIA_NS = "http://search.yahoo.com/mrss/";
-    const POST_LIMIT = 6;
+    // ---- Fresh from the feed (pet cards) ------------------------------
 
-    // First image attachment on an RSS <item>, or "" if none. Caption-overflow
-    // thread replies carry no media, so this also tells main posts from replies.
-    const itemImageUrl = (item) => {
-      const mediaElements = item.getElementsByTagNameNS(MEDIA_NS, "content");
-      for (const mediaElement of mediaElements) {
-        const medium = mediaElement.getAttribute("medium");
-        if (!medium || medium === "image") {
-          const url = mediaElement.getAttribute("url") || "";
-          if (url) return url;
-        }
-      }
-      return "";
+    const PET_LIMIT = 8; // matches FEED_SIZE in pets_json.py
+    const PET_GRID_URL = "#"; // cards whose post record has no link
+
+    let pets = [];
+    let activeFilter = "all";
+
+    const petGrid = document.getElementById("pet-grid");
+
+    const emptyFeedHtml = `
+      <p class="section-note">
+        No recent posts yet.
+        <a href="https://mastodon.social/@cutepetsboston" target="_blank" rel="noopener">View our feed on Mastodon &rarr;</a>
+      </p>`;
+
+    const formatDate = (isoDate) => {
+      const date = new Date(isoDate);
+      if (Number.isNaN(date.getTime())) return "";
+      // timeZone: "UTC" so a plain date such as "2025-10-27" can't slip a
+      // day behind in timezones west of UTC.
+      return date.toLocaleDateString(undefined, {
+        month: "short", day: "numeric", timeZone: "UTC",
+      });
     };
 
-    fetch("https://mastodon.social/@cutepetsboston.rss")
+    // Photos come from the adoption listing. The species mascot always sits
+    // behind the photo: pets without one get it outright, and if a listing
+    // image ever fails to load, onerror reveals it instead of a broken frame.
+    const mascotFor = (species) =>
+      species === "dog" ? "#icon-dog"
+      : species === "cat" ? "#icon-cat"
+      : "#icon-paw";
+
+    const petPhotoHtml = (pet) => {
+      const mascotHtml = `<svg class="pet-mascot"><use href="${mascotFor(pet.species)}" /></svg>`;
+      if (!pet.image_url) {
+        return mascotHtml;
+      }
+      return `
+        ${mascotHtml}
+        <img class="pet-photo-img" src="${escapeHtml(pet.image_url)}"
+             alt="Photo of ${escapeHtml(pet.name)}" loading="lazy"
+             onerror="this.style.display = 'none'" />`;
+    };
+
+    // Chips show the structured detail the pipeline records. Anything not
+    // recorded for a pet simply doesn't get a chip.
+    const petChipsHtml = (pet) =>
+      [pet.breed, pet.age, pet.sex]
+        .filter((chip) => chip)
+        .map((chip) => `<span class="pet-chip">${escapeHtml(chip)}</span>`)
+        .join("");
+
+    const petCardHtml = (pet) => `
+      <a class="pet-card" href="${escapeHtml(pet.post_url || PET_GRID_URL)}" target="_blank" rel="noopener">
+        <div class="pet-photo">
+          <span class="pet-date-pill">${escapeHtml(formatDate(pet.posted_date))}</span>
+          ${petPhotoHtml(pet)}
+        </div>
+        <div class="pet-body">
+          <h3 class="pet-name">${escapeHtml(pet.name)}</h3>
+          <div class="pet-location">
+            <svg class="pet-pin" aria-hidden="true"><use href="#icon-pin" /></svg>
+            ${escapeHtml(pet.location)}
+          </div>
+          <p class="pet-blurb">${escapeHtml(pet.blurb)}</p>
+          <div class="pet-chips">${petChipsHtml(pet)}</div>
+        </div>
+      </a>`;
+
+    const renderPets = () => {
+      if (pets.length === 0) {
+        petGrid.innerHTML = emptyFeedHtml;
+        return;
+      }
+      const shown = pets
+        .filter((pet) => activeFilter === "all" || pet.species === activeFilter)
+        .slice(0, PET_LIMIT);
+      petGrid.innerHTML = shown.length > 0
+        ? shown.map(petCardHtml).join("")
+        : '<p class="section-note">Nothing to show for this filter yet.</p>';
+    };
+
+    const filterPills = Array.from(document.querySelectorAll(".filter-pill"));
+    filterPills.forEach((pill) => {
+      pill.addEventListener("click", () => {
+        activeFilter = pill.dataset.filter;
+        filterPills.forEach((p) => p.classList.toggle("is-active", p === pill));
+        renderPets();
+      });
+    });
+
+    fetch("pets.json")
       .then((r) => {
-        if (!r.ok) throw new Error("RSS request failed: " + r.status);
-        return r.text();
+        if (!r.ok) throw new Error("pets.json request failed: " + r.status);
+        return r.json();
       })
-      .then((xml) => {
-        const doc = new DOMParser().parseFromString(xml, "application/xml");
-        if (doc.querySelector("parsererror")) {
-          throw new Error("RSS parse error");
-        }
-        const posts = Array.from(doc.querySelectorAll("item"))
-          .map((item) => ({ item, imageUrl: itemImageUrl(item) }))
-          .filter(({ imageUrl }) => imageUrl)
-          .slice(0, POST_LIMIT);
-        const grid = document.getElementById("post-grid");
-        if (posts.length === 0) {
-          grid.innerHTML = '<p class="dashboard-note">No recent posts found.</p>';
-          return;
-        }
-        grid.innerHTML = posts
-          .map(({ item, imageUrl }) => {
-            const link = item.querySelector("link")?.textContent || "#";
-            const pubDate = item.querySelector("pubDate")?.textContent || "";
-            const dateStr = pubDate
-              ? new Date(pubDate).toLocaleDateString(undefined, {
-                  month: "short", day: "numeric",
-                })
-              : "";
-            const descHtml = item.querySelector("description")?.textContent || "";
-            // Strip HTML to get plain-text caption
-            const tmp = document.createElement("div");
-            tmp.innerHTML = descHtml;
-            const text = (tmp.textContent || "").trim();
-            const caption = text.length > 140 ? text.slice(0, 137) + "…" : text;
-            const imageTag = `<img class="post-image" src="${escapeHtml(imageUrl)}" alt="" loading="lazy" />`;
-            return `
-              <a class="post-card" href="${escapeHtml(link)}" target="_blank" rel="noopener">
-                ${imageTag}
-                <div class="post-body">
-                  <div class="post-caption">${escapeHtml(caption) || "View post"}</div>
-                  <div class="meta">${escapeHtml(dateStr)}</div>
-                </div>
-              </a>`;
-          })
-          .join("");
+      .then((parsed) => {
+        // Anything that is not a list of cards means no feed today.
+        pets = Array.isArray(parsed) ? parsed : [];
+        renderPets();
       })
       .catch((err) => {
-        document.getElementById("post-grid").innerHTML = `
-          <p class="dashboard-note">
-            Couldn't load recent posts.
-            <a href="https://mastodon.social/@cutepetsboston" target="_blank" rel="noopener">View on Mastodon &rarr;</a>
-          </p>`;
-        console.error("Failed to load Mastodon feed:", err);
+        pets = [];
+        renderPets();
+        console.error("Failed to load the pets feed:", err);
       });
   </script>
 </body>
