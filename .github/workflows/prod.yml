@@ -98,6 +98,17 @@ jobs:
           retention-days: 14
           archive: false
 
+      - name: Upload homepage pets feed artifact
+        # pets_json.py writes pets.json every run (issue #190), so the
+        # freshly rebuilt card data is recorded the same way as
+        # dashboard.html -- regardless of whether posting succeeded.
+        if: ${{ !cancelled() && hashFiles('pets.json') != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          path: pets.json
+          retention-days: 14
+          archive: false
+
       - name: Upload redirect mapping
         # Handed to publish-redirects, which merges it into the authoritative
         # copy on gh-pages. Absent when nothing was minted, which that job
@@ -131,3 +142,4 @@ jobs:
     with:
       mapping_artifact: redirects.json
       analytics_artifact: dashboard.html
+      pets_artifact: pets.json
