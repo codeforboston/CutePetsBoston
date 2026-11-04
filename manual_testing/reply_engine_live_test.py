@@ -149,7 +149,9 @@ def instagram_test() -> dict:
 
 
 def main() -> None:
-    results = {"Bluesky": {"status": "blocked", "reason": "No Bluesky test-account secrets configured"}}
+    results: dict[str, dict] = {
+        "Bluesky": {"status": "blocked", "reason": "No Bluesky test-account secrets configured"}
+    }
     for name, run in (("Mastodon", mastodon_test), ("Instagram", instagram_test)):
         try:
             results[name] = run()

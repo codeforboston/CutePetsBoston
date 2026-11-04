@@ -1,5 +1,5 @@
 name: Controlled reply engine test
-# Test tokens are normalized before use; no production-account fallback.
+# Test tokens are normalized before use; API access failures are reported separately.
 
 on:
   push:
