@@ -8,6 +8,8 @@ import time
 from pathlib import Path
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -19,7 +21,12 @@ RESULT = Path("comment-reply-test-results.json")
 
 
 def call(method: str, url: str, **kwargs) -> dict:
-    response = requests.request(method, url, timeout=25, **kwargs)
+    if method == "GET":
+        with requests.Session() as session:
+            session.mount("https://", HTTPAdapter(max_retries=Retry(total=2, backoff_factor=1)))
+            response = session.get(url, timeout=25, **kwargs)
+    else:
+        response = requests.request(method, url, timeout=25, **kwargs)
     response.raise_for_status()
     return response.json()
 

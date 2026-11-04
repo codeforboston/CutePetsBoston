@@ -1,4 +1,5 @@
 name: Controlled comment-to-reply test
+# Retry account verification reads after a transient Mastodon timeout.
 
 on:
   push:
