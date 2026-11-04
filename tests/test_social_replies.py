@@ -238,8 +238,9 @@ def test_instagram_send_targets_comment_replies_not_media(monkeypatch):
     assert post.call_args.kwargs["data"] == {"message": "Woof! 🐶"}
 
 
-def test_mastodon_send_mentions_author_and_preserves_visibility(monkeypatch):
-    monkeypatch.setenv("MASTODON_TOKEN", "test-token")
+@pytest.mark.parametrize("token", ["test-token", " test-token\n"])
+def test_mastodon_send_mentions_author_and_preserves_visibility(monkeypatch, token):
+    monkeypatch.setenv("MASTODON_TOKEN", token)
     incoming = comment(context={"visibility": "unlisted"})
     with patch("requests.post") as post:
         post.return_value.json.return_value = {"id": "sent"}
@@ -252,3 +253,4 @@ def test_mastodon_send_mentions_author_and_preserves_visibility(monkeypatch):
         "visibility": "unlisted",
     }
     assert args["headers"]["Idempotency-Key"] == incoming.key
+    assert args["headers"]["Authorization"] == "Bearer test-token"

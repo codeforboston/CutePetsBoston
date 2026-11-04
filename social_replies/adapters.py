@@ -126,7 +126,7 @@ class MastodonReplies:
         return comments
 
     def reply(self, comment: Comment, text: str) -> PostResult:
-        token = os.environ.get("MASTODON_TOKEN")
+        token = (os.environ.get("MASTODON_TOKEN") or "").strip()
         if not token:
             return PostResult(success=False, error_message="Mastodon token missing")
         response = requests.post(
