@@ -1,0 +1,72 @@
+name: Instagram reply credential test
+
+on:
+  push:
+    branches: [codex/test-comment-replies-174]
+    paths: [.github/workflows/instagram-reply-access-test.yml]
+
+permissions:
+  contents: read
+
+jobs:
+  access:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@v9.0.0
+      - run: uv sync --locked
+      - name: Check both Instagram accounts without exposing credentials
+        env:
+          PROD_ID: ${{ secrets.INSTAGRAM_BUSINESS_ACCOUNT_ID }}
+          PROD_TOKEN: ${{ secrets.INSTAGRAM_PAGE_ACCESS_TOKEN }}
+          TEST_ID: ${{ secrets.INSTAGRAM_TEST_BUSINESS_ACCOUNT_ID }}
+          TEST_TOKEN: ${{ secrets.INSTAGRAM_TEST_PAGE_ACCESS_TOKEN }}
+        run: |
+          uv run --locked python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          import requests
+          from social_posters.instagram import GRAPH_API_BASE
+
+          results = {}
+          for name in ('PROD', 'TEST'):
+              account_id = os.environ[name + '_ID'].strip()
+              token = os.environ[name + '_TOKEN'].strip()
+              if not account_id or not token:
+                  results[name] = {'status': 'blocked', 'reason': 'Missing credentials'}
+                  continue
+              response = requests.get(
+                  f'{GRAPH_API_BASE}/{account_id}',
+                  headers={'Authorization': f'Bearer {token}'},
+                  params={'fields': 'id,username'}, timeout=25,
+              )
+              if response.ok:
+                  results[name] = {'status': 'authenticated', 'username': response.json().get('username')}
+              else:
+                  error = response.json().get('error', {})
+                  message = str(error.get('message', ''))
+                  for key in ('PROD_TOKEN', 'TEST_TOKEN'):
+                      secret = os.environ.get(key)
+                      if secret:
+                          message = message.replace(secret, '[redacted]')
+                  results[name] = {
+                      'status': 'blocked', 'http_status': response.status_code,
+                      'api_code': error.get('code'), 'api_message': message[:500],
+                  }
+          rendered = json.dumps(results, indent=2)
+          print(rendered)
+          Path('instagram-reply-access.json').write_text(rendered)
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
+              summary.write('Instagram credential check\n\n```json\n' + rendered + '\n```\n')
+          PY
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: instagram-reply-access
+          path: instagram-reply-access.json
+          retention-days: 7
