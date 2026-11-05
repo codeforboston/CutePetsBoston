@@ -1,9 +1,8 @@
 name: Publish Pages
 
-# Reusable workflow (RFC 0001). Assembles web/ plus the redirect mapping,
-# the analytics page and the homepage pets feed, then deploys GitHub Pages.
-# When handed any of those artifacts it also records the freshly generated
-# Pages asset on the gh-pages branch.
+# Reusable workflow (RFC 0001). Assembles web/ plus the redirect mapping and
+# analytics page, then deploys GitHub Pages. When handed either artifact it also
+# records the freshly generated Pages asset on the gh-pages branch.
 #
 # Lives in its own workflow rather than a composite action for two reasons:
 #   * a composite action runs inside the CALLING job and inherits its token, so
@@ -12,7 +11,7 @@ name: Publish Pages
 #     two Pages deployments from overlapping.
 #
 # The CALLING job must grant:
-#   contents: write  -- only when passing a mapping/analytics/pets artifact
+#   contents: write  -- only when passing a mapping or analytics artifact
 #                         (push to gh-pages)
 #   pages: write     -- deploy Pages
 #   id-token: write  -- OIDC for actions/deploy-pages
@@ -27,11 +26,6 @@ on:
         default: ''
       analytics_artifact:
         description: 'Artifact holding a fresh dashboard.html. Empty = keep the existing page.'
-        type: string
-        required: false
-        default: ''
-      pets_artifact:
-        description: 'Artifact holding a fresh pets.json homepage feed. Empty = keep the existing data.'
         type: string
         required: false
         default: ''
@@ -71,14 +65,6 @@ jobs:
           name: ${{ inputs.analytics_artifact }}
           path: analytics
 
-      - name: Download freshly built pets feed
-        if: ${{ inputs.pets_artifact != '' }}
-        continue-on-error: true # a missing artifact keeps the last good data
-        uses: actions/download-artifact@v8
-        with:
-          name: ${{ inputs.pets_artifact }}
-          path: pets-feed
-
       - name: Checkout gh-pages (redirect mapping and analytics page)
         continue-on-error: true # the branch does not exist on the very first run
         uses: actions/checkout@v6
@@ -112,7 +98,7 @@ jobs:
           echo "Mapping now holds $(jq 'length' merged.json || echo '?') redirect(s)."
 
       - name: Record Pages assets on gh-pages
-        if: ${{ inputs.mapping_artifact != '' || inputs.analytics_artifact != '' || inputs.pets_artifact != '' }}
+        if: ${{ inputs.mapping_artifact != '' || inputs.analytics_artifact != '' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -126,9 +112,6 @@ jobs:
           if [ -f analytics/dashboard.html ]; then
             cp analytics/dashboard.html gh-pages/dashboard.html
           fi
-          if [ -f pets-feed/pets.json ]; then
-            cp pets-feed/pets.json gh-pages/pets.json
-          fi
           cd gh-pages
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -139,9 +122,6 @@ jobs:
           git add -f redirects.json
           if [ -f dashboard.html ]; then
             git add -f dashboard.html
-          fi
-          if [ -f pets.json ]; then
-            git add -f pets.json
           fi
           if git diff --cached --quiet; then
             echo "No new redirects to record."
@@ -165,14 +145,6 @@ jobs:
           cp merged.json _site/redirects.json
           if [ -f gh-pages/dashboard.html ]; then
             cp gh-pages/dashboard.html _site/dashboard.html
-          fi
-          # The pets feed is a generated asset with no committed copy (see
-          # .gitignore), so the gh-pages record is the only source here. Which
-          # version it holds follows from the steps above: a posting run just
-          # overwrote it with the fresh download, while a web-only push
-          # redeploys the last good data instead of shipping a broken fetch.
-          if [ -f gh-pages/pets.json ]; then
-            cp gh-pages/pets.json _site/pets.json
           fi
 
       - name: Upload Pages artifact
