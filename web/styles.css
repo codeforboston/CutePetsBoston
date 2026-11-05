@@ -355,6 +355,9 @@ h2 {
   position: absolute;
   left: 14px;
   top: 14px;
+  /* Above the photo, which fills the tile in an absolutely-positioned
+     <img> rendered later in the DOM. */
+  z-index: 1;
   background: var(--cream);
   border: var(--border);
   border-radius: var(--radius-pill);
