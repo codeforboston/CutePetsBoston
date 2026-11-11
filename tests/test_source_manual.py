@@ -16,6 +16,7 @@ class SourceManualTests(unittest.TestCase):
         for pet in pets:
             self.assertTrue(pet.image_urls)
             self.assertTrue(pet.adoption_url)
+            self.assertFalse(pet.description.__contains__("&nbsp;"))
 
 
 if __name__ == "__main__":
