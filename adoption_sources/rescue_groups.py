@@ -13,6 +13,7 @@ from collections.abc import Sequence
 from typing import Iterator, overload
 
 import requests
+from bs4 import BeautifulSoup
 from ftfy import fix_and_explain
 from pydantic import BaseModel, ValidationError
 from requests.adapters import HTTPAdapter
@@ -236,8 +237,11 @@ class SourceRescueGroups(PetSource):
                 animal_id,
             )
 
-            # Clean up description (use text version, not HTML)
-            description = self._clean_description(attrs.get("descriptionText", ""), animal_id=animal_id)
+            # descriptionText can join words across stripped HTML boundaries
+            # (#177). Recover those separators from the HTML when available.
+            description = self._clean_html_description(attrs.get("descriptionHtml", ""), animal_id=animal_id)
+            if not description:
+                description = self._clean_description(attrs.get("descriptionText", ""), animal_id=animal_id)
 
             # Get adoption_url
             org_id = animal.get("relationships", {}).get("orgs", {}).get("data", [{}])[0].get("id")
@@ -349,7 +353,31 @@ class SourceRescueGroups(PetSource):
         cleaned = re.split(r"\s*[\*\-\|]+\s*", name)[0]
         return cleaned.strip()
 
-    def _clean_description(self, description: str, animal_id: str = "unknown") -> str:
+    def _clean_html_description(self, description: str, animal_id: str = "unknown") -> str:
+        """Convert shelter HTML to plain text, retaining structural breaks."""
+        if not description:
+            return ""
+
+        soup = BeautifulSoup(description, "html.parser")
+        for tag in soup(["script", "style"]):
+            tag.decompose()
+        # Whitespace in HTML source is not a displayed line break. Normalize
+        # it before adding breaks from the elements themselves.
+        for text in list(soup.strings):
+            text.replace_with(re.sub(r"\s+", " ", str(text)))
+        for tag in soup.find_all("br"):
+            tag.replace_with("\n")
+        for tag in soup.find_all(["p", "div", "blockquote", "h1", "h2", "h3", "h4", "h5", "h6"]):
+            tag.insert_before("\n\n")
+            tag.append("\n\n")
+        for tag in soup.find_all("li"):
+            tag.append("\n")
+
+        return self._clean_description(soup.get_text(), animal_id=animal_id, preserve_line_breaks=True)
+
+    def _clean_description(
+        self, description: str, animal_id: str = "unknown", *, preserve_line_breaks: bool = False
+    ) -> str:
         """Clean up description text."""
         if not description:
             return ""
@@ -364,7 +392,11 @@ class SourceRescueGroups(PetSource):
 
         # Remove &nbsp; and normalize whitespace
         text = text.replace("&nbsp;", " ")
-        text = re.sub(r"\s+", " ", text)
+        if preserve_line_breaks:
+            text = "\n".join(re.sub(r"\s+", " ", line).strip() for line in text.splitlines())
+            text = re.sub(r"\n{3,}", "\n\n", text).strip()
+        else:
+            text = re.sub(r"\s+", " ", text)
 
         # Remove promotional headers
         text = re.sub(r"\*\*Home for the Holidays.*?\*\*", "", text, flags=re.IGNORECASE)
