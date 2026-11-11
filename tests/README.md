@@ -17,20 +17,20 @@ This directory contains the test suite for CutePetsBoston.
 
 ### With pytest (recommended)
 
-If you have pytest installed:
+Install uv as described in the main README, then:
 
 ```bash
 # Install dependencies
-pip install -r requirements.txt
+make install
 
 # Run all tests
-pytest tests/ -v
+uv run --locked pytest tests/ -v
 
 # Run specific test file
-pytest tests/test_pets.py -v
+uv run --locked pytest tests/test_pets.py -v
 
 # Run with coverage
-pytest tests/ --cov=abstractions --cov=main --cov-report=html
+uv run --locked --with pytest-cov pytest tests/ --cov=abstractions --cov=main --cov-report=html
 ```
 
 ## Test Categories
@@ -110,7 +110,7 @@ The test suite covers:
 
 ## Dependencies
 
-- `pytest` (optional but recommended)
-- `pytest-cov` (for coverage reports)
+- `pytest` and `hypothesis` (installed by `make install`)
+- `pytest-cov` (provided temporarily by `--with` for the optional coverage command)
 - Standard library modules: `json`, `pathlib`, `typing`, `unittest.mock`
 

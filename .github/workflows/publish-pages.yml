@@ -29,6 +29,11 @@ on:
         type: string
         required: false
         default: ''
+      staging_analytics_artifact:
+        description: 'Artifact holding a fresh STAGING dashboard.html(served at /staging/dashboard.html). Empty = keep the existing page.'
+        type: string
+        required: false
+        default: ''
 
 jobs:
   publish:
@@ -65,6 +70,23 @@ jobs:
           name: ${{ inputs.analytics_artifact }}
           path: analytics
 
+        # staging new analytics page step
+      - name: Download newly generated staging analytics page
+        if: ${{ inputs.staging_analytics_artifact != '' }}
+        continue-on-error: true # a missing artifact keeps the last good page
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ inputs.staging_analytics_artifact }}
+          path: staging_analytics
+
+      - name: Checkout staging branch (staging website source)
+        continue-on-error: true # the branch does not exist on the very first run
+        uses: actions/checkout@v6
+        with:
+          ref: staging
+          path: staging-analytics
+          sparse-checkout: web
+
       - name: Checkout gh-pages (redirect mapping and analytics page)
         continue-on-error: true # the branch does not exist on the very first run
         uses: actions/checkout@v6
@@ -98,7 +120,7 @@ jobs:
           echo "Mapping now holds $(jq 'length' merged.json || echo '?') redirect(s)."
 
       - name: Record Pages assets on gh-pages
-        if: ${{ inputs.mapping_artifact != '' || inputs.analytics_artifact != '' }}
+        if: ${{ inputs.mapping_artifact != '' || inputs.analytics_artifact != '' || inputs.staging_analytics_artifact != '' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -112,6 +134,10 @@ jobs:
           if [ -f analytics/dashboard.html ]; then
             cp analytics/dashboard.html gh-pages/dashboard.html
           fi
+          if [ -f staging-analytics/dashboard.html ]; then
+            mkdir -p gh-pages/staging
+            cp staging-analytics/dashboard.html gh-pages/staging/dashboard.html
+          fi
           cd gh-pages
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -122,6 +148,9 @@ jobs:
           git add -f redirects.json
           if [ -f dashboard.html ]; then
             git add -f dashboard.html
+          fi
+          if [ -f staging/dashboard.html ]; then
+            git add -f staging/dashboard.html
           fi
           if git diff --cached --quiet; then
             echo "No new redirects to record."
@@ -145,6 +174,16 @@ jobs:
           cp merged.json _site/redirects.json
           if [ -f gh-pages/dashboard.html ]; then
             cp gh-pages/dashboard.html _site/dashboard.html
+          fi
+
+          # staging preview at /staging/
+          mkdir -p _site/staging
+          if [ -d staging-src/web ]; then
+            cp -r staging-src/web/. _site/staging/
+            rm -f _site/staging/CNAME
+          fi
+          if [ -f gh-pages/staging/dashboard.html ]; then
+            cp gh-pages/staging/dashboard.html _site/staging/dashboard.html
           fi
 
       - name: Upload Pages artifact

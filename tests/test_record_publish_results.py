@@ -1,9 +1,14 @@
 import json
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from types import SimpleNamespace
 
 from abstractions import AdoptablePet, PostResult
 from main import pick_pet, record_publish_results
+
+
+@dataclass
+class FakePlatform:
+    platform_name: str
 
 
 def make_pet(pet_id="pet-123", name="Poppy"):
@@ -56,8 +61,8 @@ def test_pick_pet_does_not_create_a_missing_database(tmp_path):
 def test_records_pet_and_one_post_per_successful_publish(tmp_path):
     database_path = tmp_path / "database.json"
     pet = make_pet()
-    bluesky = SimpleNamespace(platform_name="Bluesky")
-    mastodon = SimpleNamespace(platform_name="Mastodon")
+    bluesky = FakePlatform(platform_name="Bluesky")
+    mastodon = FakePlatform(platform_name="Mastodon")
 
     record_publish_results(
         pet,
@@ -95,7 +100,7 @@ def test_records_pet_and_one_post_per_successful_publish(tmp_path):
 
 def test_records_pet_when_all_publishes_fail(tmp_path):
     database_path = tmp_path / "database.json"
-    poster = SimpleNamespace(platform_name="Mastodon")
+    poster = FakePlatform(platform_name="Mastodon")
 
     record_publish_results(
         make_pet(),

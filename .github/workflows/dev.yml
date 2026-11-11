@@ -37,11 +37,15 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.14"
-          cache: 'pip'
+          python-version-file: ".python-version"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v9.0.0
+        with:
+          enable-cache: true
 
       - name: Install dependencies
-        run: pip install --break-system-packages -r requirements.txt
+        run: uv sync --locked --no-dev
 
       - name: Get Previous Run ID
         continue-on-error: true 
@@ -77,6 +81,9 @@ jobs:
           MASTODON_TOKEN: ${{ secrets.MASTODON_TEST_TOKEN }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           APP_ENV: dev
+          CITY_NAME: ${{ vars.CITY_NAME }}
+          CITY_STATE: ${{ vars.CITY_STATE }}
+          POSTAL_CODE: ${{ vars.POSTAL_CODE }}
           DEBUG_SOURCES: ${{ github.event_name != 'workflow_dispatch' || inputs.debugsources }}
           DEBUG_POSTERS: ${{ github.event_name != 'workflow_dispatch' || inputs.debugposters }}
         run: |
@@ -84,7 +91,7 @@ jobs:
           FLAGS=""
           if [ "$DEBUG_SOURCES" = "true" ]; then FLAGS="$FLAGS --debugsources"; fi
           if [ "$DEBUG_POSTERS" = "true" ]; then FLAGS="$FLAGS --debugposters"; fi
-          python ./main.py $FLAGS
+          uv run --locked --no-dev python ./main.py $FLAGS
 
       - name: Upload database artifact
         uses: actions/upload-artifact@v7

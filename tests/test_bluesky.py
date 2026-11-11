@@ -1,3 +1,5 @@
+import pytest
+
 from abstractions import AdoptablePet, Post
 from social_posters.bluesky import PosterBluesky
 
@@ -45,7 +47,7 @@ class TestBuildTextAndFacets:
         """Without preserving the URL suffix, body[:max_body] would drop the link entirely."""
         url = "https://www.rescuegroups.org/html/sa_details.html?id=12345"
         tags = ["AdoptDontShop", "Boston", "DogsOfBluesky"]
-        tags_section = " ".join(f"#{t}" for t in tags)
+        tags_section = "#DogsOfBluesky"
         filler = "x" * 400
         post = Post(text=f"{filler}\n\n{url}", tags=tags, link=url)
         text, facets = self.poster._build_text_and_facets(post)
@@ -60,7 +62,7 @@ class TestBuildTextAndFacets:
     def test_url_that_crosses_body_limit_is_preserved_with_tags(self):
         url = "https://www.smalldogrescuene.org/adoptable-dogs/#action_0=pet&animalID_0=22537020&petIndex_0=-1"
         tags = ["AdoptDontShop", "Boston", "Cranston", "DogsOfBluesky"]
-        tags_section = " ".join(f"#{t}" for t in tags)
+        tags_section = "#Cranston #DogsOfBluesky"
         body = (
             "Hi, I'm Glandis in TX! I'm a Chihuahua / Mixed (short coat) "
             "looking for a forever home in Cranston, RI.\n\n"
@@ -95,6 +97,50 @@ class TestBuildTextAndFacets:
             assert facet["features"][0]["$type"] == "app.bsky.richtext.facet#tag"
             assert facet["features"][0]["tag"] == tag_name
 
+    @pytest.mark.parametrize("overflow", [0, 1])
+    def test_generic_tags_are_dropped_only_when_post_exceeds_limit(self, overflow):
+        tags = ["AdoptDontShop", "Boston", "CatsOfBluesky", "Siamese"]
+        suffix = "\n\n#AdoptDontShop #Boston #CatsOfBluesky #Siamese"
+        body = "x" * (300 - len(suffix) + overflow)
+        post = Post(text=body, tags=tags)
+        text, facets = self.poster._build_text_and_facets(post)
+
+        expected_tags = tags if overflow == 0 else ["CatsOfBluesky", "Siamese"]
+        assert text == body + "\n\n" + " ".join(f"#{tag}" for tag in expected_tags)
+        assert [facet["features"][0]["tag"] for facet in facets] == expected_tags
+        assert post.tags == tags
+        assert len(text) <= 300
+
+    def test_remaining_overflow_trims_body_but_preserves_link_and_breed(self):
+        url = "https://example.com/adopt/mia"
+        post = Post(
+            text="x" * 400 + "\n\n" + url,
+            link=url,
+            tags=["AdoptDontShop", "Boston", "CatsOfBluesky", "Siamese"],
+        )
+        text, facets = self.poster._build_text_and_facets(post)
+        assert len(text) <= 300
+        assert url in text
+        assert text.endswith("\n\n#CatsOfBluesky #Siamese")
+        assert [facet["features"][0].get("tag") for facet in facets] == [None, "CatsOfBluesky", "Siamese"]
+
+    def test_oversized_breed_tag_cannot_overflow_or_displace_adoption_link(self):
+        url = "https://example.com/adopt/mia"
+        post = Post(
+            text=f"Adopt Mia! {url}",
+            link=url,
+            tags=["AdoptDontShop", "Boston", "CatsOfBluesky", "x" * 300],
+        )
+        text, facets = self.poster._build_text_and_facets(post)
+        assert len(text) <= 300
+        assert url in text
+        assert text.endswith("\n\n#CatsOfBluesky")
+        encoded = text.encode("utf-8")
+        for facet in facets:
+            feature = facet["features"][0]
+            target = "#" + feature["tag"] if "tag" in feature else feature["uri"]
+            assert encoded[facet["index"]["byteStart"] : facet["index"]["byteEnd"]] == target.encode("utf-8")
+
 
 class TestFormatPost:
     def setup_method(self):
@@ -106,3 +152,44 @@ class TestFormatPost:
 
         assert "DogsOfBluesky" in self.poster.format_post(dog).tags
         assert "CatsOfBluesky" in self.poster.format_post(cat).tags
+
+    @pytest.mark.parametrize(
+        ("breed", "expected"),
+        [
+            ("Siamese / Mixed", ["Siamese"]),
+            ("Domestic Short Hair (medium coat)", ["DomesticShortHair"]),
+            ("Siamese / Persian / Mixed", ["Siamese", "Persian"]),
+            ("Siamese / siamese / Mixed (short coat)", ["Siamese"]),
+            (None, ["purr"]),
+            ("", ["purr"]),
+            ("   ", ["purr"]),
+            ("Mixed", ["purr"]),
+            ("Unknown", ["purr"]),
+        ],
+    )
+    def test_cat_breed_tags(self, breed, expected):
+        assert self.poster._cat_breed_tags(breed) == expected
+
+    def test_cat_breed_tag_is_published_as_a_facet_within_text_budget(self):
+        cat = AdoptablePet(
+            name="Mia",
+            species="cat",
+            breed="Siamese / Mixed",
+            location="Boston, MA",
+            description="A friendly cat. " * 30,
+            adoption_url="https://example.com/adopt/mia",
+        )
+        text, facets = self.poster._build_text_and_facets(self.poster.format_post(cat))
+        assert text.endswith("#CatsOfBluesky #Siamese")
+        assert cat.adoption_url is not None
+        assert cat.adoption_url in text
+        assert len(text) <= 300
+        assert any(facet["features"][0].get("tag") == "Siamese" for facet in facets)
+
+    def test_dog_hashtags_do_not_include_cat_breed_or_fallback(self):
+        dog = AdoptablePet(name="Rex", species="dog", breed="Lab", location="Boston, MA")
+        assert [tag for tag in self.poster.format_post(dog).tags if tag] == [
+            "AdoptDontShop",
+            "Boston",
+            "DogsOfBluesky",
+        ]

@@ -2,19 +2,20 @@ import logging
 import mimetypes
 import os
 import pprint
+import re
 from datetime import datetime, timezone
 from urllib.parse import urlparse
 
 import requests
 
-from abstractions import Post, PostResult, SocialPoster
+from abstractions import AdoptablePet, Post, PostResult, SocialPoster
 from config import CITY_HASHTAGS, CITY_NAME, CITY_STATE
 
 logger = logging.getLogger(__name__)
 
 
 class PosterBluesky(SocialPoster):
-    def __init__(self):
+    def __init__(self) -> None:
         # Handle environment variable validation internally
         self.username = os.environ.get("BLUESKY_HANDLE")
         self.password = os.environ.get("BLUESKY_PASSWORD")
@@ -150,9 +151,7 @@ class PosterBluesky(SocialPoster):
             logger.info("Bluesky publish result: %s", pprint.pformat(result))
             return result
 
-    def format_post(self, pet):
-        from abstractions import Post
-
+    def format_post(self, pet: AdoptablePet) -> Post:
         name = pet.name.split("*")[0].strip()
 
         text = f"Hi, I'm {name}! I'm a {pet.breed} looking for a forever home"
@@ -183,6 +182,8 @@ class PosterBluesky(SocialPoster):
 
         species_tag = f"{pet.species.capitalize()}sOfBluesky"
         tags = ["AdoptDontShop", *CITY_HASHTAGS, city, species_tag]
+        if pet.species.lower() == "cat":
+            tags.extend(self._cat_breed_tags(pet.breed))
 
         photos = pet.image_urls
         return Post(
@@ -193,6 +194,22 @@ class PosterBluesky(SocialPoster):
             tags=tags,
         )
 
+    @staticmethod
+    def _cat_breed_tags(breed: str | None) -> list[str]:
+        """Turn each named cat breed into a hashtag, omitting coat notes and mix labels."""
+        tags: list[str] = []
+        for part in (breed or "").split("/"):
+            name = re.sub(r"\([^)]*\)", "", part)
+            name = re.sub(r"\b(?:mixed|mix)\b", "", name, flags=re.IGNORECASE).strip()
+            tag = "".join(character for character in name if character.isalnum())
+            if (
+                tag
+                and tag.casefold() not in {"unknown", "unspecified", "other"}
+                and tag.casefold() not in {existing.casefold() for existing in tags}
+            ):
+                tags.append(tag)
+        return tags or ["purr"]
+
     def _build_text_and_facets(self, post: Post) -> tuple[str, list]:
         body = post.text
         facets: list = []
@@ -201,6 +218,18 @@ class PosterBluesky(SocialPoster):
 
         tag_strings = [f"#{tag}" for tag in (post.tags) if tag]
         tags_section = " ".join(tag_strings)
+        if len(body) + (len(separator) + len(tags_section) if tags_section else 0) > limit:
+            # Keep the pet-specific tags before cutting any of its description.
+            tag_strings = [tag for tag in tag_strings if tag.casefold() not in {"#adoptdontshop", "#boston"}]
+            tags_section = " ".join(tag_strings)
+
+        # Even an unusually long breed tag must leave room for the adoption URL.
+        # Remove trailing tags only when the tags and URL cannot fit together.
+        link_length = len(post.link) if post.link and post.link in body else 0
+        while tag_strings and len(separator) + len(tags_section) + link_length > limit:
+            tag_strings.pop()
+            tags_section = " ".join(tag_strings)
+
         # Truncate body so the full text (body + separators + tags) fits in limit chars.
         max_body = limit - (len(separator) + len(tags_section) if tags_section else 0)
         # When the link URL is embedded in the body and would be truncated,

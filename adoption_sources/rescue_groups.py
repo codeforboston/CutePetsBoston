@@ -10,10 +10,11 @@ import os
 import pprint
 import re
 from collections.abc import Sequence
-from typing import Iterator
+from typing import Iterator, overload
 
 import requests
 from bs4 import BeautifulSoup
+from ftfy import fix_and_explain
 from pydantic import BaseModel, ValidationError
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
@@ -112,7 +113,7 @@ class SourceRescueGroups(PetSource):
         species: Sequence[str] | None = None,
         limit: int = RESCUEGROUPS_LIMIT,
         location_label: str = f"{CITY_NAME}, {CITY_STATE}",
-    ):
+    ) -> None:
         self._api_key = api_key or os.environ.get("CUTEPETSBOSTON_RESCUEGROUPS_API_KEY")
         self.postal_code = postal_code
         self.radius_miles = radius_miles
@@ -215,7 +216,7 @@ class SourceRescueGroups(PetSource):
             animal_id = animal.get("id", "")
 
             # Extract and clean the name
-            name = self._clean_name(attrs.get("name", "Unknown"))
+            name = self._clean_name(attrs.get("name", "Unknown"), animal_id=animal_id)
 
             # Determine species from the included species relationship
             species_id = animal.get("relationships", {}).get("species", {}).get("data", [{}])[0].get("id")
@@ -230,7 +231,11 @@ class SourceRescueGroups(PetSource):
             species = SPECIES_SINGULAR[normalized_plural]
 
             # Get breed info
-            breed = attrs.get("breedString", attrs.get("breedPrimary", "Mixed"))
+            breed = self._repair_mojibake(
+                attrs.get("breedString", attrs.get("breedPrimary", "Mixed")),
+                "breed",
+                animal_id,
+            )
 
             # descriptionText can join words across stripped HTML boundaries
             # (#177). Recover those separators from the HTML when available.
@@ -270,7 +275,12 @@ class SourceRescueGroups(PetSource):
                 image_urls = select_image_urls([thumbnail] if thumbnail else [])
 
             # Location of the adoption org
-            location = f"{org_attrs.get('city')}, {org_attrs.get('state')}"
+            location = self._repair_mojibake(
+                f"{org_attrs.get('city')}, {org_attrs.get('state')}",
+                "location",
+                org_id or "unknown",
+                "organization",
+            )
 
             return AdoptablePet(
                 name=name,
@@ -293,7 +303,42 @@ class SourceRescueGroups(PetSource):
     def _is_placeholder_name(self, name: str) -> bool:
         return name.lower() in PLACEHOLDER_NAMES
 
-    def _clean_name(self, name: str) -> str:
+    @overload
+    def _repair_mojibake(self, text: str, field: str, entity_id: str, entity_type: str = "animal") -> str: ...
+
+    @overload
+    def _repair_mojibake(self, text: None, field: str, entity_id: str, entity_type: str = "animal") -> None: ...
+
+    def _repair_mojibake(
+        self,
+        text: str | None,
+        field: str,
+        entity_id: str,
+        entity_type: str = "animal",
+    ) -> str | None:
+        """Apply ftfy's complete set of repairs to RescueGroups display text.
+
+        This deliberately uses ftfy's default configuration, including its
+        mixed/lossy encoding recovery and general Unicode cleanup. The complete
+        ``ExplainedText`` result is logged whenever ftfy changes a value.
+        """
+        if not text:
+            return text
+
+        result = fix_and_explain(text)
+        repaired = result.text
+        if repaired != text:
+            logger.info(
+                "Fixed RescueGroups %s for %s %s: ftfy_result=%r",
+                field,
+                entity_type,
+                entity_id,
+                result,
+            )
+            return repaired
+        return text
+
+    def _clean_name(self, name: str, animal_id: str = "unknown") -> str:
         """
         Clean up pet name by removing promotional text.
 
@@ -301,6 +346,8 @@ class SourceRescueGroups(PetSource):
             "Doli ***Home for the Holidays 1/2 price!" -> "Doli"
             "Kathy" -> "Kathy"
         """
+        name = self._repair_mojibake(name, "name", animal_id)
+
         # Remove common promotional suffixes
         # Split on common delimiters and take the first part
         cleaned = re.split(r"\s*[\*\-\|]+\s*", name)[0]
@@ -333,8 +380,13 @@ class SourceRescueGroups(PetSource):
         if not description:
             return ""
 
-        # Decode HTML entities
+        # Decode HTML entities first, so mojibake that arrived entity-encoded
+        # (&#226;&euro;&trade;) is repairable too.
         text = html.unescape(description)
+        # A description may combine paragraphs copied from systems with
+        # different encodings. Treat natural line boundaries independently so
+        # ftfy can assess each paragraph on its own.
+        text = "".join(self._repair_mojibake(line, "description", animal_id) for line in text.splitlines(keepends=True))
 
         # Remove &nbsp; and normalize whitespace
         text = text.replace("&nbsp;", " ")
