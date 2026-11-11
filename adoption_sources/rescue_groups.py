@@ -239,9 +239,9 @@ class SourceRescueGroups(PetSource):
 
             # descriptionText can join words across stripped HTML boundaries
             # (#177). Recover those separators from the HTML when available.
-            description = self._clean_html_description(attrs.get("descriptionHtml", ""))
+            description = self._clean_html_description(attrs.get("descriptionHtml", ""), animal_id=animal_id)
             if not description:
-                description = self._clean_description(attrs.get("descriptionText", ""))
+                description = self._clean_description(attrs.get("descriptionText", ""), animal_id=animal_id)
 
             # Get adoption_url
             org_id = animal.get("relationships", {}).get("orgs", {}).get("data", [{}])[0].get("id")
@@ -353,7 +353,7 @@ class SourceRescueGroups(PetSource):
         cleaned = re.split(r"\s*[\*\-\|]+\s*", name)[0]
         return cleaned.strip()
 
-    def _clean_html_description(self, description: str) -> str:
+    def _clean_html_description(self, description: str, animal_id: str = "unknown") -> str:
         """Convert shelter HTML to plain text, retaining structural breaks."""
         if not description:
             return ""
@@ -373,9 +373,11 @@ class SourceRescueGroups(PetSource):
         for tag in soup.find_all("li"):
             tag.append("\n")
 
-        return self._clean_description(soup.get_text(), preserve_line_breaks=True)
+        return self._clean_description(soup.get_text(), animal_id=animal_id, preserve_line_breaks=True)
 
-    def _clean_description(self, description: str, *, preserve_line_breaks: bool = False) -> str:
+    def _clean_description(
+        self, description: str, animal_id: str = "unknown", *, preserve_line_breaks: bool = False
+    ) -> str:
         """Clean up description text."""
         if not description:
             return ""

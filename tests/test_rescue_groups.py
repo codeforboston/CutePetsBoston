@@ -6,7 +6,6 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-
 from ftfy import ExplainedText
 from requests import Response
 
@@ -14,9 +13,8 @@ from adoption_sources.rescue_groups import (
     SourceRescueGroups,
     _build_species_filters,
 )
-from social_posters.mastodon import MASTODON_CHARACTER_LIMIT, PosterMastodon
 from social_posters.instagram import PosterInstagram
-from social_posters.mastodon import PosterMastodon
+from social_posters.mastodon import MASTODON_CHARACTER_LIMIT, PosterMastodon
 
 
 def _repair_log_args(record: logging.LogRecord) -> tuple[str, str, str, ExplainedText]:
@@ -833,7 +831,7 @@ EXPECTED_REX = (
     "Good with kids: Unknown, likely yes\n"
     "Crate trained: Working on it\n"
     "House Trained: Working on it\n\n"
-    "Rex is a handsome, affectionate boy who’s ready to "
+    "Rex is a handsome, affectionate boy who's ready to "
     "wiggle his way into your heart!\n\n"
     "Please apply at www.lasthopek9.org."
 )
@@ -854,6 +852,16 @@ def test_falls_back_to_text_when_html_has_no_readable_content(markup):
 
 def test_html_only_description_is_used():
     assert parse_description(descriptionHtml="<p>Meet Rex!</p><p>He loves walks.</p>") == "Meet Rex!\n\nHe loves walks."
+
+
+def test_html_description_repairs_encoding_and_logs_animal_id(caplog):
+    with caplog.at_level(logging.INFO, logger="adoption_sources.rescue_groups"):
+        description = parse_description(descriptionHtml="<p>Heâ\x80\x99s ready.</p><p>Meet Rex!</p>")
+
+    assert description == "He's ready.\n\nMeet Rex!"
+    repair_records = [record for record in caplog.records if record.name == "adoption_sources.rescue_groups"]
+    assert len(repair_records) == 1
+    assert _repair_log_args(repair_records[0])[:3] == ("description", "animal", "12345")
 
 
 def test_preserves_inline_words_and_separates_blocks_and_lists():
