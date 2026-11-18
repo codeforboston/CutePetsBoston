@@ -12,18 +12,20 @@ def dashboard(html_file_path="dashboard.html", database_path="database.json"):
         record_path=["metrics"],
         meta=["pet_id", "platform", "post_id", "post_url"],
     )
+
+    df_posts['posts'] = 1
     
     df_metrics = pd.merge(df_pets, df_posts, on="pet_id", how="left")
     
     # Process views daily aggregations
     df_metrics["day"] = pd.to_datetime(df_metrics["posted_at"]).dt.tz_localize(None).dt.normalize()
     views = (
-        df_metrics[["day", "platform", "post_id", "likes", "reposts", "comments"]]
+        df_metrics[["day", "platform", "post_id", "likes", "reposts", "comments", "posts"]]
         .groupby(["day", "platform", "post_id"])
         .max()
         .reset_index()
     )
-    views = views.groupby(["day", "platform"])[["likes", "reposts", "comments"]].sum().reset_index()
+    views = views.groupby(["day", "platform"])[["likes", "reposts", "comments", "posts"]].sum().reset_index()
 
     # 2. Options Setup
     platforms_html = ["All Platforms"] + sorted(
@@ -99,7 +101,7 @@ def dashboard(html_file_path="dashboard.html", database_path="database.json"):
                 filtered_views = p_views
 
             metrics_charts = ""
-            for metric in ["likes", "reposts", "comments"]:
+            for metric in ["likes", "reposts", "comments", "posts"]:
                 fig_metric = px.line(
                     filtered_views,
                     x="day",
