@@ -179,6 +179,11 @@ def record_publish_results(
     results: Iterable[tuple[NamedPlatform, PostResult]],
     database_path: str | Path = "database.json",
 ) -> None:
+    results = list(results)
+    if not any(result.success for _, result in results):
+        logger.warning("No platform published pet %s; not recording it as posted.", pet.pet_id)
+        return
+
     data = read_database(database_path)
     posted_pets = data.setdefault("posted_pets", [])
     posts = data.setdefault("posts", [])
