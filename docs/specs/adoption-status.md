@@ -28,6 +28,7 @@ Preserve existing data with minimal retention edits. Do not add engagement compa
 - Run status refreshes as a separate step in the existing production workflow, sequentially with posting against the same database file. The four-hour workflow schedule checks which pets are due; it must not cause four-hour status polling. Do not introduce a second scheduled database writer.
 - Status refreshes must be able to run when posting fails. Persist their successful updates and make them available to subsequent runs and dashboard generation even when posting fails.
 - The main dashboard table has one row per pet and exactly five columns: Name, Pet ID, Posted date, Adoption status, and Status last observed. Include search, sorting, and pagination. Platform posts must not create duplicate pet rows.
+- Display the two date columns as YYYY-MM-DD, preserving full stored timestamps for scheduling. Show a summary table of pet counts by status, including Unknown, using the same distinct pet rows as the detail table. These counts cover the whole archive rather than the detail table's current search results.
 
 ## Deferred work
 

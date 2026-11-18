@@ -21,13 +21,21 @@ def adoption_table_html(pets: list[PostedPet]) -> str:
             {
                 "Name": pet["name"],
                 "Pet ID": pet_id,
-                "Posted date": pet["posted_at"],
+                "Posted date": pet["posted_at"][:10],
                 "Adoption status": pet.get("status_name") or "Unknown",
-                "Status last observed": pet.get("status_observed_at", ""),
+                "Status last observed": pet.get("status_observed_at", "")[:10],
             }
         )
+    frame = pd.DataFrame(rows)
+    summary = (
+        frame.groupby("Adoption status")
+        .size()
+        .rename("Pets")
+        .reset_index()
+        .to_html(index=False, table_id="adoption-status-summary", border=0)
+    )
     table = to_html_datatable(
-        pd.DataFrame(rows),
+        frame,
         table_id="adoption-status-table",
         showIndex=False,
         allow_html=False,
@@ -42,6 +50,8 @@ def adoption_table_html(pets: list[PostedPet]) -> str:
         <p>Statuses are the last successfully observed shelter reports.
         Unknown means no status has been retrieved. Dates are in UTC;
         the observation date is not the actual adoption date.</p>
+        <h3>Pet counts by status</h3>
+        <div style="display: inline-block; text-align: left;">{summary}</div>
         {table}
     </section>"""
 

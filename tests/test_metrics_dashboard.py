@@ -53,9 +53,14 @@ def test_adoption_table_shows_all_pets_without_engagement_metrics(tmp_path):
         "Status last observed",
     ]
     assert [[cell.get_text() for cell in row.select("td")] for row in table.select("tbody tr")] == [
-        ["Poppy", "123", "2026-10-01T00:00:00+00:00", "Adopted", "2026-11-18T00:00:00+00:00"],
-        ["Spot", "456", "2026-10-02T00:00:00+00:00", "Unknown", ""],
-        ["No ID", "", "2026-10-03T00:00:00+00:00", "Unknown", ""],
+        ["Poppy", "123", "2026-10-01", "Adopted", "2026-11-18"],
+        ["Spot", "456", "2026-10-02", "Unknown", ""],
+        ["No ID", "", "2026-10-03", "Unknown", ""],
+    ]
+    summary = document.select("#adoption-status-summary tbody tr")
+    assert [[cell.get_text() for cell in row.select("td")] for row in summary] == [
+        ["Adopted", "1"],
+        ["Unknown", "2"],
     ]
 
 
@@ -95,4 +100,5 @@ def test_adoption_table_is_one_row_per_pet_alongside_platform_charts_and_escapes
     assert cell is not None
     assert cell.get_text() == name
     assert table.select("img") == []
+    assert [cell.get_text() for cell in document.select("#adoption-status-summary tbody td")] == ["Adopted", "1"]
     assert "Top 10 Pets by Max Likes" in html_path.read_text()
