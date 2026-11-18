@@ -108,9 +108,24 @@ def test_records_pet_when_all_publishes_fail(tmp_path):
         database_path=database_path,
     )
 
+    assert not database_path.exists()
+
+
+def test_records_pet_when_at_least_one_platform_succeeds(tmp_path):
+    database_path = tmp_path / "database.json"
+
+    record_publish_results(
+        make_pet(),
+        [
+            (FakePlatform("Mastodon"), PostResult(success=False, error_message="publish failed")),
+            (FakePlatform("Bluesky"), PostResult(success=True, post_id="p1", post_url="at://p1")),
+        ],
+        database_path=database_path,
+    )
+
     data = json.loads(database_path.read_text())
     assert [pet["pet_id"] for pet in data["posted_pets"]] == ["pet-123"]
-    assert data["posts"] == []
+    assert [post["platform"] for post in data["posts"]] == ["Bluesky"]
 
 
 def test_prunes_old_pets_and_posts_independently(tmp_path):
@@ -134,8 +149,12 @@ def test_prunes_old_pets_and_posts_independently(tmp_path):
         )
     )
 
-    record_publish_results(make_pet(), [], database_path=database_path)
+    record_publish_results(
+        make_pet(),
+        [(FakePlatform("Mastodon"), PostResult(success=True, post_id="p1", post_url="https://m/p1"))],
+        database_path=database_path,
+    )
 
     data = json.loads(database_path.read_text())
     assert [pet["pet_id"] for pet in data["posted_pets"]] == ["pet-123"]
-    assert data["posts"] == []
+    assert [post["post_id"] for post in data["posts"]] == ["p1"]
