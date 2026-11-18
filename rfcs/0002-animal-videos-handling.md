@@ -153,13 +153,13 @@ In a draft PR:
 After approving (and merging) the PR with this document, and another PR with an added animal in manual.json:
 
 - One issue which will
--- add video_urls fields and processing to:
---- AdoptablePet
---- SourceManual
---- SourceRescueGroups
---- Post
--- Alter test_source_manual (see above), but **not** test_rescue_groups _(since it is currently not clear how to test that)_.
+  - add video_urls fields and processing to:
+    - AdoptablePet
+    - SourceManual
+    - SourceRescueGroups
+    - Post
+  - Alter test_source_manual (see above), but **not** test_rescue_groups _(since it is currently not clear how to test that)_.
 - A subsequent issue for each social media poster (order TBD), which includes implementation **and** tests):
--- BlueSky
--- Mastadon
--- Instagram
+  - BlueSky
+  - Mastadon
+  - Instagram
