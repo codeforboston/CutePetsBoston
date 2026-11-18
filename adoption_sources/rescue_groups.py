@@ -4,6 +4,7 @@ RescueGroups.org API implementation of the PetSource interface.
 API Documentation: https://api.rescuegroups.org/v5/public/docs
 """
 
+import html
 import logging
 import os
 import pprint
