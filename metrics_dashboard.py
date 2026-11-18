@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 import plotly.express as px
+
 from database import read_database
 
 
@@ -22,6 +23,7 @@ def empty_dashboard_html(message: str) -> str:
     </html>
     """
 
+
 def dashboard(
     html_file_path: str | Path = "dashboard.html",
     database_path: str | Path = "database.json",
@@ -32,14 +34,14 @@ def dashboard(
         with open(html_file_path, "w", encoding="utf-8") as f:
             f.write(empty_dashboard_html("No analytics data available yet."))
         return
-    
+
     df_pets = pd.DataFrame(data.get("posted_pets", []))
     df_posts = pd.json_normalize(
-        data.get("posts", []),
+        [dict(post) for post in data.get("posts", [])],
         record_path=["metrics"],
         meta=["pet_id", "platform", "post_id", "post_url"],
     )
-    
+
     df_metrics = pd.merge(df_pets, df_posts, on="pet_id", how="left")
 
     # Posts with no recorded metrics yet leave the metric columns absent
@@ -72,12 +74,8 @@ def dashboard(
     }
 
     # 3. Build Dropdowns
-    platform_options_html = "".join(
-        [f'<option value="{p}">{p}</option>' for p in platforms_html]
-    )
-    timerange_options_html = "".join(
-        [f'<option value="{key}">{label}</option>' for key, label in time_ranges.items()]
-    )
+    platform_options_html = "".join([f'<option value="{p}">{p}</option>' for p in platforms_html])
+    timerange_options_html = "".join([f'<option value="{key}">{label}</option>' for key, label in time_ranges.items()])
 
     # 4. Determine max date and cutoff windows
     max_date = views["day"].max() if not views.empty else pd.Timestamp.now().normalize()
@@ -92,7 +90,7 @@ def dashboard(
     sections_html = ""
     for p in platforms_html:
         p_df = df_metrics if p == "All Platforms" else df_metrics[df_metrics["platform"] == p]
-        
+
         # --- SEPARATE TOP 5 CHARTS FOR LIKES, REPOSTS, COMMENTS ---
         top_charts_html = ""
         for metric in ["likes", "reposts", "comments"]:
@@ -103,7 +101,7 @@ def dashboard(
                 .sort_values(by=metric, ascending=False)
                 .head(5)
             )
-            
+
             fig_top = px.bar(
                 top_pets,
                 x="name",
@@ -119,17 +117,13 @@ def dashboard(
         metrics_html_by_range = ""
         for range_key in time_ranges.keys():
             cutoff = cutoff_dates[range_key]
-            
+
             if cutoff is not None and not p_views.empty:
                 full_dates = pd.date_range(start=cutoff, end=max_date, freq="D")
                 unique_platforms = p_views["platform"].unique()
                 idx = pd.MultiIndex.from_product([full_dates, unique_platforms], names=["day", "platform"])
-                
-                filtered_views = (
-                    p_views.set_index(["day", "platform"])
-                    .reindex(idx, fill_value=0)
-                    .reset_index()
-                )
+
+                filtered_views = p_views.set_index(["day", "platform"]).reindex(idx, fill_value=0).reset_index()
             else:
                 filtered_views = p_views
 
