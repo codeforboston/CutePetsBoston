@@ -101,4 +101,6 @@ def test_adoption_table_is_one_row_per_pet_alongside_platform_charts_and_escapes
     assert cell.get_text() == name
     assert table.select("img") == []
     assert [cell.get_text() for cell in document.select("#adoption-status-summary tbody td")] == ["Adopted", "1"]
-    assert "Top 10 Pets by Max Likes" in html_path.read_text()
+    assert "Top 5 Pets by Likes" in html_path.read_text()
+    assert "Metrics Over Time" in html_path.read_text()
+    assert 'id="timerange-select"' in html_path.read_text()

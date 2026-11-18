@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   schedule:
     # Every 4 hours
-    - cron: "0 */4 * * *"
+    - cron: "30 */4 * * *"
 
 # Default for jobs that do not set their own. Job-level permissions REPLACE
 # these wholesale rather than merging with them -- see both jobs below.
@@ -107,3 +107,14 @@ jobs:
           path: cutepets.log
           retention-days: 90
           archive: false
+  # Publishes the staging dashboard to /staging/dashboard.html and redeploys the site.
+  publish-staging-pages:
+    needs: run-cute-pets
+    if: '!cancelled()'
+    permissions:
+      contents: write   # push the staging dashbaord to gh-pages
+      pages: write      # deploy pages
+      id-token: write   # asks GitHub for an ID to run job
+    uses: ./.github/workflows/publish-pages.yml
+    with:
+      staging_analytics_artifact: dashboard.html
