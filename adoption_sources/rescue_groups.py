@@ -10,7 +10,7 @@ import os
 import pprint
 import re
 from collections.abc import Sequence
-from typing import Iterator, overload
+from typing import Final, Iterator, overload
 
 import requests
 from ftfy import fix_and_explain
@@ -26,11 +26,13 @@ logger = logging.getLogger(__name__)
 
 # Some rescues publish entries like "More Dogs Soon!" to point users at their
 # website; those should never be posted. Add new names here as we encounter them.
-PLACEHOLDER_NAMES: tuple[str, ...] = (
-    "more dogs soon",
-    "more dogs soon!",
-    "more cats soon!",
-    "fosters needed!",
+PLACEHOLDER_NAMES: Final[frozenset[str]] = frozenset(
+    {
+        "more dogs soon",
+        "more dogs soon!",
+        "more cats soon!",
+        "fosters needed!",
+    }
 )
 
 # Values used by the rest of the application.
