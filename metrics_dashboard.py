@@ -2,11 +2,51 @@ from pathlib import Path
 
 import pandas as pd
 import plotly.express as px
+from itables import to_html_datatable
 
-from database import read_database
+from database import PostedPet, read_database
 
 
-def empty_dashboard_html(message: str) -> str:
+def adoption_table_html(pets: list[PostedPet]) -> str:
+    if not pets:
+        return ""
+    rows = []
+    seen_ids: set[str] = set()
+    for pet in pets:
+        pet_id = str(pet.get("pet_id") or "").strip()
+        if pet_id and pet_id in seen_ids:
+            continue
+        seen_ids.add(pet_id)
+        rows.append(
+            {
+                "Name": pet["name"],
+                "Pet ID": pet_id,
+                "Posted date": pet["posted_at"],
+                "Adoption status": pet.get("status_name") or "Unknown",
+                "Status last observed": pet.get("status_observed_at", ""),
+            }
+        )
+    table = to_html_datatable(
+        pd.DataFrame(rows),
+        table_id="adoption-status-table",
+        showIndex=False,
+        allow_html=False,
+        maxBytes=0,
+        display_logo_when_loading=False,
+        layout={"topStart": "pageLength", "topEnd": "search", "bottomStart": "info", "bottomEnd": "paging"},
+        pageLength=10,
+        order=[[2, "desc"]],
+    )
+    return f"""<section>
+        <h2>Posted pet adoption statuses</h2>
+        <p>Statuses are the last successfully observed shelter reports.
+        Unknown means no status has been retrieved. Dates are in UTC;
+        the observation date is not the actual adoption date.</p>
+        {table}
+    </section>"""
+
+
+def empty_dashboard_html(message: str, adoption_html: str = "") -> str:
     return f"""<!DOCTYPE html>
     <html>
     <head>
@@ -18,6 +58,7 @@ def empty_dashboard_html(message: str) -> str:
     </head>
     <body>
         <h1>🐶 Cute Pets Boston Top Pets 🐶</h1>
+        {adoption_html}
         <p>{message}</p>
     </body>
     </html>
@@ -32,10 +73,12 @@ def dashboard(
     data = read_database(database_path)
     posts = data.get("posts", [])
     posted_pets = data.get("posted_pets", [])
+    adoption_html = adoption_table_html(posted_pets)
 
     if not posts or not posted_pets:
         with open(html_file_path, "w", encoding="utf-8") as f:
-            f.write(empty_dashboard_html("No analytics data available yet."))
+            message = "No engagement data available yet." if posted_pets else "No analytics data available yet."
+            f.write(empty_dashboard_html(message, adoption_html))
         return
 
     df_pets = pd.DataFrame(posted_pets)
@@ -54,7 +97,7 @@ def dashboard(
 
     if not df_metrics["likes"].notna().any():
         with open(html_file_path, "w", encoding="utf-8") as f:
-            f.write(empty_dashboard_html("No metric data available yet."))
+            f.write(empty_dashboard_html("No metric data available yet.", adoption_html))
         return
 
     # 2. Get unique platforms including 'All Platforms'
@@ -144,6 +187,7 @@ def dashboard(
     </head>
     <body>
         <h1>🐶 Cute Pets Boston Top Pets 🐶</h1>
+        {adoption_html}
         <div class="dropdown-container">
             <label for="platform-select"><strong>Select Platform: </strong></label>
             <select id="platform-select" onchange="filterPlatform(this.value)">
@@ -160,3 +204,7 @@ def dashboard(
         f.write(html_content)
 
     print("Successfully generated dashboard.html with all platforms, max/sum stats, and metrics!")
+
+
+if __name__ == "__main__":
+    dashboard()
