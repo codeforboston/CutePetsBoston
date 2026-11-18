@@ -30,6 +30,7 @@ PLACEHOLDER_NAMES: Final[frozenset[str]] = frozenset(
     {
         "more dogs soon",
         "more dogs soon!",
+        "more cats soon",
         "more cats soon!",
         "fosters needed!",
     }
