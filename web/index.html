@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CutePetsBoston</title>
+  <meta name="description" content="A Code for Boston project that posts adoptable pets from Boston-area shelters to social media." />
+  <!-- Favicons: .ico is the universal fallback (auto-requested by every
+       browser), the SVG is used by modern browsers for crisp scaling, and the
+       apple-touch-icon covers iOS home-screen bookmarks. sizes="any" on the
+       .ico lets Chromium prefer the SVG instead of downloading the .ico too. -->
+  <link rel="icon" href="favicon.ico" sizes="any" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <!-- Fonts: Fredoka for headings, Nunito for body, both matching the
+       design mockup, with system fallbacks while they load. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;800&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body id="top">
+  <!-- Reusable mascot and wayfinding icons, referenced by <use> from the
+       hero decorations and the pet cards below. -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="icon-dog" viewBox="0 0 120 120">
+        <ellipse cx="20" cy="62" rx="14" ry="30" fill="#8A4B2D" transform="rotate(12 20 62)" />
+        <ellipse cx="100" cy="62" rx="14" ry="30" fill="#8A4B2D" transform="rotate(-12 100 62)" />
+        <circle cx="60" cy="58" r="38" fill="#FFF6E5" />
+        <ellipse cx="60" cy="76" rx="20" ry="15" fill="#FFE2C2" />
+        <circle cx="46" cy="52" r="5" fill="#2B1B17" />
+        <circle cx="74" cy="52" r="5" fill="#2B1B17" />
+        <ellipse cx="60" cy="68" rx="7" ry="5" fill="#2B1B17" />
+        <path d="M60 73 v6 M60 79 q-7 6 -13 1 M60 79 q7 6 13 1" stroke="#2B1B17" stroke-width="2.5" fill="none" stroke-linecap="round" />
+      </symbol>
+      <symbol id="icon-cat" viewBox="0 0 120 120">
+        <polygon points="22,50 28,12 56,34" fill="#FFF6E5" />
+        <polygon points="98,50 92,12 64,34" fill="#FFF6E5" />
+        <polygon points="29,42 31,24 44,34" fill="#FFB3C1" />
+        <polygon points="91,42 89,24 76,34" fill="#FFB3C1" />
+        <circle cx="60" cy="66" r="40" fill="#FFF6E5" />
+        <ellipse cx="45" cy="62" rx="5" ry="8" fill="#2B1B17" />
+        <ellipse cx="75" cy="62" rx="5" ry="8" fill="#2B1B17" />
+        <path d="M54 76 h12 l-6 7z" fill="#F25C3B" />
+        <path d="M60 83 q-6 8 -14 4 M60 83 q6 8 14 4" stroke="#2B1B17" stroke-width="2.5" fill="none" stroke-linecap="round" />
+      </symbol>
+      <symbol id="icon-paw" viewBox="0 0 24 24" fill="currentColor">
+        <ellipse cx="6" cy="10" rx="2.2" ry="3" />
+        <ellipse cx="10.5" cy="6" rx="2.2" ry="3" />
+        <ellipse cx="15.5" cy="6" rx="2.2" ry="3" />
+        <ellipse cx="19.5" cy="10" rx="2.2" ry="3" />
+        <path d="M12.5 11c-3 0-6 3.2-6 6 0 2 1.6 3 3.4 3 1.2 0 1.8-.5 2.6-.5s1.4.5 2.6.5c1.8 0 3.4-1 3.4-3 0-2.8-3-6-6-6z" />
+      </symbol>
+      <symbol id="icon-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+        <path d="M12 22s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12z" />
+        <circle cx="12" cy="10" r="2.5" />
+      </symbol>
+    </defs>
+  </svg>
+
+  <header class="hero">
+    <div class="container">
+      <nav class="site-nav" aria-label="Main">
+        <a class="site-logo" href="#top">
+          <svg class="site-logo-paw" aria-hidden="true"><use href="#icon-paw" /></svg>
+          CutePetsBoston
+        </a>
+        <div class="site-nav-links">
+          <a href="#pets">Meet the pets</a>
+          <a href="#shelters">Shelters</a>
+          <a href="#follow">Follow</a>
+          <a href="#contribute">Contribute</a>
+        </div>
+      </nav>
+
+      <div class="hero-inner">
+        <div class="hero-copy">
+          <span class="hero-badge">A new adoptable pet, every day</span>
+          <h1>Finding forever homes, one cute pet at a time.</h1>
+          <p class="hero-summary">
+            CutePetsBoston is a volunteer-run social media bot that shares adoptable pets
+            daily from Boston-area shelters.
+          </p>
+          <div class="hero-buttons">
+            <a class="hero-button" href="#pets">Meet today's pets</a>
+            <a class="hero-button hero-button-cream" href="#follow">Follow along</a>
+          </div>
+        </div>
+
+        <!-- Photo mats for the two most recent pets (filled from the
+             Mastodon feed; the species mascots are the fallback). -->
+        <div class="hero-art" aria-hidden="true">
+          <div class="art-tile art-tile-pink">
+            <svg class="art-mascot"><use href="#icon-dog" /></svg>
+            <img class="art-photo" alt="" />
+          </div>
+          <div class="art-tile art-tile-blue">
+            <svg class="art-mascot"><use href="#icon-cat" /></svg>
+            <img class="art-photo" alt="" />
+          </div>
+          <div class="art-tile art-tile-slogan">Adopt<br />don't shop</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Fresh from the feed: post cards parsed from the Mastodon RSS feed
+         (the account's post feed; see the script block below). -->
+    <section id="pets" class="container section-pets">
+      <div class="section-head">
+        <div class="section-intro">
+          <h2>Fresh from the feed</h2>
+          <p>The latest pets we've shared on social media. Tap a card to see the full post.</p>
+        </div>
+        <div class="pet-filters" role="group" aria-label="Filter pets by species">
+          <button class="filter-pill is-active" data-filter="all" type="button">All pets</button>
+          <button class="filter-pill" data-filter="dog" type="button">Dogs</button>
+          <button class="filter-pill" data-filter="cat" type="button">Cats</button>
+        </div>
+      </div>
+      <div id="pet-grid" class="pet-grid">
+        <p class="section-note">Loading recent posts&hellip;</p>
+      </div>
+    </section>
+
+    <section id="shelters" class="container section-shelters">
+      <h2>Featured shelters</h2>
+      <p class="section-intro">
+        Shelters we've confirmed featuring on the feed. Our broader pet pool comes
+        from <a href="https://rescuegroups.org/" target="_blank" rel="noopener">RescueGroups.org</a>
+        within 50 miles of Boston, so plenty of other rescues appear too.
+      </p>
+      <div id="shelter-list" class="shelter-list">
+        <p class="section-note">Loading shelters&hellip;</p>
+      </div>
+    </section>
+
+    <section id="follow" class="container section-follow">
+      <h2>Get a new face in your feed daily</h2>
+      <div class="follow-cards">
+        <a class="follow-card" href="https://www.instagram.com/cutepetsboston/" target="_blank" rel="noopener">
+          <span class="follow-name">Instagram</span>
+          <span class="follow-handle">@cutepetsboston</span>
+        </a>
+        <a class="follow-card" href="https://bsky.app/profile/cutepetsboston.bsky.social" target="_blank" rel="noopener">
+          <span class="follow-name">Bluesky</span>
+          <span class="follow-handle">@cutepetsboston.bsky.social</span>
+        </a>
+        <a class="follow-card" href="https://mastodon.social/@cutepetsboston" target="_blank" rel="me noopener">
+          <span class="follow-name">Mastodon</span>
+          <span class="follow-handle">@cutepetsboston@mastodon.social</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <section id="contribute" class="contribute">
+    <div class="container">
+      <div class="contribute-inner">
+        <div class="contribute-copy">
+          <h2>How to contribute</h2>
+          <p>
+            CutePetsBoston is a <a href="https://www.codeforboston.org/" target="_blank" rel="noopener">Code for Boston</a>
+            project. Come hack on it with us.
+          </p>
+        </div>
+        <div class="contribute-links">
+          <a class="contribute-link contribute-link-hot" href="https://github.com/codeforboston/CutePetsBoston/fork" target="_blank" rel="noopener">Fork on GitHub</a>
+          <a class="contribute-link" href="https://github.com/codeforboston/CutePetsBoston" target="_blank" rel="noopener">View repo</a>
+          <a class="contribute-link" href="https://www.meetup.com/code-for-boston/" target="_blank" rel="noopener">Code for Boston Meetup</a>
+          <a class="contribute-link" href="https://cfb-public.slack.com/archives/C0A742DF1SP" target="_blank" rel="noopener">#cute-pets-boston on Slack</a>
+        </div>
+      </div>
+
+      <footer class="site-footer">
+        <p>
+          Made with <span aria-label="love">&hearts;</span> by
+          <a href="https://www.codeforboston.org/" target="_blank" rel="noopener">Code for Boston</a>
+          volunteers.
+        </p>
+        <p>
+          <a href="https://stats.uptimerobot.com/5SyexhEIaG" target="_blank" rel="noopener">Service status &amp; uptime &rarr;</a>
+        </p>
+      </footer>
+    </div>
+  </section>
+
+  <script>
+    // =====================================================================
+    // Data loading.
+    //  * shelters.json         -- committed; the featured-shelter pills
+    //  * Mastodon account RSS  -- the pets we've posted, newest first.
+    //    Every post carries its own image (Mastodon hosts the photo it
+    //    was published with, so the copy is stable), and the caption is
+    //    written by our post builders in a predictable shape, which the
+    //    card renderer parses for name, species, breed and location.
+    // =====================================================================
+
+    // Escape HTML special chars before interpolating values from JSON into
+    // the template literals below. JS has no built-in for this, so we map
+    // each unsafe char to its HTML entity.
+    const escapeHtml = (s) =>
+      String(s).replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+      }[c]));
+
+    // ---- Featured shelters -------------------------------------------
+
+    const shelterList = document.getElementById("shelter-list");
+
+    const shelterPillHtml = (shelter) => `
+      <a class="shelter-pill" href="${escapeHtml(shelter.url)}" target="_blank" rel="noopener">
+        <span class="shelter-name">${escapeHtml(shelter.name)}</span>
+        <span class="shelter-location">${escapeHtml(shelter.location)}</span>
+      </a>`;
+
+    fetch("shelters.json")
+      .then((r) => {
+        if (!r.ok) throw new Error("shelters.json request failed: " + r.status);
+        return r.json();
+      })
+      .then(({ shelters }) => {
+        shelterList.innerHTML = shelters.map(shelterPillHtml).join("");
+      })
+      .catch(() => {
+        shelterList.innerHTML =
+          '<p class="section-note">Shelter list unavailable.</p>';
+      });
+
+    // ---- Fresh from the feed (post cards) ------------------------------
+
+    const FEED_URL = "https://mastodon.social/@cutepetsboston.rss";
+    const POST_LIMIT = 8;
+    const BLURB_LIMIT = 140;
+
+    let posts = [];
+    let activeFilter = "all";
+
+    const petGrid = document.getElementById("pet-grid");
+
+    const failedFeedHtml = `
+      <p class="section-note">
+        Couldn't load recent posts.
+        <a href="https://mastodon.social/@cutepetsboston" target="_blank" rel="noopener">View on Mastodon &rarr;</a>
+      </p>`;
+
+    const emptyFeedHtml = `
+      <p class="section-note">No recent posts found.</p>`;
+
+    // First image attachment on an RSS <item>, or "" if none.
+    // Caption-overflow thread replies carry no media, so this also
+    // tells main posts from replies.
+    const itemImageUrl = (item) => {
+      const MEDIA_NS = "http://search.yahoo.com/mrss/";
+      for (const mediaElement of item.getElementsByTagNameNS(MEDIA_NS, "content")) {
+        const medium = mediaElement.getAttribute("medium");
+        if (!medium || medium === "image") {
+          const url = mediaElement.getAttribute("url") || "";
+          if (url) return url;
+        }
+      }
+      return "";
+    };
+
+    // Plain text from the caption's HTML; captures the text content and
+    // never any embedded markup.
+    const captionText = (captionHtml) => {
+      const tmp = document.createElement("div");
+      tmp.innerHTML = captionHtml;
+      return tmp.textContent.trim();
+    };
+
+    // Our post builders write a predictable caption:
+    //   "Meet NAME! This adorable BREED SPECIES is looking for a forever
+    //    home in CITY, ST. Adopt NAME: LINK"
+    // followed by optional description paragraphs and a trailing hashtag
+    // block, so the structured bits the cards display parse straight out
+    // of it. Anything unparseable just stays off the card.
+    const parsePost = (item) => {
+      const caption = captionText(item.querySelector("description")?.textContent || "");
+      // Paragraph breaks survive as blank lines in the plain text; the
+      // first paragraph is the intro sentence above.
+      const [intro = ""] = caption.split(/\n\s*\n/, 1);
+      return {
+        imageUrl: itemImageUrl(item),
+        link: item.querySelector("link")?.textContent || "",
+        date: item.querySelector("pubDate")?.textContent || "",
+        name: intro.match(/Meet (.+?)!/)?.[1] || "",
+        species: caption.match(/#(dog|cat)\b/)?.[1] || "",
+        breed: intro.match(/This adorable (.+?) (?:dog|cat) is looking/)?.[1] || "",
+        location: intro.match(/forever home in ([^.!]+?)\./)?.[1] || "",
+        blurb: blurbOf(caption),
+      };
+    };
+
+    // Card text: the narrative after the intro sentence (whose content the
+    // card's own rows already show), minus the adoption line (the card
+    // links to it) and the trailing hashtag block (metadata). Rescues
+    // often continue the narrative on the intro's own paragraph, so we
+    // cut past "looking for a forever home in CITY." itself; posts with
+    // no narrative fall back to the intro.
+    const blurbOf = (caption) => {
+      let body = caption
+        .replace(/Adopt .*?: https?:\/\/\S+/, "")
+        .replace(/More details at link.{0,3}/, "")
+        .replace(/(?:\s*#\S+)+\s*$/, "");
+      const withIntro = body.replace(/\s+/g, " ").trim(); // the no-narrative fallback
+      const introEnd = body.match(/is looking for a forever home in [^.!\n]*?[!.]/);
+      if (introEnd) {
+        body = body.slice(introEnd.index + introEnd[0].length);
+      }
+      return (body.replace(/\s+/g, " ").trim() || withIntro).slice(0, BLURB_LIMIT);
+    };
+
+    const formatDate = (pubDate) => {
+      const date = new Date(pubDate);
+      if (Number.isNaN(date.getTime())) return "";
+      return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    };
+
+    // Photos post with the pet. A caption reply that somehow carries no
+    // image is dropped by the fetch filter, so every card has one.
+    const petCardHtml = (post) => `
+      <a class="pet-card" href="${escapeHtml(post.link)}" target="_blank" rel="noopener">
+        <div class="pet-photo">
+          <span class="pet-date-pill">${escapeHtml(formatDate(post.date))}</span>
+          <img class="pet-photo-img" src="${escapeHtml(post.imageUrl)}"
+               alt="Photo of ${escapeHtml(post.name || "an adoptable pet")}" loading="lazy"
+               onerror="this.style.display = 'none'" />
+        </div>
+        <div class="pet-body">
+          <h3 class="pet-name">${escapeHtml(post.name || "A new adoptable pet")}</h3>
+          <div class="pet-location">
+            <svg class="pet-pin" aria-hidden="true"><use href="#icon-pin" /></svg>
+            ${escapeHtml(post.location)}
+          </div>
+          <p class="pet-blurb">${escapeHtml(post.blurb)}</p>
+          <div class="pet-chips">${post.breed ? `<span class="pet-chip">${escapeHtml(post.breed)}</span>` : ""}</div>
+        </div>
+      </a>`;
+
+    const renderPosts = () => {
+      if (posts.length === 0) {
+        petGrid.innerHTML = emptyFeedHtml;
+        return;
+      }
+      const shown = posts
+        .filter((post) => activeFilter === "all" || post.species === activeFilter)
+        .slice(0, POST_LIMIT);
+      petGrid.innerHTML = shown.length > 0
+        ? shown.map(petCardHtml).join("")
+        : '<p class="section-note">Nothing to show for this filter yet.</p>';
+    };
+
+    // Up top, the colored hero tiles act as borders around the two most
+    // recent posts from the feed (RSS is newest-first).
+    const decorateHero = () => {
+      document.querySelectorAll(".hero-art .art-photo").forEach((img, position) => {
+        const post = posts[position];
+        if (post && post.imageUrl) {
+          img.src = post.imageUrl;
+        } else {
+          img.style.display = "none";
+        }
+      });
+    };
+
+    const filterPills = Array.from(document.querySelectorAll(".filter-pill"));
+    filterPills.forEach((pill) => {
+      pill.addEventListener("click", () => {
+        activeFilter = pill.dataset.filter;
+        filterPills.forEach((p) => p.classList.toggle("is-active", p === pill));
+        renderPosts();
+      });
+    });
+
+    fetch(FEED_URL)
+      .then((r) => {
+        if (!r.ok) throw new Error("RSS request failed: " + r.status);
+        return r.text();
+      })
+      .then((xml) => {
+        const doc = new DOMParser().parseFromString(xml, "application/xml");
+        if (doc.querySelector("parsererror")) {
+          throw new Error("RSS parse error");
+        }
+        posts = Array.from(doc.querySelectorAll("item"))
+          .map(parsePost)
+          .filter((post) => post.imageUrl); // image-less replies never show
+        renderPosts();
+        decorateHero();
+      })
+      .catch((err) => {
+        posts = [];
+        renderPosts();
+        petGrid.innerHTML = failedFeedHtml;
+        console.error("Failed to load the Mastodon feed:", err);
+      });
+  </script>
+</body>
+</html>

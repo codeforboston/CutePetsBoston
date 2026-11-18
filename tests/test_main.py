@@ -1,20 +1,50 @@
 import json
+import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
-import unittest
+from unittest import mock
 
 from abstractions import AdoptablePet, Post, PostMetrics, PostResult
 from adoption_sources import SourceManual
 from adoption_sources.rescue_groups import SourceRescueGroups
-from main import create_collectors, create_posters, create_sources, run
+from config import SITE_URL
+from main import (
+    create_collectors,
+    create_posters,
+    create_sources,
+    notify_slack_of_warning,
+    run,
+)
+
+
+class SlackNotificationTests(unittest.TestCase):
+    @mock.patch("main.requests.post")
+    def test_warning_is_sent_to_slack(self, post):
+        with mock.patch.dict(
+            "os.environ",
+            {
+                "SLACK_WEBHOOK_URL": "https://hooks.example.test/slack",
+                "APP_ENV": "prod",
+                "GITHUB_WORKFLOW": "Prod Account Post",
+            },
+            clear=True,
+        ):
+            notify_slack_of_warning("pet ID required slug sanitization")
+
+        post.assert_called_once()
+        args, kwargs = post.call_args
+        self.assertEqual(args[0], "https://hooks.example.test/slack")
+        self.assertIn("CutePetsBoston [prod] warning", kwargs["json"]["text"])
+        self.assertIn("pet ID required slug sanitization", kwargs["json"]["text"])
+        self.assertEqual(kwargs["timeout"], 10)
 
 
 class FakeSource:
-    def __init__(self, pets):
+    def __init__(self, pets: list[AdoptablePet]) -> None:
         self.pets = pets
         self.fetch_called = False
 
-    def fetch_pets(self):
+    def fetch_pets(self) -> list[AdoptablePet]:
         self.fetch_called = True
         return self.pets
 
@@ -22,16 +52,16 @@ class FakeSource:
 class FakePoster:
     platform_name = "FakePoster"
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.format_called = False
         self.publish_called = False
-        self.posts = []
+        self.posts: list[Post] = []
 
-    def format_post(self, pet):
+    def format_post(self, pet: AdoptablePet) -> Post:
         self.format_called = True
-        return Post(text=f"Meet {pet.name}", image_url=pet.image_url)
+        return Post(text=f"Meet {pet.name}", image_urls=pet.image_urls)
 
-    def publish(self, post):
+    def publish(self, post: Post) -> PostResult:
         self.publish_called = True
         self.posts.append(post)
         return PostResult(
@@ -44,10 +74,10 @@ class FakePoster:
 class FakeCollector:
     platform_name = "FakePoster"
 
-    def __init__(self):
-        self.calls = []
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, str | None]] = []
 
-    def fetch_metrics(self, post_id, post_url=None):
+    def fetch_metrics(self, post_id: str, post_url: str | None = None) -> PostMetrics:
         self.calls.append((post_id, post_url))
         return PostMetrics(
             collected_at="set-by-run",
@@ -64,7 +94,7 @@ class RunFlowTests(unittest.TestCase):
             species="dog",
             breed="mutt",
             location="Boston, MA",
-            image_url="https://example.com/poppy.jpg",
+            image_urls=["https://example.com/poppy.jpg"],
             adoption_url="https://example.com/adopt/poppy",
             pet_id="pet-poppy",
         )
@@ -100,7 +130,7 @@ class RunFlowTests(unittest.TestCase):
             species="dog",
             breed="mutt",
             location="Boston, MA",
-            image_url="https://example.com/rex.jpg",
+            image_urls=["https://example.com/rex.jpg"],
             adoption_url="https://example.com/adopt/rex",
             pet_id="test-dog",
         )
@@ -109,7 +139,7 @@ class RunFlowTests(unittest.TestCase):
             species="cat",
             breed="tabby",
             location="Boston, MA",
-            image_url="https://example.com/luna.jpg",
+            image_urls=["https://example.com/luna.jpg"],
             adoption_url="https://example.com/adopt/luna",
             pet_id="test-cat",
         )
@@ -133,20 +163,128 @@ class RunFlowTests(unittest.TestCase):
         self.assertIn(data["posted_pets"][0]["pet_id"], {"test-dog", "test-cat"})
 
 
+class RedirectRunTests(unittest.TestCase):
+    """The main.py seam that swaps the adoption URL for our redirect (RFC 0001)."""
+
+    class CapturingPoster(FakePoster):
+        def format_post(self, pet):
+            self.format_called = True
+            self.last_adoption_url = pet.adoption_url
+            return Post(text=f"Meet {pet.name}", image_urls=pet.image_urls)
+
+    def _pet(self, pet_id: str | None = "pet-redirect"):
+        return AdoptablePet(
+            name="Poppy",
+            species="dog",
+            breed="mutt",
+            location="Boston, MA",
+            image_urls=["https://example.com/poppy.jpg"],
+            adoption_url="https://example.com/adopt/poppy",
+            pet_id=pet_id,
+        )
+
+    def test_run_swaps_adoption_url_for_redirect_when_enabled(self):
+        pet = self._pet()
+        poster = self.CapturingPoster()
+
+        with TemporaryDirectory() as temporary_directory:
+            database_path = Path(temporary_directory) / "database.json"
+            redirects_path = Path(temporary_directory) / "redirects.json"
+            with mock.patch.dict("os.environ", {"REDIRECTS_ENABLED": "true"}):
+                run(
+                    [FakeSource([pet])],
+                    [poster],
+                    collectors=[],
+                    database_path=database_path,
+                    redirects_path=redirects_path,
+                )
+            mapping = json.loads(redirects_path.read_text())
+            recorded_pet_id = json.loads(database_path.read_text())["posted_pets"][0]["pet_id"]
+
+        self.assertEqual(poster.last_adoption_url, f"{SITE_URL}/r/?id=pet-redirect")
+        self.assertEqual(mapping, {"pet-redirect": "https://example.com/adopt/poppy"})
+        # The post record still tracks the real pet id, not the slug plumbing.
+        self.assertEqual(recorded_pet_id, "pet-redirect")
+
+    def test_run_keeps_raw_adoption_url_when_redirects_disabled(self):
+        pet = self._pet()
+        poster = self.CapturingPoster()
+
+        with TemporaryDirectory() as temporary_directory:
+            database_path = Path(temporary_directory) / "database.json"
+            redirects_path = Path(temporary_directory) / "redirects.json"
+            with mock.patch.dict("os.environ", {}, clear=True):
+                run(
+                    [FakeSource([pet])],
+                    [poster],
+                    collectors=[],
+                    database_path=database_path,
+                    redirects_path=redirects_path,
+                )
+            # If the enabled() guard ever regresses this must fail loudly here,
+            # not quietly mint into the repo's working directory.
+            self.assertFalse(redirects_path.exists())
+
+        self.assertEqual(poster.last_adoption_url, "https://example.com/adopt/poppy")
+
+    def test_run_defaults_to_redirects_json_in_working_directory(self):
+        pet = self._pet()
+        poster = self.CapturingPoster()
+
+        with TemporaryDirectory() as temporary_directory:
+            default_path = Path(temporary_directory) / "redirects.json"
+            database_path = Path(temporary_directory) / "database.json"
+            with (
+                mock.patch.dict("os.environ", {"REDIRECTS_ENABLED": "true"}),
+                mock.patch("redirects.DEFAULT_REDIRECTS_PATH", str(default_path)),
+            ):
+                run(
+                    [FakeSource([pet])],
+                    [poster],
+                    collectors=[],
+                    database_path=database_path,
+                    redirects_path=None,
+                )
+            mapping = json.loads(default_path.read_text())
+
+        self.assertEqual(poster.last_adoption_url, f"{SITE_URL}/r/?id=pet-redirect")
+        self.assertEqual(mapping, {"pet-redirect": "https://example.com/adopt/poppy"})
+
+    def test_run_still_posts_when_pet_has_no_pet_id(self):
+        pet = self._pet(pet_id=None)
+        poster = self.CapturingPoster()
+
+        with TemporaryDirectory() as temporary_directory:
+            database_path = Path(temporary_directory) / "database.json"
+            redirects_path = Path(temporary_directory) / "redirects.json"
+            with mock.patch.dict("os.environ", {"REDIRECTS_ENABLED": "true"}):
+                results = run(
+                    [FakeSource([pet])],
+                    [poster],
+                    collectors=[],
+                    database_path=database_path,
+                    redirects_path=redirects_path,
+                )
+
+        self.assertEqual(poster.last_adoption_url, "https://example.com/adopt/poppy")
+        self.assertEqual(len(results), 1)
+        self.assertFalse(redirects_path.exists())
+
+
 class CreateSourcesTests(unittest.TestCase):
     def test_prod_returns_single_multi_species_rescuegroups_source(self):
         sources = create_sources(debug=False)
 
         self.assertEqual(len(sources), 1)
-        self.assertIsInstance(sources[0], SourceRescueGroups)
+        assert isinstance(sources[0], SourceRescueGroups)
         self.assertEqual(sources[0].species, ("dogs", "cats"))
 
     def test_debug_returns_manual_sources_for_dogs_and_cats(self):
         sources = create_sources(debug=True)
 
         self.assertEqual(len(sources), 2)
-        self.assertIsInstance(sources[0], SourceManual)
-        self.assertIsInstance(sources[1], SourceManual)
+        assert isinstance(sources[0], SourceManual)
+        assert isinstance(sources[1], SourceManual)
         self.assertEqual(sources[0].species, "dog")
         self.assertEqual(sources[1].species, "cat")
 

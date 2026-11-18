@@ -1,8 +1,8 @@
-import sys
 import os
 import random
+import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from adoption_sources import SourceRescueGroups
 from social_posters.bluesky import PosterBluesky
@@ -21,7 +21,7 @@ def main():
     pets = list(source.fetch_pets())
     print(f"Fetched {len(pets)} pets")
 
-    with_images = [p for p in pets if p.image_url]
+    with_images = [p for p in pets if p.image_urls]
     if not with_images:
         print("No pets with images found.")
         exit(1)

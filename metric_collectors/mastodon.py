@@ -1,27 +1,34 @@
 """Mastodon engagement metric collector."""
 
-from datetime import datetime, timezone
 import os
+from datetime import datetime, timezone
+from typing import Protocol, TypedDict
 
 from mastodon import Mastodon
 
 from abstractions import MetricCollector, PostMetrics
 
 
+class StatusCounts(TypedDict, total=False):
+    favourites_count: int | None
+    reblogs_count: int | None
+    replies_count: int | None
+
+
+class MastodonStatusClient(Protocol):
+    def status(self, post_id: str, /) -> StatusCounts: ...
+
+
 class CollectorMastodon(MetricCollector):
-    def __init__(self, client=None):
-        api_base_url = os.environ.get(
-            "MASTODON_API_BASE_URL", "https://mastodon.social"
-        )
-        self._client = client or Mastodon(api_base_url=api_base_url)
+    def __init__(self, client: MastodonStatusClient | None = None) -> None:
+        api_base_url = os.environ.get("MASTODON_API_BASE_URL", "https://mastodon.social")
+        self._client: MastodonStatusClient = client or Mastodon(api_base_url=api_base_url)
 
     @property
     def platform_name(self) -> str:
         return "Mastodon"
 
-    def fetch_metrics(
-        self, post_id: str, post_url: str | None = None
-    ) -> PostMetrics | None:
+    def fetch_metrics(self, post_id: str, post_url: str | None = None) -> PostMetrics | None:
         try:
             status = self._client.status(post_id)
             return PostMetrics(

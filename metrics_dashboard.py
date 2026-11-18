@@ -1,10 +1,37 @@
+from pathlib import Path
+
 import pandas as pd
 import plotly.express as px
 from database import read_database
 
-def dashboard(html_file_path="dashboard.html", database_path="database.json"):
+
+def empty_dashboard_html(message: str) -> str:
+    return f"""<!DOCTYPE html>
+    <html>
+    <head>
+        <title>Cute Pets Boston Top Pets</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; margin: 40px; text-align: center; background-color: #f9f9f9; }}
+            h1 {{ color: #333; }}
+        </style>
+    </head>
+    <body>
+        <h1>🐶 Cute Pets Boston Top Pets 🐶</h1>
+        <p>{message}</p>
+    </body>
+    </html>
+    """
+
+def dashboard(
+    html_file_path: str | Path = "dashboard.html",
+    database_path: str | Path = "database.json",
+) -> None:
     # 1. Fetch and prepare data
     data = read_database(database_path)
+    if not data.get("posts") or not data.get("posted_pets"):
+        with open(html_file_path, "w", encoding="utf-8") as f:
+            f.write(empty_dashboard_html("No analytics data available yet."))
+        return
     
     df_pets = pd.DataFrame(data.get("posted_pets", []))
     df_posts = pd.json_normalize(
@@ -14,7 +41,15 @@ def dashboard(html_file_path="dashboard.html", database_path="database.json"):
     )
     
     df_metrics = pd.merge(df_pets, df_posts, on="pet_id", how="left")
-    
+
+    # Posts with no recorded metrics yet leave the metric columns absent
+    missing = [c for c in ("likes", "reposts", "comments") if c not in df_metrics.columns]
+    df_metrics = df_metrics.reindex(columns=[*df_metrics.columns, *missing])
+    if not df_metrics["likes"].notna().any():
+        with open(html_file_path, "w", encoding="utf-8") as f:
+            f.write(empty_dashboard_html("No metric data available yet."))
+        return
+
     # Process views daily aggregations
     df_metrics["day"] = pd.to_datetime(df_metrics["collected_at"]).dt.tz_localize(None).dt.normalize()
     views = (

@@ -2,7 +2,7 @@
 
 import json
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict
 
 from abstractions import AdoptablePet
 
@@ -15,7 +15,7 @@ def load_sample_data() -> list[Dict[str, Any]]:
     if not data_file.exists():
         raise FileNotFoundError(f"Sample data file not found: {data_file}")
 
-    with open(data_file, 'r', encoding='utf-8') as f:
+    with open(data_file, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -43,7 +43,7 @@ def rescuegroups_to_adoptable_pet(animal_data: Dict[str, Any]) -> AdoptablePet:
         location=location,
         description=description,
         adoption_url=adoption_url,
-        image_url=image_url,
+        image_urls=[image_url] if image_url else [],
     )
 
 
@@ -118,21 +118,13 @@ class TestDataUtils:
 
     def test_rescuegroups_to_adoptable_pet_with_promotions(self):
         """Test converting data with promotional text in name."""
-        sample_data = {
-            "attributes": {
-                "name": "Doli ***Home for the Holidays 1/2 price!"
-            }
-        }
+        sample_data = {"attributes": {"name": "Doli ***Home for the Holidays 1/2 price!"}}
         pet = rescuegroups_to_adoptable_pet(sample_data)
         assert pet.name == "Doli"
 
     def test_rescuegroups_to_adoptable_pet_with_asterisks(self):
         """Test converting data with asterisks in name."""
-        sample_data = {
-            "attributes": {
-                "name": "Cylana *Home for the holidays 1/2 price!"
-            }
-        }
+        sample_data = {"attributes": {"name": "Cylana *Home for the holidays 1/2 price!"}}
         pet = rescuegroups_to_adoptable_pet(sample_data)
         assert pet.name == "Cylana"
 
@@ -221,6 +213,7 @@ class TestWithSampleData:
 # Pytest fixtures (only used when pytest is available)
 try:
     import pytest
+
     HAS_PYTEST = True
 
     @pytest.fixture
@@ -241,4 +234,3 @@ try:
 except ImportError:
     # pytest not available, fixtures won't be available
     HAS_PYTEST = False
-

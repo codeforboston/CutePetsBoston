@@ -16,7 +16,9 @@ def sample_pet():
         location="Boston, MA",
         description="Brian is a laid-back lab mix who loves a good nap and a good book.",
         adoption_url="https://example.org/adopt/brian",
-        image_url="https://static.wikia.nocookie.net/familyguy/images/c/c2/FamilyGuy_Single_BrianWriter_R7.jpg/revision/latest?cb=20230807152447",
+        image_urls=[
+            "https://static.wikia.nocookie.net/familyguy/images/c/c2/FamilyGuy_Single_BrianWriter_R7.jpg/revision/latest?cb=20230807152447"
+        ],
         age_string="4 years",
         sex="Male",
         size_group="Large",
@@ -28,9 +30,7 @@ testing_cases = [sample_pet]
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Manually exercise the Instagram poster against a real account."
-    )
+    parser = argparse.ArgumentParser(description="Manually exercise the Instagram poster against a real account.")
     parser.add_argument(
         "--dry-run",
         action="store_true",
@@ -54,7 +54,7 @@ def main():
     for make_pet in testing_cases:
         pet = make_pet()
         if args.image_url:
-            pet.image_url = args.image_url
+            pet.image_urls = [args.image_url]
 
         post = poster.format_post(pet)
         print(f"\nPost preview:\n{post.text}")
@@ -64,10 +64,7 @@ def main():
         if args.dry_run:
             continue
 
-        print(
-            "\nPublishing (this polls Instagram until the image finishes "
-            "processing, up to 60s)..."
-        )
+        print("\nPublishing (this polls Instagram until the image finishes processing, up to 60s)...")
         result = poster.publish(post)
 
         if result.success:

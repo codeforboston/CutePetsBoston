@@ -1,18 +1,21 @@
-from datetime import datetime
 import logging
+import mimetypes
 import os
 import pprint
+import re
+from datetime import datetime, timezone
+from urllib.parse import urlparse
 
 import requests
 
-from abstractions import Post, PostResult, SocialPoster
+from abstractions import AdoptablePet, Post, PostResult, SocialPoster
 from config import CITY_HASHTAGS, CITY_NAME, CITY_STATE
 
 logger = logging.getLogger(__name__)
 
 
 class PosterBluesky(SocialPoster):
-    def __init__(self):
+    def __init__(self) -> None:
         # Handle environment variable validation internally
         self.username = os.environ.get("BLUESKY_HANDLE")
         self.password = os.environ.get("BLUESKY_PASSWORD")
@@ -54,47 +57,47 @@ class PosterBluesky(SocialPoster):
 
         if not self._is_available:
             logger.warning("Bluesky credentials not available.")
-            result = PostResult(
-                success=False,
-                error_message="Bluesky credentials not available."
-            )
+            result = PostResult(success=False, error_message="Bluesky credentials not available.")
             logger.info("Bluesky publish result: %s", pprint.pformat(result))
             return result
 
         if not self._access_token or not self._did:
             logger.info("No active Bluesky session; authenticating now")
             if not self.authenticate():
-                result = PostResult(
-                    success=False, error_message="Bluesky authentication failed."
-                )
+                result = PostResult(success=False, error_message="Bluesky authentication failed.")
                 logger.info("Bluesky publish result: %s", pprint.pformat(result))
                 return result
 
         headers = {"Authorization": f"Bearer {self._access_token}"}
-        image_blob = None
-
-        if post.image_url:
-            logger.info("Bluesky image URL found; starting download/upload")
+        photo_urls = post.selected_image_urls
+        images = []
+        for index, image_url in enumerate(photo_urls, start=1):
+            logger.info("Bluesky image %d: starting download/upload", index)
             try:
-                img_response = requests.get(post.image_url, timeout=20)
+                img_response = requests.get(image_url, timeout=20)
                 img_response.raise_for_status()
                 logger.info("Bluesky image downloaded (%d bytes)", len(img_response.content))
-
+                if len(img_response.content) > 2_000_000:
+                    raise ValueError("Image exceeds Bluesky's 2 MB limit")
+                content_type = img_response.headers.get("Content-Type", "").split(";", 1)[0]
+                if not content_type.startswith("image/"):
+                    content_type = mimetypes.guess_type(urlparse(image_url).path)[0] or "image/jpeg"
                 upload = requests.post(
                     "https://bsky.social/xrpc/com.atproto.repo.uploadBlob",
-                    headers={**headers, "Content-Type": "image/jpeg"},
+                    headers={**headers, "Content-Type": content_type},
                     data=img_response.content,
                     timeout=30,
                 )
                 upload.raise_for_status()
-                image_blob = upload.json().get("blob")
-                logger.info("Bluesky image uploaded (blob present=%s)", bool(image_blob))
+                blob = upload.json()["blob"]
+                alt = post.alt_text or "Photo of an adoptable pet"
+                images.append({"alt": f"{alt} (photo {index})", "image": blob})
+                logger.info("Bluesky image %d uploaded", index)
             except Exception as exc:
-                logger.exception("Bluesky image download/upload failed")
-                result = PostResult(success=False, error_message=str(exc))
-                logger.info("Bluesky publish result: %s", pprint.pformat(result))
-                return result
-        else:
+                logger.warning("Bluesky image %d skipped: %s", index, exc)
+        if photo_urls and not images:
+            return PostResult(success=False, error_message="No usable Bluesky images.")
+        if not photo_urls:
             logger.info("Bluesky post has no image URL; publishing text-only post")
 
         logger.info("Building Bluesky text and facets")
@@ -103,10 +106,10 @@ class PosterBluesky(SocialPoster):
         logger.debug("Bluesky text preview: %s", text[:280])
         logger.debug("Bluesky facets: %s", pprint.pformat(facets))
 
-        record = {
+        record: dict[str, object] = {
             "$type": "app.bsky.feed.post",
             "text": text,
-            "createdAt": datetime.utcnow().isoformat() + "Z",
+            "createdAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         }
         logger.debug("Bluesky record base: %s", pprint.pformat(record))
 
@@ -114,17 +117,9 @@ class PosterBluesky(SocialPoster):
             record["facets"] = facets
             logger.info("Attached facets to Bluesky record")
 
-        if image_blob:
-            record["embed"] = {
-                "$type": "app.bsky.embed.images",
-                "images": [
-                    {
-                        "alt": post.alt_text or "Adoptable pet",
-                        "image": image_blob,
-                    }
-                ],
-            }
-            logger.info("Attached image embed to Bluesky record")
+        if images:
+            record["embed"] = {"$type": "app.bsky.embed.images", "images": images}
+            logger.info("Attached %d images to Bluesky record", len(images))
 
         logger.debug("Final Bluesky record payload: %s", pprint.pformat(record))
 
@@ -156,9 +151,7 @@ class PosterBluesky(SocialPoster):
             logger.info("Bluesky publish result: %s", pprint.pformat(result))
             return result
 
-    def format_post(self, pet):
-        from abstractions import Post
-
+    def format_post(self, pet: AdoptablePet) -> Post:
         name = pet.name.split("*")[0].strip()
 
         text = f"Hi, I'm {name}! I'm a {pet.breed} looking for a forever home"
@@ -187,16 +180,35 @@ class PosterBluesky(SocialPoster):
         if pet.adoption_url:
             text += f"\n\nLearn more and adopt me: {pet.adoption_url}"
 
-        species_tag = "DogsOfBluesky" if pet.species == "dog" else "CatsOfBluesky"
+        species_tag = f"{pet.species.capitalize()}sOfBluesky"
         tags = ["AdoptDontShop", *CITY_HASHTAGS, city, species_tag]
+        if pet.species.lower() == "cat":
+            tags.extend(self._cat_breed_tags(pet.breed))
 
+        photos = pet.image_urls
         return Post(
             text=text,
-            image_url=pet.image_url,
+            image_urls=photos,
             link=pet.adoption_url,
             alt_text=f"Photo of {name}, a {pet.breed} available for adoption",
             tags=tags,
         )
+
+    @staticmethod
+    def _cat_breed_tags(breed: str | None) -> list[str]:
+        """Turn each named cat breed into a hashtag, omitting coat notes and mix labels."""
+        tags: list[str] = []
+        for part in (breed or "").split("/"):
+            name = re.sub(r"\([^)]*\)", "", part)
+            name = re.sub(r"\b(?:mixed|mix)\b", "", name, flags=re.IGNORECASE).strip()
+            tag = "".join(character for character in name if character.isalnum())
+            if (
+                tag
+                and tag.casefold() not in {"unknown", "unspecified", "other"}
+                and tag.casefold() not in {existing.casefold() for existing in tags}
+            ):
+                tags.append(tag)
+        return tags or ["purr"]
 
     def _build_text_and_facets(self, post: Post) -> tuple[str, list]:
         body = post.text
@@ -206,6 +218,18 @@ class PosterBluesky(SocialPoster):
 
         tag_strings = [f"#{tag}" for tag in (post.tags) if tag]
         tags_section = " ".join(tag_strings)
+        if len(body) + (len(separator) + len(tags_section) if tags_section else 0) > limit:
+            # Keep the pet-specific tags before cutting any of its description.
+            tag_strings = [tag for tag in tag_strings if tag.casefold() not in {"#adoptdontshop", "#boston"}]
+            tags_section = " ".join(tag_strings)
+
+        # Even an unusually long breed tag must leave room for the adoption URL.
+        # Remove trailing tags only when the tags and URL cannot fit together.
+        link_length = len(post.link) if post.link and post.link in body else 0
+        while tag_strings and len(separator) + len(tags_section) + link_length > limit:
+            tag_strings.pop()
+            tags_section = " ".join(tag_strings)
+
         # Truncate body so the full text (body + separators + tags) fits in limit chars.
         max_body = limit - (len(separator) + len(tags_section) if tags_section else 0)
         # When the link URL is embedded in the body and would be truncated,
@@ -226,25 +250,27 @@ class PosterBluesky(SocialPoster):
             link_bytes = post.link.encode("utf-8")
             link_idx = encoded.find(link_bytes)
             if link_idx != -1:
-                facets.append({
-                    "index": {
-                        "byteStart": link_idx,
-                        "byteEnd": link_idx + len(link_bytes),
-                    },
-                    "features": [
-                        {"$type": "app.bsky.richtext.facet#link", "uri": post.link}
-                    ],
-                })
+                facets.append(
+                    {
+                        "index": {
+                            "byteStart": link_idx,
+                            "byteEnd": link_idx + len(link_bytes),
+                        },
+                        "features": [{"$type": "app.bsky.richtext.facet#link", "uri": post.link}],
+                    }
+                )
 
         search_from = 0
         for tag_str in tag_strings:
             tag_bytes = tag_str.encode("utf-8")
             idx = encoded.find(tag_bytes, search_from)
             if idx != -1:
-                facets.append({
-                    "index": {"byteStart": idx, "byteEnd": idx + len(tag_bytes)},
-                    "features": [{"$type": "app.bsky.richtext.facet#tag", "tag": tag_str[1:]}],
-                })
+                facets.append(
+                    {
+                        "index": {"byteStart": idx, "byteEnd": idx + len(tag_bytes)},
+                        "features": [{"$type": "app.bsky.richtext.facet#tag", "tag": tag_str[1:]}],
+                    }
+                )
                 search_from = idx + len(tag_bytes)
 
         facets.sort(key=lambda f: f["index"]["byteStart"])
@@ -282,4 +308,3 @@ class PosterBluesky(SocialPoster):
 
         separator = " " if trimmed_prefix else ""
         return f"{trimmed_prefix}{separator}{link}"
-

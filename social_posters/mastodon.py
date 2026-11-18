@@ -3,20 +3,19 @@ from __future__ import annotations
 import logging
 import os
 import pprint
+import re
 import tempfile
-from collections.abc import Iterator
 from urllib.parse import urlparse
 
 import requests
 from mastodon import Mastodon
 
-from abstractions import AdoptablePet, Post, PostResult, SocialPoster
-from abstractions import CITY_NAME, CITY_STATE
+from abstractions import CITY_NAME, CITY_STATE, AdoptablePet, Post, PostResult, SocialPoster
 
-THREAD_SUFFIX = "\n\nMore details below ⬇️"
+LINK_SUFFIX = "\n\nMore details at link 🔗"
 MASTODON_CHARACTER_LIMIT = 500
 TRUNCATION_SUFFIX = "..."
-MAX_REPLIES = 5
+SENTENCE_END_RE = re.compile(r"[.!?]\s")
 
 logger = logging.getLogger(__name__)
 
@@ -47,16 +46,12 @@ class PosterMastodon(SocialPoster):
             self._session.account_verify_credentials()
             self._auth_error = None
         except Exception as exc:
-            logger.exception(
-                "Mastodon authentication failed"
-            )
+            logger.exception("Mastodon authentication failed")
             self._session = None
             self._auth_error = f"{type(exc).__name__}: {exc}"
             return False
         else:
-            logger.info(
-                "Mastodon authentication succeeded"
-            )
+            logger.info("Mastodon authentication succeeded")
         return True
 
     def publish(self, post: Post) -> PostResult:
@@ -72,7 +67,8 @@ class PosterMastodon(SocialPoster):
             return result
         logger.info("Mastodon credentials available.")
 
-        if not post.image_url:
+        photo_urls = post.selected_image_urls
+        if not photo_urls:
             logger.warning("Mastodon posts require an image URL.")
             result = PostResult(
                 success=False,
@@ -80,7 +76,7 @@ class PosterMastodon(SocialPoster):
             )
             logger.info("Mastodon publish result: %s", pprint.pformat(result))
             return result
-        logger.info("Mastodon posts have image URL")
+        logger.info("Mastodon post has %d photo URLs", len(photo_urls))
 
         if self._session is None and not self.authenticate():
             logger.warning("Mastodon authentication failed.")
@@ -105,79 +101,51 @@ class PosterMastodon(SocialPoster):
             logger.info("Mastodon publish result: %s", pprint.pformat(result))
             return result
         logger.info("Mastodon authentication successful")
-        
-        root_status: dict | None = None
-        completed_reply_count = 0
+
         stage = "preparing publish"
 
         try:
             stage = "preparing media"
-            media_id = self._upload_media(session, post)
+            media_ids = []
+            for index, image_url in enumerate(photo_urls, start=1):
+                try:
+                    media_ids.append(self._upload_media(session, post, image_url, index))
+                except Exception as exc:
+                    logger.warning("Mastodon image %d skipped: %s", index, exc)
+            if not media_ids:
+                raise RuntimeError("No usable Mastodon images.")
 
-            stage = "formatting caption thread"
-            logger.info("Mastodon formatting caption thread")
-            main_caption, replies = self._format_caption_thread(post)
-            main_caption_formatted = pprint.pformat(main_caption)
-            replies_formatted = pprint.pformat(replies)
+            stage = "formatting caption"
+            logger.info("Mastodon formatting caption")
+            caption = self._format_caption(post)
+            logger.info("Mastodon caption output: length=%d", len(caption))
+            logger.info("Mastodon caption: %s", pprint.pformat(caption))
+
+            stage = "posting status"
             logger.info(
-                "Mastodon caption thread output: main_caption_length=%d reply_count=%d",
-                len(main_caption),
-                len(replies),
+                "Mastodon posting status input: caption_length=%d media_ids=%s",
+                len(caption),
+                media_ids,
             )
-            logger.info("Mastodon main caption: %s", main_caption_formatted)
-            logger.info("Mastodon replies: %s", replies_formatted)
-            
-            stage = "posting thread"
-            logger.info("Mastodon start posting thread")
-            logger.info(
-                "Mastodon posting thread input: main_caption_length=%d reply_count=%d media_id=%s",
-                len(main_caption),
-                len(replies),
-                media_id,
+            status = session.status_post(
+                caption,
+                media_ids=media_ids,
             )
-            for post_kind, reply_number, status in self._post_thread(
-                session,
-                main_caption,
-                replies,
-                media_id,
-            ):
-                if post_kind == "root":
-                    root_status = status
-                else:
-                    completed_reply_count += 1
-
-                logger.info(
-                    "Mastodon thread post output: kind=%s reply_number=%s status=%s",
-                    post_kind,
-                    reply_number,
-                    pprint.pformat(status),
-                )
-
-            if root_status is None:
-                raise RuntimeError("Mastodon thread did not return a root status.")
-
-            logger.info(
-                "Mastodon finished posting thread: root_id=%s reply_count=%d",
-                root_status["id"],
-                completed_reply_count,
-            )
+            logger.info("Mastodon status post output: %s", pprint.pformat(status))
 
             result = PostResult(
                 success=True,
-                post_id=str(root_status["id"]),
-                post_url=root_status.get("url"),
+                post_id=str(status["id"]),
+                post_url=status.get("url"),
             )
             logger.info("Mastodon publish result: %s", pprint.pformat(result))
             return result
 
         except Exception as exc:
             logger.exception(
-                "Mastodon posting failed during %s: %s "
-                "(root_posted=%s completed_reply_count=%d)",
+                "Mastodon posting failed during %s: %s",
                 stage,
                 exc,
-                root_status is not None,
-                completed_reply_count,
             )
             result = PostResult(success=False, error_message=str(exc))
             logger.info("Mastodon publish result: %s", pprint.pformat(result))
@@ -186,51 +154,23 @@ class PosterMastodon(SocialPoster):
         finally:
             self._session = None
 
-    def _post_thread(
-        self,
-        session: Mastodon,
-        main_caption: str,
-        replies: list[str],
-        media_id: str,
-    ) -> Iterator[tuple[str, int | None, dict]]:
-        status = session.status_post(
-            main_caption,
-            media_ids=[media_id],
-        )
-        yield "root", None, status
-
-        root_status_id = status["id"]
-
-        for reply_number, reply_text in enumerate(replies, start=1):
-            reply_status = session.status_post(
-                reply_text,
-                in_reply_to_id=root_status_id,
-            )
-            yield "reply", reply_number, reply_status
-
-    def _format_caption_thread(self, post: Post) -> tuple[str, list[str]]:
+    def _format_caption(self, post: Post) -> str:
         caption_text = post.text.strip()
         tag_suffix = self._format_tag_suffix(post.tags)
 
         if self._fits_single_post(caption_text, tag_suffix):
-            return f"{caption_text}{tag_suffix}", []
+            return f"{caption_text}{tag_suffix}"
 
-        main_limit = self._main_caption_limit(tag_suffix)
+        link_suffix = LINK_SUFFIX if post.link else ""
+
+        main_limit = self._main_caption_limit(link_suffix, tag_suffix)
 
         if main_limit <= 0:
             raise ValueError("Tags are too long to fit in a Mastodon post.")
 
-        main_text, overflow = self._safe_truncate(caption_text, main_limit)
-        replies = self._split_reply_chunks(overflow)
+        main_text, _ = self._safe_truncate(caption_text, main_limit)
 
-        main_caption = (
-            f"{main_text}"
-            f"{TRUNCATION_SUFFIX}"
-            f"{THREAD_SUFFIX}"
-            f"{tag_suffix}"
-        )
-
-        return main_caption, replies
+        return f"{main_text}{TRUNCATION_SUFFIX}{link_suffix}{tag_suffix}"
 
     @staticmethod
     def _fits_single_post(caption_text: str, tag_suffix: str) -> bool:
@@ -243,48 +183,29 @@ class PosterMastodon(SocialPoster):
         return f"\n\n{tag_text}" if tag_text else ""
 
     @staticmethod
-    def _main_caption_limit(tag_suffix: str) -> int:
-        return (
-            MASTODON_CHARACTER_LIMIT
-            - len(tag_suffix)
-            - len(THREAD_SUFFIX)
-            - len(TRUNCATION_SUFFIX)
-        )
-
-    def _split_reply_chunks(self, text: str) -> list[str]:
-        chunks = []
-        remaining = text.strip()
-
-        while remaining and len(chunks) < MAX_REPLIES:
-            chunk, remaining = self._safe_truncate(
-                remaining,
-                MASTODON_CHARACTER_LIMIT,
-            )
-            chunks.append(chunk)
-
-        if remaining and chunks:
-            cutoff = MASTODON_CHARACTER_LIMIT - len(TRUNCATION_SUFFIX)
-            last_chunk, _ = self._safe_truncate(chunks[-1], cutoff)
-            chunks[-1] = f"{last_chunk}{TRUNCATION_SUFFIX}"
-
-        return chunks
+    def _main_caption_limit(link_suffix: str, tag_suffix: str) -> int:
+        return MASTODON_CHARACTER_LIMIT - len(link_suffix) - len(tag_suffix) - len(TRUNCATION_SUFFIX)
 
     def _download_image(self, image_url: str) -> str:
         parsed_url = urlparse(image_url)
         ext = os.path.splitext(parsed_url.path)[1] or ".jpg"
 
         with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
-            with requests.get(image_url, stream=True, timeout=20) as response:
-                response.raise_for_status()
+            try:
+                with requests.get(image_url, stream=True, timeout=20) as response:
+                    response.raise_for_status()
 
-                for chunk in response.iter_content(chunk_size=1024 * 128):
-                    if chunk:
-                        tmp.write(chunk)
-
+                    for chunk in response.iter_content(chunk_size=1024 * 128):
+                        if chunk:
+                            tmp.write(chunk)
+            except Exception:
+                os.unlink(tmp.name)
+                raise
             return tmp.name
 
-    def _upload_media(self, session: Mastodon, post: Post) -> str:
-        if not post.image_url:
+    def _upload_media(self, session: Mastodon, post: Post, image_url: str | None = None, index: int = 1) -> str:
+        image_url = image_url or (post.selected_image_urls[0] if post.selected_image_urls else None)
+        if not image_url:
             raise ValueError("Mastodon posts require an image URL.")
 
         image_path = None
@@ -292,12 +213,12 @@ class PosterMastodon(SocialPoster):
             logger.info("Start downloading image")
             logger.info(
                 "Mastodon download image input: image_url=%s",
-                post.image_url,
+                image_url,
             )
-            image_path = self._download_image(post.image_url)
+            image_path = self._download_image(image_url)
             logger.info("Finish downloading image: image_path=%s", image_path)
 
-            media_description = post.alt_text or "Photo of an adoptable pet"
+            media_description = f"{post.alt_text or 'Photo of an adoptable pet'} (photo {index})"
             logger.info(
                 "Mastodon media upload input: image_path=%s description=%s",
                 image_path,
@@ -318,7 +239,12 @@ class PosterMastodon(SocialPoster):
         if len(text) <= limit:
             return text, ""
 
-        cut = text.rfind(" ", 0, limit)
+        cut = -1
+        for match in SENTENCE_END_RE.finditer(text[:limit]):
+            cut = match.start() + 1
+
+        if cut == -1:
+            cut = text.rfind(" ", 0, limit)
 
         if cut == -1:
             cut = limit
@@ -335,8 +261,7 @@ class PosterMastodon(SocialPoster):
             pet.pet_id,
         )
         text = (
-            f"Meet {pet.name}! This adorable {pet.breed} {pet.species} "
-            f"is looking for a forever home in {pet.location}."
+            f"Meet {pet.name}! This adorable {pet.breed} {pet.species} is looking for a forever home in {pet.location}."
         )
         logger.info("Mastodon base post text: %s", text)
 
@@ -353,14 +278,12 @@ class PosterMastodon(SocialPoster):
             city = pet.location.split(",")[0].capitalize()
         logger.info("Mastodon derived city tag: %s", city)
 
+        photos = pet.image_urls
         post = Post(
             text=text,
-            image_url=pet.image_url,
+            image_urls=photos,
             link=pet.adoption_url,
-            alt_text=(
-                f"Photo of {pet.name}, a {pet.breed} {pet.species} "
-                "available for adoption"
-            ),
+            alt_text=(f"Photo of {pet.name}, a {pet.breed} {pet.species} available for adoption"),
             tags=[
                 "adoptdontshop",
                 "rescue",
