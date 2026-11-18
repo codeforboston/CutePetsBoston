@@ -147,8 +147,7 @@ adoption date. Pets without a known status appear as Unknown.
 The workflow restores the latest completed production run with a database artifact,
 including failed runs that saved status updates. Artifacts expire after 14 days;
 if scheduled runs are interrupted longer than that, restore a saved database artifact
-before resuming to avoid losing the archive. Do not replace production state with
-the scratch databases in `data_sandbox/`.
+before resuming to avoid losing the archive.
 
 # History
 
