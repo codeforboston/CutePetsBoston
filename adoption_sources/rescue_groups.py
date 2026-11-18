@@ -24,8 +24,10 @@ from config import CITY_NAME, CITY_STATE, PET_SPECIES, POSTAL_CODE, RESCUEGROUPS
 
 logger = logging.getLogger(__name__)
 
-# Some rescues publish entries like "More Dogs Soon!" to point users at their
-# website; those should never be posted. Add new names here as we encounter them.
+# Some rescues publish placeholders like "More Dogs Soon!" to direct users to
+# their website. Skip these records when selecting pets to post.
+# If we encounter more variants of these phrases, use case-insensitive
+# Levenshtein matching with a maximum distance of 2 to handle those variants.
 PLACEHOLDER_NAMES: Final[frozenset[str]] = frozenset(
     {
         "more dogs soon",
