@@ -27,7 +27,7 @@ The goal of CutePetsBoston is to advertise pets (in the Boston area) to get more
 ## 3. Plan Summary (TL;DR)
 
 Our animal data is obtained by the Rescue Groups API. Every animal we fetch will:
-- be available for adtopion
+- be available for adoption
 - have an associated picture
 It may or may *not* have some associated videos. If those videos are available, they should be displayed on each social media platform that we support.
 
