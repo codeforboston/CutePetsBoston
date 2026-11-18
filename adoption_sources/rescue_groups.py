@@ -26,7 +26,12 @@ logger = logging.getLogger(__name__)
 
 # Some rescues publish entries like "More Dogs Soon!" to point users at their
 # website; those should never be posted. Add new names here as we encounter them.
-PLACEHOLDER_NAMES: tuple[str, ...] = ("more dogs soon!", "more cats soon!")
+PLACEHOLDER_NAMES: tuple[str, ...] = (
+    "more dogs soon",
+    "more dogs soon!",
+    "more cats soon!",
+    "fosters needed!",
+)
 
 # Values used by the rest of the application.
 SPECIES_SINGULAR = {"dogs": "dog", "cats": "cat"}
