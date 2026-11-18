@@ -5,6 +5,7 @@ pipeline also persists and publishes the analytics page.
 
 Implements RFC 0001 (`rfcs/0001-url-redirect-system.md`). Files involved:
 `.github/workflows/prod.yml`, `deploy-pages.yml`, `publish-pages.yml`,
+`tools/merge_redirects.py`,
 `redirects.py`, `database.py`, `metrics_dashboard.py`, `web/r/index.html`.
 
 ---
@@ -61,7 +62,7 @@ it exists only to own a trigger and a permission set, then delegates.
    ║  2  download mapping artifact          [if passed]   ║
    ║  2b download analytics artifact        [if passed]   ║
    ║  3  checkout gh-pages                  → authority   ║
-   ║  4  merge  jq -s '.[0] * .[1]' minted previous       ║
+   ║  4  merge with tools/merge_redirects.py              ║
    ║            gh-pages wins conflicts => append-only    ║
    ║  4b copy fresh dashboard.html into gh-pages          ║
    ║  5  commit + push to gh-pages          [if passed]   ║
@@ -89,6 +90,10 @@ it exists only to own a trigger and a permission set, then delegates.
 - New mappings are written to the local `redirects.json` and uploaded as the
   `redirects.json` artifact. Existing mappings are never overwritten or
   deleted; the `gh-pages` copy is authoritative if a collision is encountered.
+- Publishing merges mappings with the standard-library-only
+  `tools/merge_redirects.py`. Missing files support a first deployment; empty
+  minted input is a no-op. Invalid JSON, non-object mappings, non-string values,
+  or an empty authoritative file fail publishing before replacing the output.
 - Only `http` and `https` adoption targets are accepted. A missing pet ID, unsafe
   target, or unreadable local mapping falls back to the original adoption URL so
   redirect data cannot block a social post.
@@ -153,7 +158,7 @@ Do **not** assemble the analytics page straight from the artifact into `_site`.
 `_site` is rebuilt from nothing on every deploy, and Entry A passes no artifacts
 — so a site-only push would publish a site with the analytics page **missing**,
 and it would stay missing until the next cron run four hours later. This is the
-same failure shape as the mapping wipe that the `jq` merge exists to prevent.
+same failure shape as the mapping wipe that the Python merge exists to prevent.
 
 Read step 6 above: `_site` takes both files from the **gh-pages checkout**, never
 directly from the artifact. The artifact's only job is to update gh-pages in step

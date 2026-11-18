@@ -88,6 +88,10 @@ Optional for Instagram posting:
 - `INSTAGRAM_BUSINESS_ACCOUNT_ID` (or `INSTAGRAM_TEST_BUSINESS_ACCOUNT_ID`)
 - `INSTAGRAM_PAGE_ACCESS_TOKEN` (or `INSTAGRAM_TEST_PAGE_ACCESS_TOKEN`)
 
+Instagram tokens are renewed weekly by the **Refresh Instagram Tokens** workflow.
+An administrator must first configure its GitHub App credentials; see
+[automatic token renewal](docs/meta-account-ecosystem.md#automatic-token-renewal) for setup and recovery.
+
 Optional for Bluesky posting:
 - `BLUESKY_HANDLE` (or `BLUESKY_TEST_HANDLE`)
 - `BLUESKY_PASSWORD` (or `BLUESKY_TEST_PASSWORD`)

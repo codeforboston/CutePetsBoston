@@ -1,12 +1,41 @@
+/* ==========================================================================
+   CutePetsBoston homepage
+
+   The palette, type scale, radii and spacing come from the design mockup
+   (`Desktop homepage-html/Main.dc.html`) -- replicated by value, not copied
+   as tooling. Sections in this file:
+     1. Design tokens + base styles
+     2. Hero (nav, copy, art tiles)
+     3. Shared section styles
+     4. Pet cards ("Fresh from the feed")
+     5. Shelter pills
+     6. Follow cards
+     7. Contribute (dark) section + footer
+   ========================================================================== */
+
+/* ---- 1. Design tokens + base styles ------------------------------------- */
+
 :root {
-  --bg: #fef9f4;
-  --surface: #ffffff;
-  --ink: #1f2937;
-  --muted: #6b7280;
-  --accent: #d6336c;
-  --accent-soft: #fde2ec;
-  --border: #e5e7eb;
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.04);
+  /* Palette from the mockup. */
+  --cream: #fff6e5;        /* page background, card dates, light pills */
+  --ink: #2b1b17;          /* dark brown text, borders, dark section */
+  --yellow: #ffc93c;       /* hero */
+  --yellow-soft: #fff1c2;  /* pet chips */
+  --orange: #f25c3b;       /* primary buttons */
+  --pink: #ffb3c1;
+  --blue: #8ec9f0;
+  --teal: #9adfd2;
+  --teal-strong: #2bb3a3;  /* "Adopt don't shop" tile */
+  --peach: #ffc2a1;
+  --brown: #8a4b2d;
+
+  --font-display: "Fredoka", "Trebuchet MS", sans-serif;
+  --font-body: "Nunito", system-ui, sans-serif;
+
+  --radius-section: 56px;
+  --radius-card: 32px;
+  --radius-pill: 999px;
+  --border: 2px solid var(--ink);
 }
 
 * {
@@ -19,234 +48,560 @@ html, body {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-    Ubuntu, sans-serif;
-  background: var(--bg);
-  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 18px;
   line-height: 1.5;
+  background: var(--cream);
+  color: var(--ink);
 }
 
 a {
-  color: var(--accent);
+  color: inherit;
   text-decoration: none;
 }
 
 a:hover {
-  text-decoration: underline;
+  color: #b3351a;
 }
 
-.container {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 0 1.25rem;
-}
-
-.hero {
-  background: linear-gradient(135deg, var(--accent-soft), #fff);
-  border-bottom: 1px solid var(--border);
-  padding: 3.5rem 0 2.5rem;
-  text-align: center;
-}
-
-.hero h1 {
-  margin: 0 0 0.5rem;
-  font-size: 2.5rem;
-  letter-spacing: -0.02em;
-}
-
-.hero .headline {
-  margin: 0 auto 0.6rem;
-  max-width: 640px;
-  color: var(--ink);
-  font-size: 1.35rem;
-  font-weight: 500;
-}
-
-.hero .subheader {
-  margin: 0 auto;
-  max-width: 560px;
-  color: var(--muted);
-  font-size: 1.05rem;
-}
-
-section {
-  padding: 2.5rem 0;
-  border-bottom: 1px solid var(--border);
-}
-
-section:last-of-type {
-  border-bottom: none;
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  margin: 0;
 }
 
 h2 {
-  margin: 0 0 1rem;
-  font-size: 1.5rem;
+  font-size: clamp(2.125rem, 5vw, 3.5rem);
+  line-height: 1.05;
 }
 
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1rem;
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px; /* breathing room either side of the content column */
 }
 
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 1.1rem 1.2rem;
-  box-shadow: var(--shadow);
+/* ---- 2. Hero ------------------------------------------------------------ */
+
+.hero {
+  background: var(--yellow);
+  border-radius: 0 0 var(--radius-section) var(--radius-section);
+  overflow: hidden;
 }
 
-.card h3 {
-  margin: 0 0 0.25rem;
-  font-size: 1.05rem;
-}
-
-.card .meta {
-  color: var(--muted);
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
-}
-
-.dashboard-note {
-  margin-top: 1rem;
-  color: var(--muted);
-  font-size: 0.9rem;
-}
-
-.action-links {
+.site-nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.6rem;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
 }
 
-.follow {
-  margin-top: 1.5rem;
+.site-logo {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 28px;
 }
 
-.follow-label {
-  color: var(--muted);
-  font-size: 0.95rem;
-  font-weight: 500;
-}
-
-.social-icons {
-  display: flex;
-  justify-content: center;
-  gap: 0.75rem;
-}
-
-.social-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 999px;
-  color: var(--muted);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  transition: color 120ms ease, border-color 120ms ease, transform 120ms ease;
-}
-
-.social-icon svg {
-  width: 1.25rem;
-  height: 1.25rem;
-  fill: currentColor;
-}
-
-.social-icon:hover {
-  color: var(--accent);
-  border-color: var(--accent);
-  text-decoration: none;
-  transform: translateY(-1px);
-}
-
-.btn {
-  display: inline-block;
-  padding: 0.55rem 1rem;
-  border-radius: 999px;
-  background: var(--surface);
-  border: 1px solid var(--border);
+.site-logo-paw {
+  width: 40px;
+  height: 40px;
   color: var(--ink);
-  font-weight: 500;
 }
 
-.btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+.site-nav-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: center;
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.site-nav-links a {
   text-decoration: none;
 }
 
-.btn-primary {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
+.hero-inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 48px;
+  align-items: center;
+  padding: 40px 0 88px;
 }
 
-.btn-primary:hover {
-  background: #b8265a;
-  border-color: #b8265a;
-  color: #fff;
-}
-
-.post-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1rem;
-}
-
-.post-card {
+.hero-copy {
+  flex: 1 1 480px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  overflow: hidden;
+  gap: 24px;
+}
+
+.hero-badge {
+  align-self: flex-start;
+  background: var(--ink);
+  color: var(--cream);
+  border-radius: var(--radius-pill);
+  padding: 8px 18px;
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.hero-copy h1 {
+  font-size: clamp(2.75rem, 7vw, 5.25rem);
+  line-height: 0.98;
+  letter-spacing: -0.01em;
+}
+
+.hero-summary {
+  margin: 0;
+  max-width: 520px;
+  font-size: 21px;
+  font-weight: 600;
+}
+
+.hero-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.hero-button {
+  background: var(--orange);
   color: var(--ink);
-  box-shadow: var(--shadow);
-  transition: transform 120ms ease, border-color 120ms ease;
+  border-radius: var(--radius-pill);
+  padding: 18px 32px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 20px;
 }
 
-.post-card:hover {
-  text-decoration: none;
-  transform: translateY(-2px);
-  border-color: var(--accent);
+.hero-button-cream {
+  background: var(--cream);
 }
 
-.post-image {
-  width: 100%;
-  aspect-ratio: 1 / 1;
+/* Decorative tiles, tilted like the mockup: each colored tile acts as the
+   border around one of the two most recent pets' photos. */
+.hero-art {
+  flex: 1 1 420px;
+  min-width: 0;
+  position: relative;
+  height: 460px;
+}
+
+.art-tile {
+  position: absolute;
+  border-radius: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* The inset photo leaves the tile color showing as a border/mat frame. */
+.art-photo {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  width: calc(100% - 28px);
+  height: calc(100% - 28px);
   object-fit: cover;
-  display: block;
-  background: var(--accent-soft);
+  border-radius: 28px;
 }
 
-.post-image-placeholder {
-  background: var(--accent-soft);
+.art-tile-pink {
+  left: 0;
+  top: 30px;
+  width: 56%;
+  height: 400px;
+  background: var(--pink);
+  transform: rotate(-4deg);
 }
 
-.post-body {
-  padding: 0.75rem 0.9rem 0.9rem;
+.art-tile-blue {
+  right: 0;
+  top: 0;
+  width: 52%;
+  height: 340px;
+  background: var(--blue);
+  transform: rotate(5deg);
 }
 
-.post-caption {
-  font-size: 0.95rem;
-  margin-bottom: 0.3rem;
-}
-
-footer {
+.art-tile-slogan {
+  right: 6%;
+  bottom: 10px;
+  width: 46%;
+  height: 200px;
+  padding: 20px;
+  background: var(--teal-strong);
+  transform: rotate(-2deg);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 30px;
+  line-height: 1.1;
   text-align: center;
-  padding: 2rem 1rem 3rem;
-  color: var(--muted);
-  font-size: 0.9rem;
 }
 
-footer p {
-  margin: 0.35rem 0;
+.art-mascot {
+  width: 180px;
+  height: 180px;
+}
+
+/* ---- 3. Shared section styles ------------------------------------------- */
+
+.section-note {
+  color: var(--ink);
+  opacity: 0.7;
+  font-weight: 600;
+}
+
+.section-intro {
+  margin: 0 0 28px;
+  max-width: 720px;
+  font-weight: 600;
+}
+
+/* ---- 4. Pet cards ("Fresh from the feed") -------------------------------- */
+
+.section-pets {
+  padding-top: 96px;
+  padding-bottom: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.section-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.section-head .section-intro {
+  max-width: 620px;
+  margin-bottom: 0;
+}
+
+.filter-pill {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 18px;
+  min-height: 44px;
+  padding: 12px 24px;
+  border: var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--cream);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.filter-pill:hover {
+  color: #b3351a;
+}
+
+/* Selected filter, as in the mockup: dark pill on light page. */
+.filter-pill.is-active {
+  background: var(--ink);
+  color: var(--cream);
+}
+
+.section-head .filter-pill.is-active:hover {
+  color: var(--cream);
+}
+
+.pet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 24px;
+}
+
+.pet-card {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: var(--border);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
+
+.pet-photo {
+  position: relative;
+  height: 230px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pet-photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pet-mascot {
+  width: 130px;
+  height: 130px;
+}
+
+.pet-date-pill {
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  /* Above the photo, which fills the tile in an absolutely-positioned
+     <img> rendered later in the DOM. */
+  z-index: 1;
+  background: var(--cream);
+  border: var(--border);
+  border-radius: var(--radius-pill);
+  padding: 2px 12px;
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.pet-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px 22px 24px;
+}
+
+.pet-name {
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.pet-location {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.pet-pin {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.pet-blurb {
+  margin: 0;
+  font-size: 16px;
+}
+
+.pet-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.pet-chip {
+  background: var(--yellow-soft);
+  border-radius: var(--radius-pill);
+  padding: 3px 12px;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+/* Photo tiles cycle the mockup's palette so the grid is a checker of tones. */
+.pet-card:nth-child(5n + 1) .pet-photo { background: var(--pink); }
+.pet-card:nth-child(5n + 2) .pet-photo { background: var(--yellow); }
+.pet-card:nth-child(5n + 3) .pet-photo { background: var(--blue); }
+.pet-card:nth-child(5n + 4) .pet-photo { background: var(--teal); }
+.pet-card:nth-child(5n + 5) .pet-photo { background: var(--peach); }
+
+/* ---- 5. Shelter pills ---------------------------------------------------- */
+
+.section-shelters {
+  padding-top: 72px;
+  padding-bottom: 72px;
+}
+
+.shelter-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.shelter-pill {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: var(--border);
+  border-radius: var(--radius-pill);
+  padding: 12px 26px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.shelter-location {
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--brown);
+}
+
+.shelter-pill:nth-child(5n + 1) { background: var(--pink); }
+.shelter-pill:nth-child(5n + 2) { background: var(--blue); }
+.shelter-pill:nth-child(5n + 3) { background: var(--yellow); }
+.shelter-pill:nth-child(5n + 4) { background: var(--teal); }
+.shelter-pill:nth-child(5n + 5) { background: var(--peach); }
+
+/* ---- 6. Follow cards ------------------------------------------------------ */
+
+.section-follow {
+  padding-top: 40px;
+  padding-bottom: 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.follow-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.follow-card {
+  flex: 1 1 300px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: var(--border);
+  border-radius: var(--radius-card);
+  padding: 32px;
+}
+
+.follow-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 34px;
+}
+
+.follow-handle {
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.follow-card:nth-child(1) { background: var(--pink); }
+.follow-card:nth-child(2) { background: var(--blue); }
+.follow-card:nth-child(3) { background: var(--teal); }
+
+/* ---- 7. Contribute (dark) section + footer -------------------------------- */
+
+.contribute {
+  background: var(--ink);
+  color: var(--cream);
+  border-radius: var(--radius-section) var(--radius-section) 0 0;
+}
+
+/* Inline contribution links pop yellow against the dark background. */
+.contribute .contribute-copy a,
+.contribute .site-footer a {
+  color: var(--yellow);
+}
+
+.contribute-inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 48px;
+  align-items: center;
+  padding: 88px 0 40px;
+}
+
+.contribute-copy {
+  flex: 1 1 420px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.contribute-copy p {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.contribute-links {
+  flex: 1 1 420px;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.contribute-link {
+  background: var(--yellow);
+  color: var(--ink);
+  border-radius: 24px;
+  padding: 22px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 20px;
+}
+
+.contribute-link-hot {
+  background: var(--orange);
+}
+
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+  padding-bottom: 40px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.site-footer p {
+  margin: 0;
+}
+
+/* ---- Responsive tweaks (the mockup is desktop-only) ------------------------ */
+
+@media (max-width: 960px) {
+  .hero-art {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 20px;
+  }
+
+  .site-nav-links {
+    gap: 14px;
+  }
+
+  .hero-inner {
+    padding-bottom: 48px;
+  }
+
+  .section-pets,
+  .section-shelters,
+  .section-follow {
+    padding-top: 48px;
+    padding-bottom: 48px;
+  }
+
+  .contribute-links {
+    grid-template-columns: 1fr;
+  }
 }
