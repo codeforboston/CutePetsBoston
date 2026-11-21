@@ -1,11 +1,11 @@
 {
     "meta": {
-        "count": 267,
+        "count": 256,
         "countReturned": 25,
         "pageReturned": 1,
         "limit": 25,
         "pages": 11,
-        "transactionId": "KzTLUXvplGRD"
+        "transactionId": "KiSuFEAWIAIe"
     },
     "data": [
         {
@@ -1405,75 +1405,6 @@
         },
         {
             "type": "animals",
-            "id": "21733774",
-            "attributes": {
-                "distance": 19.08,
-                "isAdoptionPending": false,
-                "isBirthDateExact": false,
-                "breedString": "Chihuahua",
-                "breedPrimary": "Chihuahua",
-                "breedPrimaryId": 118,
-                "isBreedMixed": false,
-                "isCourtesyListing": false,
-                "isNeedingFoster": false,
-                "isFound": false,
-                "priority": 10,
-                "name": "Nala",
-                "pictureCount": 0,
-                "searchString": "Nala    Female    Dogs Chihuahuas",
-                "sex": "Female",
-                "slug": "adopt-nala-chihuahua-dog",
-                "isSponsorable": false,
-                "videoCount": 0,
-                "videoUrlCount": 0,
-                "createdDate": "2025-07-31T05:02:12Z",
-                "updatedDate": "2025-07-31T05:02:12Z"
-            },
-            "relationships": {
-                "breeds": {
-                    "data": [
-                        {
-                            "type": "breeds",
-                            "id": "118"
-                        }
-                    ]
-                },
-                "species": {
-                    "data": [
-                        {
-                            "type": "species",
-                            "id": "8"
-                        }
-                    ]
-                },
-                "statuses": {
-                    "data": [
-                        {
-                            "type": "statuses",
-                            "id": "1"
-                        }
-                    ]
-                },
-                "locations": {
-                    "data": [
-                        {
-                            "type": "locations",
-                            "id": "1000010445"
-                        }
-                    ]
-                },
-                "orgs": {
-                    "data": [
-                        {
-                            "type": "orgs",
-                            "id": "10445"
-                        }
-                    ]
-                }
-            }
-        },
-        {
-            "type": "animals",
             "id": "21742131",
             "attributes": {
                 "distance": 38.88,
@@ -2630,6 +2561,110 @@
                         {
                             "type": "pictures",
                             "id": "101876732"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "animals",
+            "id": "21916012",
+            "attributes": {
+                "distance": 24.31,
+                "isAdoptionPending": false,
+                "ageGroup": "Young",
+                "ageString": "3 Years 1 Month",
+                "birthDate": "2023-06-10T00:00:00Z",
+                "isBirthDateExact": false,
+                "breedString": "Domestic Short Hair (short coat)",
+                "breedPrimary": "Domestic Short Hair",
+                "breedPrimaryId": 35,
+                "coatLength": "Short",
+                "isCourtesyListing": false,
+                "descriptionHtml": "<p>\n<span style=\"font-size:14px;\">\n<span style=\"font-family:tahoma,geneva,sans-serif;\">** work-in-progress cat **</span>\n</span>\n</p>\n\n<p>\n<span style=\"font-size:14px;\">\n<span style=\"font-family:tahoma,geneva,sans-serif;\">\n<span style=\"color: rgb(41, 42, 46); letter-spacing: -0.07px; white-space-collapse: preserve; background-color: rgb(255, 255, 255);\">I am Elvira, an endlessly </span>\n</span>\n<span style=\"color: rgb(41, 42, 46); font-family: tahoma, geneva, sans-serif; letter-spacing: -0.07px; white-space-collapse: preserve; background-color: rgb(255, 255, 255);\">curious kitty. I love to follow you around from room to room. I&#39;ll </span>\n\n<span style=\"font-family:tahoma,geneva,sans-serif;\"> \n<span style=\"color: rgb(41, 42, 46); letter-spacing: -0.07px; white-space-collapse: preserve; background-color: rgb(255, 255, 255);\">roll dramatically on the floor, sleep at the foot of your bed, and show off my playful side with lasers, strings, or bouncy balls. However, I usually prefer to admire you from afar. You can only pet me while I&#39;m eating. But my quirky charm will quickly win you over. With patience&mdash;and Scraps showing me the joy of a good belly rub&mdash; I make strides in confidence every day.</span>\n</span>\n</span>\n</p>\n\n<p>\n<span style=\"font-family:tahoma,geneva,sans-serif;\">\n<span style=\"color: rgb(96, 96, 96); font-size: 14px; background-color: rgb(255, 255, 255);\">Speaking of my BFF Scraps, we are a package deal! We love to wrestle, cuddle, chase, and we will absolutely entertain you. Together, we are the perfect combo of playful chaos and sweet companionship.</span>\n</span>\n</p>\n\n<p>\n<span style=\"color: rgb(34, 34, 34); font-family: Arial, Helvetica, sans-serif; font-size: small; background-color: rgb(255, 255, 255);\">\n<span style=\"font-size:14px;\">\n<span style=\"font-family:tahoma,geneva,sans-serif;\">I am a &quot;work-in-progress&quot; cat. When I first came to Carmah, I was extremely shy but the volunteers saw possibilities in me. My foster and I have been making progress together. I want to find a home where I have the space and time to continue the&nbsp;process. When I first move to your home, I will probably hide while I get used to household rhythms, smells, sounds, and routines. I will slowly come out of my shell as I learn to trust you. I may always hide when new people arrive, or I might start to enjoy their company as well. I will reward your patience with loyalty and companionship.</span>\n</span>\n</span>\n</p>\n\n<p>\n<span style=\"background-color: rgb(255, 255, 255); color: rgb(96, 96, 96); font-family: tahoma, geneva, sans-serif; font-size: 14px;\">We are 2 years old and in perfect health. If you&rsquo;re ready for a pair of hilarious, lovable, belly-rub-seeking companion kitties who keep each other happy - and will keep you entertained, we are your duo!</span>\n</p>",
+                "descriptionText": "\n\n** work-in-progress cat **\n\n\n\n\n\n\nI am Elvira, an endlessly \n\ncurious kitty. I love to follow you around from room to room. I&#39;ll \n\n \nroll dramatically on the floor, sleep at the foot of your bed, and show off my playful side with lasers, strings, or bouncy balls. However, I usually prefer to admire you from afar. You can only pet me while I&#39;m eating. But my quirky charm will quickly win you over. With patience&mdash;and Scraps showing me the joy of a good belly rub&mdash; I make strides in confidence every day.\n\n\n\n\n\n\nSpeaking of my BFF Scraps, we are a package deal! We love to wrestle, cuddle, chase, and we will absolutely entertain you. Together, we are the perfect combo of playful chaos and sweet companionship.\n\n\n\n\n\n\nI am a &quot;work-in-progress&quot; cat. When I first came to Carmah, I was extremely shy but the volunteers saw possibilities in me. My foster and I have been making progress together. I want to find a home where I have the space and time to continue the&nbsp;process. When I first move to your home, I will probably hide while I get used to household rhythms, smells, sounds, and routines. I will slowly come out of my shell as I learn to trust you. I may always hide when new people arrive, or I might start to enjoy their company as well. I will reward your patience with loyalty and companionship.\n\n\n\n\n\nWe are 2 years old and in perfect health. If you&rsquo;re ready for a pair of hilarious, lovable, belly-rub-seeking companion kitties who keep each other happy - and will keep you entertained, we are your duo!\n",
+                "isFound": false,
+                "priority": 10,
+                "killReason": "0",
+                "name": "Elvira Beacon - must adopt with Scraps",
+                "pictureCount": 4,
+                "pictureThumbnailUrl": "https://cdn.rescuegroups.org/1259/pictures/animals/21916/21916012/101876743.jpg?width=100",
+                "searchString": "Elvira Beacon - must adopt with Scraps   Black Female    Cats Domestic Short Hair (short coat)s",
+                "sex": "Female",
+                "sizeUOM": "Pounds",
+                "slug": "adopt-elvira-beacon-must-adopt-with-scraps-domestic-short-hair-cat",
+                "isSponsorable": false,
+                "videoCount": 0,
+                "videoUrlCount": 0,
+                "createdDate": "2025-09-27T16:00:50Z",
+                "updatedDate": "2025-10-26T19:40:17Z"
+            },
+            "relationships": {
+                "breeds": {
+                    "data": [
+                        {
+                            "type": "breeds",
+                            "id": "35"
+                        }
+                    ]
+                },
+                "colors": {
+                    "data": [
+                        {
+                            "type": "colors",
+                            "id": "1"
+                        }
+                    ]
+                },
+                "species": {
+                    "data": [
+                        {
+                            "type": "species",
+                            "id": "3"
+                        }
+                    ]
+                },
+                "statuses": {
+                    "data": [
+                        {
+                            "type": "statuses",
+                            "id": "1"
+                        }
+                    ]
+                },
+                "locations": {
+                    "data": [
+                        {
+                            "type": "locations",
+                            "id": "1000001259"
+                        }
+                    ]
+                },
+                "orgs": {
+                    "data": [
+                        {
+                            "type": "orgs",
+                            "id": "1259"
+                        }
+                    ]
+                },
+                "pictures": {
+                    "data": [
+                        {
+                            "type": "pictures",
+                            "id": "101876740"
+                        },
+                        {
+                            "type": "pictures",
+                            "id": "101876741"
+                        },
+                        {
+                            "type": "pictures",
+                            "id": "101876742"
+                        },
+                        {
+                            "type": "pictures",
+                            "id": "101876743"
                         }
                     ]
                 }
@@ -3949,16 +3984,6 @@
         },
         {
             "type": "breeds",
-            "id": "118",
-            "attributes": {
-                "name": "Chihuahua"
-            },
-            "links": {
-                "self": "/public/animals/breeds/118"
-            }
-        },
-        {
-            "type": "breeds",
             "id": "3",
             "attributes": {
                 "name": "American Shorthair"
@@ -5215,6 +5240,114 @@
                 "order": 6,
                 "created": "2025-09-27T15:54:19Z",
                 "updated": "2025-10-07T11:48:26Z"
+            }
+        },
+        {
+            "type": "pictures",
+            "id": "101876740",
+            "attributes": {
+                "original": {
+                    "filesize": 8372,
+                    "resolutionX": 146,
+                    "resolutionY": 156,
+                    "url": "https://cdn.rescuegroups.org/1259/pictures/animals/21916/21916012/101876740.jpg"
+                },
+                "large": {
+                    "filesize": 8372,
+                    "resolutionX": 500,
+                    "resolutionY": 534,
+                    "url": "https://cdn.rescuegroups.org/1259/pictures/animals/21916/21916012/101876740.jpg?width=500"
+                },
+                "small": {
+                    "filesize": 8372,
+                    "resolutionX": 100,
+                    "resolutionY": 107,
+                    "url": "https://cdn.rescuegroups.org/1259/pictures/animals/21916/21916012/101876740.jpg?width=100"
+                },
+                "order": 1,
+                "created": "2025-09-27T16:00:50Z",
+                "updated": "2025-09-27T16:00:51Z"
+            }
+        },
+        {
+            "type": "pictures",
+            "id": "101876741",
+            "attributes": {
+                "original": {
+                    "filesize": 24565,
+                    "resolutionX": 342,
+                    "resolutionY": 362,
+                    "url": "https://cdn.rescuegroups.org/1259/pictures/animals/21916/21916012/101876741.jpg"
+                },
+                "large": {
+                    "filesize": 24565,
+                    "resolutionX": 500,
+                    "resolutionY": 529,
+                    "url": "https://cdn.rescuegroups.org/1259/pictures/animals/21916/21916012/101876741.jpg?width=500"
+                },
+                "small": {
+                    "filesize": 24565,
+                    "resolutionX": 100,
+                    "resolutionY": 106,
+                    "url": "https://cdn.rescuegroups.org/1259/pictures/animals/21916/21916012/101876741.jpg?width=100"
+                },
+                "order": 2,
+                "created": "2025-09-27T16:00:51Z",
+                "updated": "2025-09-27T16:00:51Z"
+            }
+        },
+        {
+            "type": "pictures",
+            "id": "101876742",
+            "attributes": {
+                "original": {
+                    "filesize": 35855,
+                    "resolutionX": 476,
+                    "resolutionY": 282,
+                    "url": "https://cdn.rescuegroups.org/1259/pictures/animals/21916/21916012/101876742.jpg"
+                },
+                "large": {
+                    "filesize": 35855,
+                    "resolutionX": 500,
+                    "resolutionY": 296,
+                    "url": "https://cdn.rescuegroups.org/1259/pictures/animals/21916/21916012/101876742.jpg?width=500"
+                },
+                "small": {
+                    "filesize": 35855,
+                    "resolutionX": 100,
+                    "resolutionY": 59,
+                    "url": "https://cdn.rescuegroups.org/1259/pictures/animals/21916/21916012/101876742.jpg?width=100"
+                },
+                "order": 3,
+                "created": "2025-09-27T16:00:51Z",
+                "updated": "2025-09-27T16:00:52Z"
+            }
+        },
+        {
+            "type": "pictures",
+            "id": "101876743",
+            "attributes": {
+                "original": {
+                    "filesize": 92173,
+                    "resolutionX": 589,
+                    "resolutionY": 488,
+                    "url": "https://cdn.rescuegroups.org/1259/pictures/animals/21916/21916012/101876743.jpg"
+                },
+                "large": {
+                    "filesize": 92173,
+                    "resolutionX": 500,
+                    "resolutionY": 414,
+                    "url": "https://cdn.rescuegroups.org/1259/pictures/animals/21916/21916012/101876743.jpg?width=500"
+                },
+                "small": {
+                    "filesize": 92173,
+                    "resolutionX": 100,
+                    "resolutionY": 83,
+                    "url": "https://cdn.rescuegroups.org/1259/pictures/animals/21916/21916012/101876743.jpg?width=100"
+                },
+                "order": 4,
+                "created": "2025-09-27T16:00:52Z",
+                "updated": "2025-09-27T16:00:53Z"
             }
         }
     ]
