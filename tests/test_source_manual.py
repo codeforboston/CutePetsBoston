@@ -15,7 +15,7 @@ class SourceManualTests(unittest.TestCase):
         self.assertSetEqual(names, expected_names)
         for pet in pets:
             self.assertTrue(pet.image_urls)
-            #            self.assertTrue(pet.adoption_url)
+            self.assertTrue(pet.adoption_url)
             self.assertFalse(pet.description.__contains__("&nbsp;"))
 
 

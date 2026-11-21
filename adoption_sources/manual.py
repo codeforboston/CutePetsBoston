@@ -72,7 +72,7 @@ class SourceManual(PetSource):
             breed=self._determine_breed(attrs),
             location=self.location_label,
             description=description,
-            adoption_url=self._adoption_url(attrs.get("adoptionUrl")),
+            adoption_url=self._adoption_url(attrs.get("slug")),
             image_urls=[attrs["pictureThumbnailUrl"]] if attrs.get("pictureThumbnailUrl") else [],
             pet_id=animal_id,
         )
