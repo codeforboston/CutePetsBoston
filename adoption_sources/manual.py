@@ -12,9 +12,29 @@ from config import CITY_NAME, CITY_STATE
 
 logger = logging.getLogger(__name__)
 
+
+def get_animals_data(payload_dict: dict) -> Sequence[dict]:
+    """Extract the list of animals from the API payload."""
+    animals_data = payload_dict.get("data", [])
+    return animals_data if isinstance(animals_data, list) else []
+
+
+def parse_json_payload(payload: str) -> dict:
+    """Parse the API payload and return a dictionary."""
+    json_response = json.loads(payload)
+    return json_response
+
+
+def read_file(data_path: str) -> str:
+    """Read the manual source data from the JSON file."""
+    file_contents = None
+    with open(data_path) as _f:
+        file_contents = _f.read()
+    return file_contents
+
+
 _data_path = __file__.replace(".py", ".json")
-with open(_data_path) as _f:
-    MANUAL_SOURCE_DATA: tuple[dict, ...] = tuple(json.loads(_f.read()))
+MANUAL_SOURCE_DATA: tuple[dict, ...] = tuple(get_animals_data(parse_json_payload(read_file(_data_path))))
 
 
 class SourceManual(PetSource):
@@ -52,7 +72,7 @@ class SourceManual(PetSource):
             breed=self._determine_breed(attrs),
             location=self.location_label,
             description=description,
-            adoption_url=self._adoption_url(attrs.get("slug")),
+            adoption_url=self._adoption_url(attrs.get("adoptionUrl")),
             image_urls=[attrs["pictureThumbnailUrl"]] if attrs.get("pictureThumbnailUrl") else [],
             pet_id=animal_id,
         )
