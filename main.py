@@ -184,10 +184,12 @@ def record_publish_results(
     posts = data.setdefault("posts", [])
     posted_at = datetime.now(timezone.utc).isoformat()
 
-    posted_pets.append({"name": pet.name, "pet_id": pet.pet_id, "posted_at": posted_at})
-    for poster, result in results:
-        if not result.success:
-            continue
+    successful = [(poster, result) for poster, result in results if result.success]
+    # Only mark the pet as posted when at least one platform published it, so a
+    # pet whose posts all failed stays eligible for a later run.
+    if successful:
+        posted_pets.append({"name": pet.name, "pet_id": pet.pet_id, "posted_at": posted_at})
+    for poster, result in successful:
         posts.append(
             {
                 "pet_id": pet.pet_id,
