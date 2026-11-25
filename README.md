@@ -84,6 +84,11 @@ Pyright starts in basic mode. Ruff and Pyright exclude vendored code.
 Required:
 - `CUTEPETSBOSTON_RESCUEGROUPS_API_KEY`
 
+Optional species filter:
+- `CUTEPETSBOSTON_PET_SPECIES`: comma-separated species to post, for example `chinchillas` or
+  `rabbits,chinchillas` (default `dogs,cats`). `python main.py --species chinchillas` overrides it.
+  Supported species are listed in `SUPPORTED_SPECIES` in `config.py`.
+
 Optional for Instagram posting:
 - `INSTAGRAM_BUSINESS_ACCOUNT_ID` (or `INSTAGRAM_TEST_BUSINESS_ACCOUNT_ID`)
 - `INSTAGRAM_PAGE_ACCESS_TOKEN` (or `INSTAGRAM_TEST_PAGE_ACCESS_TOKEN`)

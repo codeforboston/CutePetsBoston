@@ -6,7 +6,7 @@ import pprint
 import random
 import sys
 import traceback
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import cast
@@ -26,6 +26,7 @@ from abstractions import (
     SocialPoster,
 )
 from adoption_sources import SourceManual, SourceRescueGroups
+from config import PET_SPECIES_ENV_VAR, SUPPORTED_SPECIES, parse_species
 from database import MetricSnapshot, read_database, write_database
 from metric_collectors.bluesky import CollectorBluesky
 from metric_collectors.instagram import CollectorInstagram
@@ -56,11 +57,17 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--debugsources", action="store_true")  # this defaults to False
     parser.add_argument("--debugposters", action="store_true")  # this defaults to False
+    parser.add_argument(
+        "--species",
+        type=parse_species,
+        help="Comma-separated species to post, e.g. 'chinchillas' or 'rabbits,chinchillas'. "
+        f"Defaults to ${PET_SPECIES_ENV_VAR} or dogs,cats. Supported: {', '.join(SUPPORTED_SPECIES)}",
+    )
 
     args = parser.parse_args()
 
     try:
-        sources = create_sources(debug=args.debugsources)
+        sources = create_sources(debug=args.debugsources, species=args.species)
         posters = create_posters(debug=args.debugposters)
         collectors = create_collectors(debug=args.debugposters)
 
@@ -84,7 +91,7 @@ def create_collectors(debug: bool = False) -> list[MetricCollector]:
     return [CollectorBluesky(), CollectorMastodon(), CollectorInstagram()]
 
 
-def create_sources(debug: bool = False) -> list[PetSource]:
+def create_sources(debug: bool = False, species: Sequence[str] | None = None) -> list[PetSource]:
     if debug:
         cat_fixture_path = Path(__file__).parent / "tests" / "fixtures" / "sample_cats.json"
         with cat_fixture_path.open() as fixture_file:
@@ -94,7 +101,7 @@ def create_sources(debug: bool = False) -> list[PetSource]:
             SourceManual(species="cat", animals=cat_animals),
         ]
 
-    return [SourceRescueGroups()]
+    return [SourceRescueGroups(species=species)]
 
 
 def run(

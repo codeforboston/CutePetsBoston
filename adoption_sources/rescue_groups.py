@@ -20,20 +20,29 @@ from urllib3.util.retry import Retry
 
 from abstractions import AdoptablePet, PetSource, select_image_urls
 from adoption_sources.pet_links import reconstruct_adoption_url
-from config import CITY_NAME, CITY_STATE, PET_SPECIES, POSTAL_CODE, RESCUEGROUPS_LIMIT
+from config import (
+    CITY_NAME,
+    CITY_STATE,
+    PET_SPECIES,
+    PET_SPECIES_ENV_VAR,
+    POSTAL_CODE,
+    RESCUEGROUPS_LIMIT,
+    SUPPORTED_SPECIES,
+    parse_species,
+)
 
 logger = logging.getLogger(__name__)
 
 # Some rescues publish entries like "More Dogs Soon!" to point users at their
 # website; those should never be posted. Add new names here as we encounter them.
-PLACEHOLDER_NAMES: tuple[str, ...] = ("more dogs soon!", "more cats soon!", "more rabbits soon!")
+PLACEHOLDER_NAMES: tuple[str, ...] = tuple(f"more {plural} soon!" for plural in SUPPORTED_SPECIES)
 
 # Values used by the rest of the application.
-SPECIES_SINGULAR = {"dogs": "dog", "cats": "cat", "rabbits": "rabbit"}
+SPECIES_SINGULAR = SUPPORTED_SPECIES
 
 # RescueGroups filter criteria are case-sensitive and use title-cased values
-# in the API's documented multi-species search example.
-FILTER_SPECIES_SINGULAR = {"dogs": "Dog", "cats": "Cat", "rabbits": "Rabbit"}
+# in the API's documented multi-species search example ("Guinea Pig").
+FILTER_SPECIES_SINGULAR = {plural: singular.title() for plural, singular in SUPPORTED_SPECIES.items()}
 
 # The RescueGroups API occasionally times out or returns a transient 5xx. A
 # single hiccup shouldn't fail the whole run, so retry a few times with
@@ -120,7 +129,10 @@ class SourceRescueGroups(PetSource):
         self._api_key = api_key or os.environ.get("CUTEPETSBOSTON_RESCUEGROUPS_API_KEY")
         self.postal_code = postal_code
         self.radius_miles = radius_miles
-        self.species = tuple(species if species is not None else PET_SPECIES)
+        if species is None:
+            env_species = os.environ.get(PET_SPECIES_ENV_VAR)
+            species = parse_species(env_species) if env_species else PET_SPECIES
+        self.species = tuple(species)
         self.limit = limit
         self.location_label = location_label
 
