@@ -1,57 +1,20 @@
-from pathlib import Path
-
 import pandas as pd
 import plotly.express as px
-
 from database import read_database
 
-
-def empty_dashboard_html(message: str) -> str:
-    return f"""<!DOCTYPE html>
-    <html>
-    <head>
-        <title>Cute Pets Boston Top Pets</title>
-        <style>
-            body {{ font-family: Arial, sans-serif; margin: 40px; text-align: center; background-color: #f9f9f9; }}
-            h1 {{ color: #333; }}
-        </style>
-    </head>
-    <body>
-        <h1>🐶 Cute Pets Boston Top Pets 🐶</h1>
-        <p>{message}</p>
-    </body>
-    </html>
-    """
-
-
-def dashboard(
-    html_file_path: str | Path = "dashboard.html",
-    database_path: str | Path = "database.json",
-) -> None:
+def dashboard(html_file_path="dashboard.html", database_path="database.json"):
     # 1. Fetch and prepare data
     data = read_database(database_path)
-    if not data.get("posts") or not data.get("posted_pets"):
-        with open(html_file_path, "w", encoding="utf-8") as f:
-            f.write(empty_dashboard_html("No analytics data available yet."))
-        return
-
+    
     df_pets = pd.DataFrame(data.get("posted_pets", []))
     df_posts = pd.json_normalize(
-        [dict(post) for post in data.get("posts", [])],
+        data.get("posts", []),
         record_path=["metrics"],
         meta=["pet_id", "platform", "post_id", "post_url"],
     )
-
+    
     df_metrics = pd.merge(df_pets, df_posts, on="pet_id", how="left")
-
-    # Posts with no recorded metrics yet leave the metric columns absent
-    missing = [c for c in ("likes", "reposts", "comments") if c not in df_metrics.columns]
-    df_metrics = df_metrics.reindex(columns=[*df_metrics.columns, *missing])
-    if not df_metrics["likes"].notna().any():
-        with open(html_file_path, "w", encoding="utf-8") as f:
-            f.write(empty_dashboard_html("No metric data available yet."))
-        return
-
+    
     # Process views daily aggregations
     df_metrics["day"] = pd.to_datetime(df_metrics["collected_at"]).dt.tz_localize(None).dt.normalize()
     views = (
@@ -74,8 +37,12 @@ def dashboard(
     }
 
     # 3. Build Dropdowns
-    platform_options_html = "".join([f'<option value="{p}">{p}</option>' for p in platforms_html])
-    timerange_options_html = "".join([f'<option value="{key}">{label}</option>' for key, label in time_ranges.items()])
+    platform_options_html = "".join(
+        [f'<option value="{p}">{p}</option>' for p in platforms_html]
+    )
+    timerange_options_html = "".join(
+        [f'<option value="{key}">{label}</option>' for key, label in time_ranges.items()]
+    )
 
     # 4. Determine max date and cutoff windows
     max_date = views["day"].max() if not views.empty else pd.Timestamp.now().normalize()
@@ -90,7 +57,7 @@ def dashboard(
     sections_html = ""
     for p in platforms_html:
         p_df = df_metrics if p == "All Platforms" else df_metrics[df_metrics["platform"] == p]
-
+        
         # --- SEPARATE TOP 5 CHARTS FOR LIKES, REPOSTS, COMMENTS ---
         top_charts_html = ""
         for metric in ["likes", "reposts", "comments"]:
@@ -101,7 +68,7 @@ def dashboard(
                 .sort_values(by=metric, ascending=False)
                 .head(5)
             )
-
+            
             fig_top = px.bar(
                 top_pets,
                 x="name",
@@ -117,13 +84,17 @@ def dashboard(
         metrics_html_by_range = ""
         for range_key in time_ranges.keys():
             cutoff = cutoff_dates[range_key]
-
+            
             if cutoff is not None and not p_views.empty:
                 full_dates = pd.date_range(start=cutoff, end=max_date, freq="D")
                 unique_platforms = p_views["platform"].unique()
                 idx = pd.MultiIndex.from_product([full_dates, unique_platforms], names=["day", "platform"])
-
-                filtered_views = p_views.set_index(["day", "platform"]).reindex(idx, fill_value=0).reset_index()
+                
+                filtered_views = (
+                    p_views.set_index(["day", "platform"])
+                    .reindex(idx, fill_value=0)
+                    .reset_index()
+                )
             else:
                 filtered_views = p_views
 
