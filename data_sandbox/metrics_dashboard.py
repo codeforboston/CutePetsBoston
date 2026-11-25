@@ -25,7 +25,17 @@ def dashboard(html_file_path="dashboard.html", database_path="database.json"):
         .max()
         .reset_index()
     )
-    views = views.groupby(["day", "platform"])[["likes", "reposts", "comments", "posts"]].sum().reset_index()
+    views = (
+                # Posts are not all-up, the rest are...
+                views.groupby(["day", "platform"])
+                .agg({
+                    "likes": "max",
+                    "reposts": "max",
+                    "comments": "max",
+                    "posts": "sum",
+                })
+                .reset_index()
+            )
 
     # 2. Options Setup
     platforms_html = ["All Platforms"] + sorted(
@@ -65,7 +75,7 @@ def dashboard(html_file_path="dashboard.html", database_path="database.json"):
         for metric in ["likes", "reposts", "comments"]:
             top_pets = (
                 p_df.groupby(["pet_id", "name"])[metric]
-                .sum()
+                .max()   # max as they list all-up, not 1 per
                 .reset_index()
                 .sort_values(by=metric, ascending=False)
                 .head(5)
