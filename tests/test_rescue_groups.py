@@ -162,16 +162,28 @@ class PlaceholderNameTests(unittest.TestCase):
         self.source = SourceRescueGroups(api_key="dummy")
 
     def test_more_dogs_soon_is_placeholder(self):
+        self.assertTrue(self.source._is_placeholder_name("More Dogs Soon"))
+        self.assertTrue(self.source._is_placeholder_name("MORE DOGS SOON"))
         self.assertTrue(self.source._is_placeholder_name("More Dogs Soon!"))
         self.assertTrue(self.source._is_placeholder_name("MORE DOGS SOON!"))
 
     def test_more_cats_soon_is_placeholder(self):
+        self.assertTrue(self.source._is_placeholder_name("More Cats Soon"))
+        self.assertTrue(self.source._is_placeholder_name("MORE CATS SOON"))
         self.assertTrue(self.source._is_placeholder_name("More Cats Soon!"))
         self.assertTrue(self.source._is_placeholder_name("MORE CATS SOON!"))
+
+    def test_fosters_needed_is_placeholder(self):
+        self.assertTrue(self.source._is_placeholder_name("Fosters Needed!"))
+        self.assertTrue(self.source._is_placeholder_name("FOSTERS NEEDED!"))
 
     def test_real_pet_name_is_not_placeholder(self):
         self.assertFalse(self.source._is_placeholder_name("Pippin"))
         self.assertFalse(self.source._is_placeholder_name("Buddy"))
+        self.assertFalse(self.source._is_placeholder_name("Ace of Hearts"))
+        self.assertFalse(self.source._is_placeholder_name("Blaze Fortnite"))
+        self.assertFalse(self.source._is_placeholder_name("More Dogs Soonish"))
+        self.assertFalse(self.source._is_placeholder_name("Biscuit Fosters Needed!"))
 
 
 def _mojibake(text: str, encoding: str = "cp1252") -> str:

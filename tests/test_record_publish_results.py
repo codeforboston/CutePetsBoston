@@ -98,7 +98,7 @@ def test_records_pet_and_one_post_per_successful_publish(tmp_path):
     assert not database_path.with_name("database.json.tmp").exists()
 
 
-def test_records_pet_when_all_publishes_fail(tmp_path):
+def test_does_not_record_pet_when_all_publishes_fail(tmp_path):
     database_path = tmp_path / "database.json"
     poster = FakePlatform(platform_name="Mastodon")
 
@@ -109,8 +109,21 @@ def test_records_pet_when_all_publishes_fail(tmp_path):
     )
 
     data = json.loads(database_path.read_text())
-    assert [pet["pet_id"] for pet in data["posted_pets"]] == ["pet-123"]
+    assert data["posted_pets"] == []
     assert data["posts"] == []
+
+
+def test_pet_stays_eligible_after_all_publishes_fail(tmp_path):
+    database_path = tmp_path / "database.json"
+    poster = FakePlatform(platform_name="Mastodon")
+
+    record_publish_results(
+        make_pet(),
+        [(poster, PostResult(success=False, error_message="publish failed"))],
+        database_path=database_path,
+    )
+
+    assert pick_pet([make_pet()], database_path=database_path).pet_id == "pet-123"
 
 
 def test_preserves_old_pets_statuses_and_post_metrics(tmp_path):
@@ -145,6 +158,6 @@ def test_preserves_old_pets_statuses_and_post_metrics(tmp_path):
     record_publish_results(make_pet(), [], database_path=database_path)
 
     data = json.loads(database_path.read_text())
-    assert [pet["pet_id"] for pet in data["posted_pets"]] == ["old-pet", "pet-123"]
+    assert [pet["pet_id"] for pet in data["posted_pets"]] == ["old-pet"]
     assert data["posted_pets"][0]["status_name"] == "Adopted"
     assert data["posts"][0]["metrics"][0]["likes"] == 7

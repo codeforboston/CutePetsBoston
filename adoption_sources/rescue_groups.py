@@ -10,7 +10,7 @@ import os
 import pprint
 import re
 from collections.abc import Sequence
-from typing import Iterator, overload
+from typing import Final, Iterator, overload
 
 import requests
 from ftfy import fix_and_explain
@@ -24,9 +24,19 @@ from config import CITY_NAME, CITY_STATE, PET_SPECIES, POSTAL_CODE, RESCUEGROUPS
 
 logger = logging.getLogger(__name__)
 
-# Some rescues publish entries like "More Dogs Soon!" to point users at their
-# website; those should never be posted. Add new names here as we encounter them.
-PLACEHOLDER_NAMES: tuple[str, ...] = ("more dogs soon!", "more cats soon!")
+# Some rescues publish placeholders like "More Dogs Soon!" to direct users to
+# their website. Skip these records when selecting pets to post.
+# If we encounter more variants of these phrases, use case-insensitive
+# Levenshtein matching with a maximum distance of 2 to handle those variants.
+PLACEHOLDER_NAMES: Final[frozenset[str]] = frozenset(
+    {
+        "more dogs soon",
+        "more dogs soon!",
+        "more cats soon",
+        "more cats soon!",
+        "fosters needed!",
+    }
+)
 
 # Values used by the rest of the application.
 SPECIES_SINGULAR = {"dogs": "dog", "cats": "cat"}
