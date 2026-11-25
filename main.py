@@ -201,9 +201,6 @@ def record_publish_results(
             }
         )
 
-    cutoff = datetime.now(timezone.utc) - timedelta(weeks=12)
-    data["posted_pets"] = [item for item in posted_pets if datetime.fromisoformat(item["posted_at"]) >= cutoff]
-    data["posts"] = [item for item in posts if datetime.fromisoformat(item["posted_at"]) >= cutoff]
     write_database(database_path, data)
 
 

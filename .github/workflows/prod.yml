@@ -44,30 +44,40 @@ jobs:
         run: uv sync --locked --no-dev
 
       - name: Get Previous Run ID
-        continue-on-error: true 
         id: get_id
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WORKFLOW_NAME: ${{ github.workflow }}
+          BRANCH_NAME: ${{ github.ref_name }}
         run: |
-          # Fetches the ID of this branch's last completed run for the current workflow
-          PREVIOUS_RUN_ID=$(gh run list \
-          --branch "${{ github.ref_name }}" \
-          --workflow "${{ github.workflow }}" \
-          --status success \
-          --limit 1 \
+          # A failed posting run can still save successful status refreshes.
+          # Skip runs that failed before they could upload a database.
+          RUN_IDS=$(gh run list \
+          --branch "$BRANCH_NAME" \
+          --workflow "$WORKFLOW_NAME" \
+          --status completed \
+          --limit 100 \
           --json databaseId \
-          --jq '.[0].databaseId')
-          echo "previous_run_id=$PREVIOUS_RUN_ID" >> "$GITHUB_OUTPUT"
+          --jq '.[].databaseId')
+          for RUN_ID in $RUN_IDS; do
+            ARTIFACT_ID=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/artifacts" \
+              --jq '.artifacts[] | select(.name == "database.json" and .expired == false) | .id')
+            if [ -n "$ARTIFACT_ID" ]; then
+              echo "previous_run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+              break
+            fi
+          done
 
       - name: Download previous database artifact
+        if: ${{ steps.get_id.outputs.previous_run_id != '' }}
         uses: actions/download-artifact@v8
         with:
           name: database.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ steps.get_id.outputs.previous_run_id }}
-        continue-on-error: true 
 
       - name: Call RescueGroups API
+        id: post
         env:
           CUTEPETSBOSTON_RESCUEGROUPS_API_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
           INSTAGRAM_BUSINESS_ACCOUNT_ID: ${{ secrets.INSTAGRAM_BUSINESS_ACCOUNT_ID }}
@@ -83,7 +93,18 @@ jobs:
           REDIRECTS_ENABLED: true
         run: uv run --locked --no-dev python ./main.py
 
+      - name: Refresh due adoption statuses
+        if: ${{ !cancelled() && steps.post.outcome != 'skipped' && hashFiles('database.json') != '' }}
+        env:
+          CUTEPETSBOSTON_RESCUEGROUPS_API_KEY: ${{ secrets.CUTEPETSBOSTON_RESCUEGROUPS_API_KEY }}
+        run: uv run --locked --no-dev python refresh_pet_statuses.py
+
+      - name: Regenerate dashboard with saved statuses
+        if: ${{ !cancelled() && steps.post.outcome != 'skipped' && hashFiles('database.json') != '' }}
+        run: uv run --locked --no-dev python metrics_dashboard.py
+
       - name: Upload database artifact
+        if: ${{ !cancelled() && hashFiles('database.json') != '' }}
         uses: actions/upload-artifact@v7
         with:
           path: database.json

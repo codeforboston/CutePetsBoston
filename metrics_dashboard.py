@@ -2,11 +2,61 @@ from pathlib import Path
 
 import pandas as pd
 import plotly.express as px
+from itables import to_html_datatable
 
-from database import read_database
+from database import PostedPet, read_database
 
 
-def empty_dashboard_html(message: str) -> str:
+def adoption_table_html(pets: list[PostedPet]) -> str:
+    if not pets:
+        return ""
+    rows = []
+    seen_ids: set[str] = set()
+    for pet in pets:
+        pet_id = str(pet.get("pet_id") or "").strip()
+        if pet_id and pet_id in seen_ids:
+            continue
+        seen_ids.add(pet_id)
+        rows.append(
+            {
+                "Name": pet["name"],
+                "Pet ID": pet_id,
+                "Posted date": pet["posted_at"][:10],
+                "Adoption status": pet.get("status_name") or "Unknown",
+                "Status last observed": pet.get("status_observed_at", "")[:10],
+            }
+        )
+    frame = pd.DataFrame(rows)
+    summary = (
+        frame.groupby("Adoption status")
+        .size()
+        .rename("Pets")
+        .reset_index()
+        .to_html(index=False, table_id="adoption-status-summary", border=0)
+    )
+    table = to_html_datatable(
+        frame,
+        table_id="adoption-status-table",
+        showIndex=False,
+        allow_html=False,
+        maxBytes=0,
+        display_logo_when_loading=False,
+        layout={"topStart": "pageLength", "topEnd": "search", "bottomStart": "info", "bottomEnd": "paging"},
+        pageLength=10,
+        order=[[2, "desc"]],
+    )
+    return f"""<section>
+        <h2>Posted pet adoption statuses</h2>
+        <p>Statuses are the last successfully observed shelter reports.
+        Unknown means no status has been retrieved. Dates are in UTC;
+        the observation date is not the actual adoption date.</p>
+        <h3>Pet counts by status</h3>
+        <div style="display: inline-block; text-align: left;">{summary}</div>
+        {table}
+    </section>"""
+
+
+def empty_dashboard_html(message: str, adoption_html: str = "") -> str:
     return f"""<!DOCTYPE html>
     <html>
     <head>
@@ -18,6 +68,7 @@ def empty_dashboard_html(message: str) -> str:
     </head>
     <body>
         <h1>🐶 Cute Pets Boston Top Pets 🐶</h1>
+        {adoption_html}
         <p>{message}</p>
     </body>
     </html>
@@ -30,9 +81,14 @@ def dashboard(
 ) -> None:
     # 1. Fetch and prepare data
     data = read_database(database_path)
-    if not data.get("posts") or not data.get("posted_pets"):
+    posts = data.get("posts", [])
+    posted_pets = data.get("posted_pets", [])
+    adoption_html = adoption_table_html(posted_pets)
+
+    if not posts or not posted_pets:
         with open(html_file_path, "w", encoding="utf-8") as f:
-            f.write(empty_dashboard_html("No analytics data available yet."))
+            message = "No engagement data available yet." if posted_pets else "No analytics data available yet."
+            f.write(empty_dashboard_html(message, adoption_html))
         return
 
     df_pets = pd.DataFrame(data.get("posted_pets", []))
@@ -49,7 +105,7 @@ def dashboard(
     df_metrics = df_metrics.reindex(columns=[*df_metrics.columns, *missing])
     if not df_metrics["likes"].notna().any():
         with open(html_file_path, "w", encoding="utf-8") as f:
-            f.write(empty_dashboard_html("No metric data available yet."))
+            f.write(empty_dashboard_html("No metric data available yet.", adoption_html))
         return
 
     # Process views daily aggregations
@@ -179,7 +235,8 @@ def dashboard(
     </head>
     <body>
         <h1>Cute Pets Boston Top Pets & Metrics</h1>
-        
+        {adoption_html}
+
         <div class="controls">
             <label for="platform-select"><strong>Platform:</strong> </label>
             <select id="platform-select" onchange="updateDashboard()">
@@ -193,7 +250,7 @@ def dashboard(
             function updateDashboard() {{
                 var selectedPlatform = document.getElementById('platform-select').value;
                 var activePlatform = document.getElementById('platform-' + selectedPlatform);
-                
+
                 var activeRangeSelect = activePlatform.querySelector('#timerange-select');
                 var selectedRange = activeRangeSelect ? activeRangeSelect.value : '7d';
 
@@ -223,3 +280,7 @@ def dashboard(
         f.write(full_html)
 
     print(f"Dashboard saved to {html_file_path}")
+
+
+if __name__ == "__main__":
+    dashboard()

@@ -11,6 +11,11 @@ class PostedPet(TypedDict):
     name: str
     pet_id: str | None
     posted_at: str
+    status_id: NotRequired[str]
+    status_name: NotRequired[str]
+    status_observed_at: NotRequired[str]
+    status_checked_at: NotRequired[str]
+    status_missing_since: NotRequired[str]
 
 
 class MetricSnapshot(TypedDict):

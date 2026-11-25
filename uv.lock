@@ -236,6 +236,7 @@ dependencies = [
     { name = "idna" },
     { name = "iniconfig" },
     { name = "instapy" },
+    { name = "itables" },
     { name = "jsonschema" },
     { name = "mastodon-py" },
     { name = "meaningcloud-python" },
@@ -296,6 +297,7 @@ requires-dist = [
     { name = "idna", specifier = "==2.10" },
     { name = "iniconfig", specifier = "==2.3.0" },
     { name = "instapy", specifier = "==0.6.16" },
+    { name = "itables", specifier = ">=2.6,<3" },
     { name = "jsonschema", specifier = "==2.6.0" },
     { name = "mastodon-py", specifier = "==2.2.1" },
     { name = "meaningcloud-python", specifier = "==2.0.0" },
@@ -517,6 +519,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/fb/18/f237848e28248db5916fdaad0d5efa6047a581331ee8c786ddf6705f8eae/instapy-0.6.16.tar.gz", hash = "sha256:344ec55500b15b5fe9dc03aaa3e7f94f1d7bb76a1c4657eb6ec4f04472b49f00", size = 1287065, upload-time = "2022-01-19T04:05:05.814Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c0/1d/755aa555e49ddf6b0b5cf5a92d375e75eff49c4ddd61df306133a41767d4/instapy-0.6.16-py2.py3-none-any.whl", hash = "sha256:eba52161f6091ed2149344a5336659d45b2fab0f0cd52444d80816ea8f46d6ae", size = 246452, upload-time = "2022-01-19T04:05:04.45Z" },
+]
+
+[[package]]
+name = "itables"
+version = "2.9.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ae/2d/aa4700aeda35684c3a75f56e63e5499c4a86e5e9be2c0e350c2934198208/itables-2.9.1.tar.gz", hash = "sha256:b547f0882b56e5e37ed6a88450b3e34492aa03f5aaa4cf0fe00b54933b9eb7e9", size = 1543197, upload-time = "2026-07-22T21:08:31.523Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f5/3b/3a8bce7568cf568ab108fdfa41017169efc5650a4091bb6de2ae2441e5ec/itables-2.9.1-py3-none-any.whl", hash = "sha256:8342ceaa10a074d4623916875fd7390dccd703bf2cb29386ab20034e188e50cb", size = 1568923, upload-time = "2026-07-22T21:08:29.642Z" },
 ]
 
 [[package]]

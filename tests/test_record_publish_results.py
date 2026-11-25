@@ -126,13 +126,21 @@ def test_pet_stays_eligible_after_all_publishes_fail(tmp_path):
     assert pick_pet([make_pet()], database_path=database_path).pet_id == "pet-123"
 
 
-def test_prunes_old_pets_and_posts_independently(tmp_path):
+def test_preserves_old_pets_statuses_and_post_metrics(tmp_path):
     database_path = tmp_path / "database.json"
     old_timestamp = (datetime.now(timezone.utc) - timedelta(weeks=13)).isoformat()
     database_path.write_text(
         json.dumps(
             {
-                "posted_pets": [{"name": "Old pet", "pet_id": "old-pet", "posted_at": old_timestamp}],
+                "posted_pets": [
+                    {
+                        "name": "Old pet",
+                        "pet_id": "old-pet",
+                        "posted_at": old_timestamp,
+                        "status_name": "Adopted",
+                        "status_observed_at": old_timestamp,
+                    }
+                ],
                 "posts": [
                     {
                         "pet_id": "different-old-pet",
@@ -140,7 +148,7 @@ def test_prunes_old_pets_and_posts_independently(tmp_path):
                         "post_id": "old-post",
                         "post_url": "at://old",
                         "posted_at": old_timestamp,
-                        "metrics": [],
+                        "metrics": [{"collected_at": old_timestamp, "likes": 7, "reposts": 0, "comments": 1}],
                     }
                 ],
             }
@@ -150,5 +158,6 @@ def test_prunes_old_pets_and_posts_independently(tmp_path):
     record_publish_results(make_pet(), [], database_path=database_path)
 
     data = json.loads(database_path.read_text())
-    assert data["posted_pets"] == []
-    assert data["posts"] == []
+    assert [pet["pet_id"] for pet in data["posted_pets"]] == ["old-pet"]
+    assert data["posted_pets"][0]["status_name"] == "Adopted"
+    assert data["posts"][0]["metrics"][0]["likes"] == 7
