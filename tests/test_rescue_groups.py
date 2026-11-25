@@ -1,6 +1,7 @@
 import json
 import logging
 import unittest
+import unittest.mock
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
@@ -804,3 +805,46 @@ class RealCaptureParsingTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ConfigurableSpeciesTests(unittest.TestCase):
+    def test_parse_species_normalizes_and_dedupes(self):
+        from config import parse_species
+
+        self.assertEqual(parse_species(" Chinchillas, guinea pigs,chinchillas"), ("chinchillas", "guinea pigs"))
+
+    def test_parse_species_rejects_unknown_and_empty(self):
+        from config import parse_species
+
+        with self.assertRaises(ValueError):
+            parse_species("unicorns")
+        with self.assertRaises(ValueError):
+            parse_species(" , ")
+
+    def test_chinchilla_filter_and_parse(self):
+        filters, _ = _build_species_filters(("chinchillas",))
+        self.assertEqual(filters[0]["criteria"], "Chinchilla")
+        source = SourceRescueGroups(api_key="dummy", species=("chinchillas",))
+        animal = _make_animal(species_id="9")
+        pet = source._parse_animal(animal, {}, _make_species_by_id(plural="Chinchillas", species_id="9"))
+        assert pet is not None
+        self.assertEqual(pet.species, "chinchilla")
+
+    def test_multiword_species_filter_is_title_cased(self):
+        filters, _ = _build_species_filters(("guinea pigs",))
+        self.assertEqual(filters[0]["criteria"], "Guinea Pig")
+
+    def test_unconfigured_species_is_skipped(self):
+        source = SourceRescueGroups(api_key="dummy", species=("chinchillas",))
+        self.assertIsNone(source._parse_animal(_make_animal(), {}, _make_species_by_id(plural="Dogs")))
+
+    def test_env_var_selects_species(self):
+        with unittest.mock.patch.dict("os.environ", {"CUTEPETSBOSTON_PET_SPECIES": "rabbits,chinchillas"}):
+            self.assertEqual(SourceRescueGroups(api_key="dummy").species, ("rabbits", "chinchillas"))
+
+    def test_explicit_species_beats_env_var(self):
+        with unittest.mock.patch.dict("os.environ", {"CUTEPETSBOSTON_PET_SPECIES": "rabbits"}):
+            self.assertEqual(SourceRescueGroups(api_key="dummy", species=("dogs",)).species, ("dogs",))
+
+    def test_placeholder_covers_chinchillas(self):
+        self.assertTrue(SourceRescueGroups(api_key="dummy")._is_placeholder_name("More Chinchillas Soon!"))
