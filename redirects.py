@@ -56,10 +56,7 @@ def mint_slug(pet_id, warning_callback=None):
         # hashlib, not the builtin hash(): that one is salted per process, so
         # it would mint a different slug for the same pet on every run.
         slug = f"{slug}-{hashlib.sha256(raw.encode('utf-8')).hexdigest()[:6]}"
-        message = (
-            f"RescueGroups pet_id {raw!r} required slug sanitization; "
-            f"minted slug {slug!r}"
-        )
+        message = f"RescueGroups pet_id {raw!r} required slug sanitization; minted slug {slug!r}"
         logger.warning(message)
         if warning_callback is not None:
             try:
@@ -114,7 +111,7 @@ def is_safe_target(url):
     """
     try:
         return urlparse(str(url)).scheme in ("http", "https")
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return False
 
 

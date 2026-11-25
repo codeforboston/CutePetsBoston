@@ -1,8 +1,8 @@
-import sys
 import os
 import random
+import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from adoption_sources import SourceRescueGroups
 from social_posters.bluesky import PosterBluesky

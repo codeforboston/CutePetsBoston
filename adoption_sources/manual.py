@@ -3,18 +3,19 @@
 from __future__ import annotations
 
 import json
+import logging
+import pprint
 from typing import Iterable, Sequence
 
 from abstractions import AdoptablePet, PetSource
 from config import CITY_NAME, CITY_STATE
-import logging
-import pprint
 
 logger = logging.getLogger(__name__)
 
 _data_path = __file__.replace(".py", ".json")
 with open(_data_path) as _f:
     MANUAL_SOURCE_DATA: tuple[dict, ...] = tuple(json.loads(_f.read()))
+
 
 class SourceManual(PetSource):
     """Static PetSource useful for offline testing and demos."""
@@ -35,19 +36,22 @@ class SourceManual(PetSource):
 
     def fetch_pets(self) -> Iterable[AdoptablePet]:
         log_data = pprint.pformat(MANUAL_SOURCE_DATA)
-        logger.debug('API Response: \n%s', log_data)
+        logger.debug("API Response: \n%s", log_data)
         for animal in self._animals:
             yield self._build_pet(animal)
 
     def _build_pet(self, animal: dict) -> AdoptablePet:
         attrs = animal.get("attributes", {})
         animal_id = animal.get("id", "")
+        # Clean up description (use text version, not HTML)
+        description = self._clean_description(attrs.get("descriptionText", "")).strip()
+
         return AdoptablePet(
             name=attrs.get("name", "Unknown"),
             species=self.species,
             breed=self._determine_breed(attrs),
             location=self.location_label,
-            description=(attrs.get("descriptionText") or "").strip(),
+            description=description,
             adoption_url=self._adoption_url(attrs.get("slug")),
             image_urls=[attrs["pictureThumbnailUrl"]] if attrs.get("pictureThumbnailUrl") else [],
             pet_id=animal_id,

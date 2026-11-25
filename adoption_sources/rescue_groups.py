@@ -6,13 +6,14 @@ API Documentation: https://api.rescuegroups.org/v5/public/docs
 
 import html
 import logging
-import pprint
 import os
+import pprint
 import re
 from collections.abc import Sequence
-from typing import Iterator
+from typing import Iterator, overload
 
 import requests
+from ftfy import fix_and_explain
 from pydantic import BaseModel, ValidationError
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
@@ -79,13 +80,17 @@ def _build_species_filters(species: Sequence[str]) -> tuple[list[dict], str]:
     documented RescueGroups multi-species search example. #124 was silently
     rejected by the live API (zero results), so any change here must be
     re-verified against the real API (tests/test_rescue_groups_live.py).
+
+    The API's documented operations are ``equal``/``notequal``/``contains``/
+    etc. -- there is no ``equals``, and an unrecognized operation is silently
+    ignored, which is why #124 returned zero results.
     """
     if not species:
         raise ValueError("At least one species is required")
     filters = [
         {
             "fieldName": "species.singular",
-            "operation": "equals",
+            "operation": "equal",
             "criteria": FILTER_SPECIES_SINGULAR[plural],
         }
         for plural in species
@@ -111,7 +116,7 @@ class SourceRescueGroups(PetSource):
         species: Sequence[str] | None = None,
         limit: int = RESCUEGROUPS_LIMIT,
         location_label: str = f"{CITY_NAME}, {CITY_STATE}",
-    ):
+    ) -> None:
         self._api_key = api_key or os.environ.get("CUTEPETSBOSTON_RESCUEGROUPS_API_KEY")
         self.postal_code = postal_code
         self.radius_miles = radius_miles
@@ -136,8 +141,7 @@ class SourceRescueGroups(PetSource):
         """
         if not self._api_key:
             raise ValueError(
-                "RescueGroups API key not configured. "
-                "Set CUTEPETSBOSTON_RESCUEGROUPS_API_KEY environment variable."
+                "RescueGroups API key not configured. Set CUTEPETSBOSTON_RESCUEGROUPS_API_KEY environment variable."
             )
 
         url = (
@@ -179,18 +183,13 @@ class SourceRescueGroups(PetSource):
         logger.info(f"Received {len(data)} pets from RescueGroups")
 
         data_log = pprint.pformat(data)
-        logger.debug('API Response: \n%s', data_log)
-
+        logger.debug("API Response: \n%s", data_log)
 
         orgs_by_id = {
-            item["id"]: item.get("attributes", {})
-            for item in body.get("included", [])
-            if item.get("type") == "orgs"
+            item["id"]: item.get("attributes", {}) for item in body.get("included", []) if item.get("type") == "orgs"
         }
         species_by_id = {
-            item["id"]: item.get("attributes", {})
-            for item in body.get("included", [])
-            if item.get("type") == "species"
+            item["id"]: item.get("attributes", {}) for item in body.get("included", []) if item.get("type") == "species"
         }
         pictures_by_id = {
             item["id"]: item.get("attributes", {})
@@ -220,15 +219,10 @@ class SourceRescueGroups(PetSource):
             animal_id = animal.get("id", "")
 
             # Extract and clean the name
-            name = self._clean_name(attrs.get("name", "Unknown"))
+            name = self._clean_name(attrs.get("name", "Unknown"), animal_id=animal_id)
 
             # Determine species from the included species relationship
-            species_id = (
-                animal.get("relationships", {})
-                .get("species", {})
-                .get("data", [{}])[0]
-                .get("id")
-            )
+            species_id = animal.get("relationships", {}).get("species", {}).get("data", [{}])[0].get("id")
             if not species_id:
                 logger.warning(f"Skipping animal {animal_id} with no species relationship")
                 return None
@@ -240,18 +234,17 @@ class SourceRescueGroups(PetSource):
             species = SPECIES_SINGULAR[normalized_plural]
 
             # Get breed info
-            breed = attrs.get("breedString", attrs.get("breedPrimary", "Mixed"))
+            breed = self._repair_mojibake(
+                attrs.get("breedString", attrs.get("breedPrimary", "Mixed")),
+                "breed",
+                animal_id,
+            )
 
             # Clean up description (use text version, not HTML)
-            description = self._clean_description(attrs.get("descriptionText", ""))
+            description = self._clean_description(attrs.get("descriptionText", ""), animal_id=animal_id)
 
             # Get adoption_url
-            org_id = (
-                animal.get("relationships", {})
-                .get("orgs", {})
-                .get("data", [{}])[0]
-                .get("id")
-            )
+            org_id = animal.get("relationships", {}).get("orgs", {}).get("data", [{}])[0].get("id")
             org_attrs = orgs_by_id.get(org_id, {}) if org_id else {}
             url_candidates = (
                 attrs.get("adoptionUrl"),
@@ -259,9 +252,12 @@ class SourceRescueGroups(PetSource):
                 org_attrs.get("url"),
             )
             adoption_url = next(
-                (u for u in url_candidates
-                 if u and u.strip().rstrip("/") not in ("http:", "https:", "http://", "https://")),
-                None
+                (
+                    u
+                    for u in url_candidates
+                    if u and u.strip().rstrip("/") not in ("http:", "https:", "http://", "https://")
+                ),
+                None,
             )
 
             # Shelter's own animal id (e.g. MSPCA's "A468573"); some orgs' deep
@@ -270,10 +266,7 @@ class SourceRescueGroups(PetSource):
 
             # For shelters we have a template for, rebuild a deep link to this
             # specific pet; otherwise keep the org landing page from above.
-            adoption_url = (
-                reconstruct_adoption_url(url_candidates, animal_id, rescue_id)
-                or adoption_url
-            )
+            adoption_url = reconstruct_adoption_url(url_candidates, animal_id, rescue_id) or adoption_url
 
             # Get best available image
             image_urls = self._get_image_urls(animal, pictures_by_id or {})
@@ -282,8 +275,12 @@ class SourceRescueGroups(PetSource):
                 image_urls = select_image_urls([thumbnail] if thumbnail else [])
 
             # Location of the adoption org
-            location = f"{org_attrs.get('city')}, {org_attrs.get('state')}"
-
+            location = self._repair_mojibake(
+                f"{org_attrs.get('city')}, {org_attrs.get('state')}",
+                "location",
+                org_id or "unknown",
+                "organization",
+            )
 
             return AdoptablePet(
                 name=name,
@@ -306,7 +303,42 @@ class SourceRescueGroups(PetSource):
     def _is_placeholder_name(self, name: str) -> bool:
         return name.lower() in PLACEHOLDER_NAMES
 
-    def _clean_name(self, name: str) -> str:
+    @overload
+    def _repair_mojibake(self, text: str, field: str, entity_id: str, entity_type: str = "animal") -> str: ...
+
+    @overload
+    def _repair_mojibake(self, text: None, field: str, entity_id: str, entity_type: str = "animal") -> None: ...
+
+    def _repair_mojibake(
+        self,
+        text: str | None,
+        field: str,
+        entity_id: str,
+        entity_type: str = "animal",
+    ) -> str | None:
+        """Apply ftfy's complete set of repairs to RescueGroups display text.
+
+        This deliberately uses ftfy's default configuration, including its
+        mixed/lossy encoding recovery and general Unicode cleanup. The complete
+        ``ExplainedText`` result is logged whenever ftfy changes a value.
+        """
+        if not text:
+            return text
+
+        result = fix_and_explain(text)
+        repaired = result.text
+        if repaired != text:
+            logger.info(
+                "Fixed RescueGroups %s for %s %s: ftfy_result=%r",
+                field,
+                entity_type,
+                entity_id,
+                result,
+            )
+            return repaired
+        return text
+
+    def _clean_name(self, name: str, animal_id: str = "unknown") -> str:
         """
         Clean up pet name by removing promotional text.
 
@@ -314,27 +346,32 @@ class SourceRescueGroups(PetSource):
             "Doli ***Home for the Holidays 1/2 price!" -> "Doli"
             "Kathy" -> "Kathy"
         """
+        name = self._repair_mojibake(name, "name", animal_id)
+
         # Remove common promotional suffixes
         # Split on common delimiters and take the first part
         cleaned = re.split(r"\s*[\*\-\|]+\s*", name)[0]
         return cleaned.strip()
 
-    def _clean_description(self, description: str) -> str:
+    def _clean_description(self, description: str, animal_id: str = "unknown") -> str:
         """Clean up description text."""
         if not description:
             return ""
 
-        # Decode HTML entities
+        # Decode HTML entities first, so mojibake that arrived entity-encoded
+        # (&#226;&euro;&trade;) is repairable too.
         text = html.unescape(description)
+        # A description may combine paragraphs copied from systems with
+        # different encodings. Treat natural line boundaries independently so
+        # ftfy can assess each paragraph on its own.
+        text = "".join(self._repair_mojibake(line, "description", animal_id) for line in text.splitlines(keepends=True))
 
         # Remove &nbsp; and normalize whitespace
         text = text.replace("&nbsp;", " ")
         text = re.sub(r"\s+", " ", text)
 
         # Remove promotional headers
-        text = re.sub(
-            r"\*\*Home for the Holidays.*?\*\*", "", text, flags=re.IGNORECASE
-        )
+        text = re.sub(r"\*\*Home for the Holidays.*?\*\*", "", text, flags=re.IGNORECASE)
 
         return text
 

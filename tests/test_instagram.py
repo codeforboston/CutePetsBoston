@@ -3,7 +3,6 @@ from unittest.mock import Mock, patch
 from abstractions import Post
 from social_posters.instagram import GRAPH_API_BASE, PosterInstagram
 
-
 ACCESS_TOKEN = "secret-token"
 ACCOUNT_ID = "account-id"
 

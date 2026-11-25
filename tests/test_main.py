@@ -1,7 +1,7 @@
 import json
+import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
-import unittest
 from unittest import mock
 
 from abstractions import AdoptablePet, Post, PostMetrics, PostResult
@@ -40,11 +40,11 @@ class SlackNotificationTests(unittest.TestCase):
 
 
 class FakeSource:
-    def __init__(self, pets):
+    def __init__(self, pets: list[AdoptablePet]) -> None:
         self.pets = pets
         self.fetch_called = False
 
-    def fetch_pets(self):
+    def fetch_pets(self) -> list[AdoptablePet]:
         self.fetch_called = True
         return self.pets
 
@@ -52,16 +52,16 @@ class FakeSource:
 class FakePoster:
     platform_name = "FakePoster"
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.format_called = False
         self.publish_called = False
-        self.posts = []
+        self.posts: list[Post] = []
 
-    def format_post(self, pet):
+    def format_post(self, pet: AdoptablePet) -> Post:
         self.format_called = True
         return Post(text=f"Meet {pet.name}", image_urls=pet.image_urls)
 
-    def publish(self, post):
+    def publish(self, post: Post) -> PostResult:
         self.publish_called = True
         self.posts.append(post)
         return PostResult(
@@ -74,10 +74,10 @@ class FakePoster:
 class FakeCollector:
     platform_name = "FakePoster"
 
-    def __init__(self):
-        self.calls = []
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, str | None]] = []
 
-    def fetch_metrics(self, post_id, post_url=None):
+    def fetch_metrics(self, post_id: str, post_url: str | None = None) -> PostMetrics:
         self.calls.append((post_id, post_url))
         return PostMetrics(
             collected_at="set-by-run",
@@ -172,7 +172,7 @@ class RedirectRunTests(unittest.TestCase):
             self.last_adoption_url = pet.adoption_url
             return Post(text=f"Meet {pet.name}", image_urls=pet.image_urls)
 
-    def _pet(self, pet_id="pet-redirect"):
+    def _pet(self, pet_id: str | None = "pet-redirect"):
         return AdoptablePet(
             name="Poppy",
             species="dog",
@@ -234,8 +234,10 @@ class RedirectRunTests(unittest.TestCase):
         with TemporaryDirectory() as temporary_directory:
             default_path = Path(temporary_directory) / "redirects.json"
             database_path = Path(temporary_directory) / "database.json"
-            with mock.patch.dict("os.environ", {"REDIRECTS_ENABLED": "true"}), \
-                 mock.patch("redirects.DEFAULT_REDIRECTS_PATH", str(default_path)):
+            with (
+                mock.patch.dict("os.environ", {"REDIRECTS_ENABLED": "true"}),
+                mock.patch("redirects.DEFAULT_REDIRECTS_PATH", str(default_path)),
+            ):
                 run(
                     [FakeSource([pet])],
                     [poster],
@@ -274,15 +276,15 @@ class CreateSourcesTests(unittest.TestCase):
         sources = create_sources(debug=False)
 
         self.assertEqual(len(sources), 1)
-        self.assertIsInstance(sources[0], SourceRescueGroups)
+        assert isinstance(sources[0], SourceRescueGroups)
         self.assertEqual(sources[0].species, ("dogs", "cats"))
 
     def test_debug_returns_manual_sources_for_dogs_and_cats(self):
         sources = create_sources(debug=True)
 
         self.assertEqual(len(sources), 2)
-        self.assertIsInstance(sources[0], SourceManual)
-        self.assertIsInstance(sources[1], SourceManual)
+        assert isinstance(sources[0], SourceManual)
+        assert isinstance(sources[1], SourceManual)
         self.assertEqual(sources[0].species, "dog")
         self.assertEqual(sources[1].species, "cat")
 
